@@ -30,6 +30,7 @@ public class UserService implements IUserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
+
     @Override
     public HttpResponseBody<UserCreateResponseDTO> register(UserCreateRequestDTO userCreateRequestDTO) {
         HttpResponseBody<UserCreateResponseDTO> response = new UserCreateResponse();
@@ -70,15 +71,11 @@ public class UserService implements IUserService {
         if (user != null) {
             if (passwordEncoder.matches(userLoginRequestDTO.getPassword(), user.getPasswordHash())) {
                 response.setMessage("User logged in successfully");
-                List<OAuth2AccessToken> tokens = tokenService.createTokens(user.getUserCode(),user.getUsername(), user.getRoleRefId());
-                long timeAccess = tokens.getFirst().getExpiresAt().getEpochSecond() - tokens.getFirst().getIssuedAt().getEpochSecond();
-                long timeRefresh =  tokens.getLast().getExpiresAt().getEpochSecond() - tokens.getLast().getIssuedAt().getEpochSecond();
-
-                response.setResponseEntity(userMapper.mapTokensToUserLoginResponseDTO());
-            }
-          else {
+                List<OAuth2AccessToken> tokens = tokenService.createTokens(user.getUserCode(), user.getUsername(), user.getRoleRefId());
+                response.setResponseEntity(userMapper.mapTokensToUserLoginResponseDTO(tokens));
+            } else {
                 System.out.println(user.getPasswordHash());
-              response.setMessage("Incorrect password");
+                response.setMessage("Incorrect password");
             }
         }
         if (response.getErrors().isEmpty()) {
