@@ -31,6 +31,15 @@ ext {
 }
 
 dependencies {
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation('org.springframework.boot:spring-boot-starter-security')
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
+    testImplementation('org.springframework.security:spring-security-test')
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("com.h2database:h2:1.4.191")
     implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-rest'
@@ -45,10 +54,9 @@ dependencies {
     implementation 'org.springframework.modulith:spring-modulith-starter-core'
     implementation 'org.springframework.modulith:spring-modulith-starter-jdbc'
     implementation 'org.springframework.modulith:spring-modulith-starter-jpa'
-    implementation 'org.springframework.session:spring-session-jdbc'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.projectlombok:lombok'
@@ -58,6 +66,9 @@ dependencies {
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    //implementation 'org.springframework.session:spring-session-jdbc'
+
 }
 
 dependencyManagement {

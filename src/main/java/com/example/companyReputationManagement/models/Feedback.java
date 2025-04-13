@@ -1,7 +1,9 @@
 package com.example.companyReputationManagement.models;
 
-import com.example.companyReputationManagement.models.enums.SentimentTypeRef;
+import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
+import com.example.companyReputationManagement.models.enums.converters.SentimentTypeRefConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -27,18 +29,10 @@ public class Feedback extends CoreEntity {
     @Column(name = "content")
     private String content;
     @Column(name = "sentiment_type_id")
-    private Long sentimentTypeId;
+    @Convert(converter = SentimentTypeRefConverter.class)
+    private SentimentTypeEnum sentimentTypeId;
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
 
 
-    @Override
-    public Long getCoreEntityId() {
-        return super.getCoreEntityId(); // Получаем ID из родительского класса
-    }
-
-    @Override
-    public void setCoreEntityId(Long coreEntityId) {
-        super.setCoreEntityId(coreEntityId); // Устанавливаем ID через родительский класс
-    }
 }

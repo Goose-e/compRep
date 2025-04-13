@@ -9,7 +9,8 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "company")
-public class Company extends CoreEntity {
+public class Company extends CoreEntity  {
+
 
     @Column(name = "company_code")
     private String companyCode;
@@ -21,15 +22,7 @@ public class Company extends CoreEntity {
     private String website;
 
 
-    @Override
-    public Long getCoreEntityId() {
-        return super.getCoreEntityId(); // Получаем ID из родительского класса
-    }
 
-    @Override
-    public void setCoreEntityId(Long coreEntityId) {
-        super.setCoreEntityId(coreEntityId); // Устанавливаем ID через родительский класс
-    }
 
 
 }

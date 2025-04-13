@@ -3,22 +3,22 @@ package com.example.companyReputationManagement.models.enums;
 import lombok.Getter;
 
 @Getter
-public enum SentimentTypeRef {
-    POSITIVE(1, "POSITIVE", "Positive"),
-    NEUTRAL(2, "NEUTRAL", "Neutral"),
-    NEGATIVE(3, "NEGATIVE", "Negative");
-    private final int id;
+public enum SentimentTypeEnum {
+    POSITIVE(1L, "POSITIVE", "Positive"),
+    NEUTRAL(2L, "NEUTRAL", "Neutral"),
+    NEGATIVE(3L, "NEGATIVE", "Negative");
+    private final Long id;
     private final String code;
     private final String Type;
 
-    SentimentTypeRef(int id, String code, String Type) {
+    SentimentTypeEnum(Long id, String code, String Type) {
         this.id = id;
         this.code = code;
         this.Type = Type;
     }
 
-    public static SentimentTypeRef fromString(String code) {
-        for (SentimentTypeRef sentiment : SentimentTypeRef.values()) {
+    public static SentimentTypeEnum fromString(String code) {
+        for (SentimentTypeEnum sentiment : SentimentTypeEnum.values()) {
             if (sentiment.getCode().equalsIgnoreCase(code)) {
                 return sentiment;
             }
@@ -27,8 +27,8 @@ public enum SentimentTypeRef {
     }
 
 
-    public static SentimentTypeRef fromId(int id) {
-        for (SentimentTypeRef sentiment : SentimentTypeRef.values()) {
+    public static SentimentTypeEnum fromId(int id) {
+        for (SentimentTypeEnum sentiment : SentimentTypeEnum.values()) {
             if (sentiment.getId() == id) {
                 return sentiment;
             }
@@ -37,7 +37,7 @@ public enum SentimentTypeRef {
     }
 
 
-    public static String toString(SentimentTypeRef sentimentType) {
+    public static String toString(SentimentTypeEnum sentimentType) {
         return sentimentType != null ? sentimentType.getType() : null;
     }
 }

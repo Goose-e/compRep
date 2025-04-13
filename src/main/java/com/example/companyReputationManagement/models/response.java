@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "response")
-public class response extends Company {
+public class response extends CoreEntity {
     @Column(name = "response_code")
     private String responseCode;
     @Column(name = "feedback_id")
@@ -22,13 +22,5 @@ public class response extends Company {
     private Long companyId;
     @Column(name = "response_text")
     private String responseText;
-    @Override
-    public Long getCoreEntityId() {
-        return super.getCoreEntityId(); // Получаем ID из родительского класса
-    }
 
-    @Override
-    public void setCoreEntityId(Long coreEntityId) {
-        super.setCoreEntityId(coreEntityId); // Устанавливаем ID через родительский класс
-    }
 }

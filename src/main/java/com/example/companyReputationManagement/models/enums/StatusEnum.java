@@ -2,18 +2,19 @@ package com.example.companyReputationManagement.models.enums;
 
 import lombok.Getter;
 
+
 @Getter
 public enum StatusEnum {
-    ACTUAL(0, "ACTUAL", "Actual"),
-    CLOSED(1, "CLOSED", "Closed"),
-    NEW(2, "NEW", "New"),
-    IN_PROGRESS(3, "IN_PROGRESS", "In Progress"),
-    RESOLVED(4, "RESOLVED", "Resolved");
-    final int id;
+    ACTUAL(0L, "ACTUAL", "Actual"),
+    CLOSED(1L, "CLOSED", "Closed"),
+    NEW(2L, "NEW", "New"),
+    IN_PROGRESS(3L, "IN_PROGRESS", "In Progress"),
+    RESOLVED(4L, "RESOLVED", "Resolved");
+    final Long id;
     final String status;
     final String code;
 
-    StatusEnum(int id, String code, String status) {
+    StatusEnum(Long id, String code, String status) {
         this.id = id;
         this.code = code;
         this.status = status;

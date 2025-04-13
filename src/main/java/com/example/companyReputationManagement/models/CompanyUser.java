@@ -1,9 +1,9 @@
 package com.example.companyReputationManagement.models;
 
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.example.companyReputationManagement.models.enums.RoleEnum;
+import com.example.companyReputationManagement.models.enums.converters.RoleEnumConverter;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,13 +11,15 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "company_user")
+@PrimaryKeyJoinColumn(name = "user_id")
 public class CompanyUser extends CoreEntity {
     @Column(name = "user_code")
     private String userCode;
     @Column(name = "company_id")
     private Long companyId;
     @Column(name = "role_ref_id")
-    private Long roleRefId;
+    @Convert(converter = RoleEnumConverter.class)
+    private RoleEnum roleRefId;
     @Column(name = "username")
     private String username;
     @Column(name = "email")
@@ -25,13 +27,4 @@ public class CompanyUser extends CoreEntity {
     @Column(name = "password_hash")
     private String passwordHash;
 
-    @Override
-    public Long getCoreEntityId() {
-        return super.getCoreEntityId(); // Получаем ID из родительского класса
-    }
-
-    @Override
-    public void setCoreEntityId(Long coreEntityId) {
-        super.setCoreEntityId(coreEntityId); // Устанавливаем ID через родительский класс
-    }
 }

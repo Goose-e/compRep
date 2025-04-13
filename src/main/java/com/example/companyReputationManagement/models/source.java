@@ -21,13 +21,5 @@ public class source extends CoreEntity {
     @Column(name = "url")
     private String url;
 
-    @Override
-    public Long getCoreEntityId() {
-        return super.getCoreEntityId(); // Получаем ID из родительского класса
-    }
 
-    @Override
-    public void setCoreEntityId(Long coreEntityId) {
-        super.setCoreEntityId(coreEntityId); // Устанавливаем ID через родительский класс
-    }
 }
