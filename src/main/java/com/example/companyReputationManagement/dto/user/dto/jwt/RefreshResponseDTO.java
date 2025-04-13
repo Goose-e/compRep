@@ -1,21 +1,18 @@
-package com.example.companyReputationManagement.dto.user.dto.login;
+package com.example.companyReputationManagement.dto.user.dto.jwt;
 
 import com.example.companyReputationManagement.httpResponse.ResponseDto;
 import lombok.Data;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
-public class UserLoginResponseDTO implements ResponseDto {
+public class RefreshResponseDTO implements ResponseDto {
+
     private String refreshToken;
     private String accessToken;
     private long accessExpiresIn;
     private long refreshExpiresIn;
     private String tokenType;
 
-    public UserLoginResponseDTO(String accessToken, long accessExpiresIn, String refreshToken, long refreshExpiresIn) {
+    public RefreshResponseDTO(String accessToken, long accessExpiresIn, String refreshToken, long refreshExpiresIn) {
         this.accessToken = accessToken;
         this.accessExpiresIn = accessExpiresIn;
         this.refreshToken = refreshToken;

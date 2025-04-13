@@ -2,19 +2,23 @@ package com.example.companyReputationManagement.mapper;
 
 import com.example.companyReputationManagement.dto.user.dto.create.UserCreateRequestDTO;
 import com.example.companyReputationManagement.dto.user.dto.create.UserCreateResponseDTO;
+import com.example.companyReputationManagement.dto.user.dto.login.UserLoginResponseDTO;
 import com.example.companyReputationManagement.iservice.generate.GenerateCode;
 import com.example.companyReputationManagement.models.CompanyUser;
 import com.example.companyReputationManagement.models.enums.RoleEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class UserMapper {
 
-    private final PasswordEncoder passwordEncoder;
 
+    private final PasswordEncoder passwordEncoder;
     private final GenerateCode generateCode;
 
     public CompanyUser mapUserDtoToUser(UserCreateRequestDTO userCreateRequestDTO) {
@@ -31,5 +35,11 @@ public class UserMapper {
 
     public UserCreateResponseDTO mapUserToUserDtoResponse(CompanyUser companyUser) {
         return new UserCreateResponseDTO(companyUser.getEmail(), companyUser.getUsername());
+    }
+    public UserLoginResponseDTO mapTokensToUserLoginResponseDTO(List<OAuth2AccessToken> tokens) {
+        long timeAccess = tokens.getFirst().getExpiresAt().getEpochSecond() - tokens.getFirst().getIssuedAt().getEpochSecond();
+        long timeRefresh =  tokens.getLast().getExpiresAt().getEpochSecond() - tokens.getLast().getIssuedAt().getEpochSecond();
+
+        return new UserLoginResponseDTO(tokens.getFirst().getTokenValue(),timeAccess, tokens.get(1).getTokenValue(),timeRefresh);
     }
 }

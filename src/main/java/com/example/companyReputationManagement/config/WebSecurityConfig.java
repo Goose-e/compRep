@@ -1,8 +1,14 @@
 package com.example.companyReputationManagement.config;
 
 import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -12,38 +18,27 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtDecoders;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
-
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.oidc.OidcScopes;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
-
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.proc.SecurityContext;
-
-import com.nimbusds.jose.jwk.RSAKey;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.UUID;
-import java.util.logging.Logger;
 
-import static com.example.companyReputationManagement.config.KeyLoader.loadPrivateKey;
-import static com.example.companyReputationManagement.config.KeyLoader.loadPublicKey;
+import static com.example.companyReputationManagement.jwt.KeyLoader.loadPrivateKey;
+import static com.example.companyReputationManagement.jwt.KeyLoader.loadPublicKey;
 
 @Configuration
 @EnableWebSecurity
@@ -54,11 +49,11 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/", "/home").permitAll()
                         .requestMatchers("/auth/*").permitAll()
+                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/.well-known/**", "/oauth2/**").permitAll()
                         .anyRequest().authenticated()
                 ).oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
                 .logout((logout) -> logout.permitAll()).csrf(AbstractHttpConfigurer::disable);
-        ;
-
         return http.build();
     }
 
@@ -66,10 +61,12 @@ public class WebSecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
         return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
+
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder encoder) {
         UserDetails user = User.withUsername("user")
@@ -78,6 +75,16 @@ public class WebSecurityConfig {
                 .build();
         return new InMemoryUserDetailsManager(user);
     }
+
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder, UserDetailsService userDetailsService) throws Exception {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return new ProviderManager(provider);
+    }
+
+
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
         RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
@@ -94,6 +101,7 @@ public class WebSecurityConfig {
 
         return new InMemoryRegisteredClientRepository(registeredClient);
     }
+
     @Bean
     public JWKSource<SecurityContext> jwkSource() throws Exception {
         String publicKeyPath = "src/main/resources/rsa/public.pem";
@@ -114,8 +122,13 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
+        return new NimbusJwtEncoder(jwkSource);
+    }
+
+    @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder().issuer("http://localhost:9000")
-        .build();
+                .build();
     }
 }

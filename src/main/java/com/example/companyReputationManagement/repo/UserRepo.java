@@ -10,4 +10,5 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 public interface UserRepo extends JpaRepository<CompanyUser, Long> {
     CompanyUser findUserByUsernameOrEmail(String username, String email);
 
+    CompanyUser findUserByUsername(String username);
 }

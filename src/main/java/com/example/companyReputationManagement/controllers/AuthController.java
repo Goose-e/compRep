@@ -1,5 +1,8 @@
 package com.example.companyReputationManagement.controllers;
 
+import com.example.companyReputationManagement.dto.user.dto.login.UserLoginRequestDTO;
+import com.example.companyReputationManagement.dto.user.dto.login.UserLoginResponse;
+import com.example.companyReputationManagement.dto.user.dto.login.UserLoginResponseDTO;
 import com.example.companyReputationManagement.iservice.IUserService;
 import com.example.companyReputationManagement.dto.StringResponseDto;
 import com.example.companyReputationManagement.dto.user.dto.create.UserCreateRequestDTO;
@@ -18,10 +21,9 @@ public class AuthController {
     private final IUserService userService;
 
     @GetMapping(value = "/login")
-    public HttpResponseBody<StringResponseDto> authenticate() {
-        HttpResponseBody<StringResponseDto> response = new StringResponse();
-        response.setMessage("/auth");
-        return response;
+    public HttpResponseBody<UserLoginResponseDTO> authenticate(@Valid @RequestBody UserLoginRequestDTO userLoginRequestDTO) {
+
+        return userService.login(userLoginRequestDTO);
     }
 
     @PostMapping(value = "/signup")

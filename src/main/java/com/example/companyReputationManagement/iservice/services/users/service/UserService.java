@@ -5,13 +5,19 @@ import com.example.companyReputationManagement.dto.user.dto.create.UserCreateReq
 import com.example.companyReputationManagement.dto.user.dto.create.UserCreateResponse;
 import com.example.companyReputationManagement.dto.user.dto.create.UserCreateResponseDTO;
 import com.example.companyReputationManagement.dto.user.dto.login.UserLoginRequestDTO;
+import com.example.companyReputationManagement.dto.user.dto.login.UserLoginResponse;
 import com.example.companyReputationManagement.dto.user.dto.login.UserLoginResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.IUserService;
+import com.example.companyReputationManagement.jwt.TokenService;
 import com.example.companyReputationManagement.mapper.UserMapper;
 import com.example.companyReputationManagement.models.CompanyUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 import static com.example.companyReputationManagement.constants.SysConst.*;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
@@ -22,7 +28,8 @@ import static org.springframework.http.HttpStatus.I_AM_A_TEAPOT;
 public class UserService implements IUserService {
     private final UserDao userDao;
     private final UserMapper userMapper;
-
+    private final PasswordEncoder passwordEncoder;
+    private final TokenService tokenService;
     @Override
     public HttpResponseBody<UserCreateResponseDTO> register(UserCreateRequestDTO userCreateRequestDTO) {
         HttpResponseBody<UserCreateResponseDTO> response = new UserCreateResponse();
@@ -44,6 +51,7 @@ public class UserService implements IUserService {
                 response.setMessage("Username is already taken");
             } else {
                 response.setMessage("Email is already taken");
+
             }
             response.addErrorInfo(CREATE_USER_ERROR, String.valueOf(I_AM_A_TEAPOT), "User exists");
         }
@@ -57,6 +65,27 @@ public class UserService implements IUserService {
 
     @Override
     public HttpResponseBody<UserLoginResponseDTO> login(UserLoginRequestDTO userLoginRequestDTO) {
-        return null;
+        HttpResponseBody<UserLoginResponseDTO> response = new UserLoginResponse();
+        CompanyUser user = userDao.findUserByLoginOrEmail(userLoginRequestDTO.getUsernameOrEmail());
+        if (user != null) {
+            if (passwordEncoder.matches(userLoginRequestDTO.getPassword(), user.getPasswordHash())) {
+                response.setMessage("User logged in successfully");
+                List<OAuth2AccessToken> tokens = tokenService.createTokens(user.getUserCode(),user.getUsername(), user.getRoleRefId());
+                long timeAccess = tokens.getFirst().getExpiresAt().getEpochSecond() - tokens.getFirst().getIssuedAt().getEpochSecond();
+                long timeRefresh =  tokens.getLast().getExpiresAt().getEpochSecond() - tokens.getLast().getIssuedAt().getEpochSecond();
+
+                response.setResponseEntity(userMapper.mapTokensToUserLoginResponseDTO());
+            }
+          else {
+                System.out.println(user.getPasswordHash());
+              response.setMessage("Incorrect password");
+            }
+        }
+        if (response.getErrors().isEmpty()) {
+            response.setResponseCode(OC_OK);
+        } else {
+            response.setResponseCode(OC_BUGS);
+        }
+        return response;
     }
 }

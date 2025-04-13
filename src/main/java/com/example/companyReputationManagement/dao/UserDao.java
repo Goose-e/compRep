@@ -13,8 +13,14 @@ public class UserDao {
     public CompanyUser save(CompanyUser companyUser){
         return userRepo.save(companyUser);
     }
+    public CompanyUser findUserByUserName(String username){
+        return userRepo.findUserByUsername(username);
+    }
     public CompanyUser findUserByLoginOrEmail(String UserLogin, String UserEmail) {
         return userRepo.findUserByUsernameOrEmail(UserLogin, UserEmail);
+    }
+    public CompanyUser findUserByLoginOrEmail(String userLoginOrEmail) {
+        return userRepo.findUserByUsernameOrEmail(userLoginOrEmail,userLoginOrEmail);
     }
 
 }
