@@ -37,8 +37,8 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.UUID;
 
-import static com.example.companyReputationManagement.jwt.KeyLoader.loadPrivateKey;
-import static com.example.companyReputationManagement.jwt.KeyLoader.loadPublicKey;
+import static com.example.companyReputationManagement.jwt.security.KeyLoader.loadPrivateKey;
+import static com.example.companyReputationManagement.jwt.security.KeyLoader.loadPublicKey;
 
 @Configuration
 @EnableWebSecurity

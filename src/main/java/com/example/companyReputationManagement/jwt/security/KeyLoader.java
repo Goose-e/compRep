@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.jwt;
+package com.example.companyReputationManagement.jwt.security;
 
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
