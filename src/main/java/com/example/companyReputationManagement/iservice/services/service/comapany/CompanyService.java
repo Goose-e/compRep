@@ -2,24 +2,32 @@ package com.example.companyReputationManagement.iservice.services.service.comapa
 
 
 import com.example.companyReputationManagement.dao.CompanyDao;
+import com.example.companyReputationManagement.dao.UserCompanyRolesDao;
 import com.example.companyReputationManagement.dao.UserDao;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateRequestDTO;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponse;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.ICompanyService;
+import com.example.companyReputationManagement.iservice.services.transactions.CompanyTrans;
 import com.example.companyReputationManagement.mapper.CompanyMapper;
+import com.example.companyReputationManagement.mapper.UserCompanyRolesMapper;
 import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.models.CompanyUser;
-import com.example.companyReputationManagement.models.enums.RoleEnum;
+import com.example.companyReputationManagement.models.UserCompanyRoles;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
-import static com.example.companyReputationManagement.constants.SysConst.*;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import java.sql.SQLException;
+
+import static com.example.companyReputationManagement.constants.SysConst.OC_BUGS;
+import static com.example.companyReputationManagement.constants.SysConst.OC_OK;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +35,10 @@ public class CompanyService implements ICompanyService {
     private final CompanyDao companyDao;
     private final CompanyMapper companyMapper;
     private final UserDao userDao;
+    private final UserCompanyRolesDao userCompanyRolesdao;
+    private final UserCompanyRolesMapper userCompanyRolesMapper;
+    private final CompanyTrans companyTrans;
+    private static final Logger logger = LoggerFactory.getLogger(CompanyService.class);
 
     @Override
     public HttpResponseBody<CompanyCreateResponseDTO> createCompany(CompanyCreateRequestDTO companyCreateRequestDTO) {
@@ -39,21 +51,22 @@ public class CompanyService implements ICompanyService {
             if (user != null) {
                 if (!companyDao.existByCompanyName(companyCreateRequestDTO.getCompanyName())) {
                     Company company = companyMapper.mapCompanyCreateRequestDTOToCompany(companyCreateRequestDTO);
-                    if (companyDao.save(company) != null) {
-                        user.setRoleRefId(RoleEnum.ADMIN);
-                        user.setCompanyId(company.getCoreEntityId());
-                        userDao.save(user);
+                    UserCompanyRoles userCompanyRoles = userCompanyRolesMapper.mapUserAndCompanyToUserCompanyRoles(user, company);
+                    try {
+                        companyTrans.save(company, userCompanyRoles);
                         response.setMessage("Company created successfully.User role changed successfully.");
                         response.setResponseEntity(companyMapper.mapCompanyToCompanyCreateResponseDTO(company));
-                    } else {
-                        response.setMessage("save company failed");
-                        response.setError("save company failed");
-                        response.addErrorInfo(CREATE_COMPANY_ERROR, String.valueOf(INTERNAL_SERVER_ERROR), "save company failed");
+                    } catch (DataIntegrityViolationException e) {
+                        response.setError("Transaction failed");
+                        response.setMessage("Data integrity violation: " + e.getMessage());
+                        logger.error("Data integrity error while saving company and user role: ", e);
+                    } catch (Exception e) {
+                        response.setError("Transaction failed");
+                        response.setMessage("Unexpected error: " + e.getMessage());
+                        logger.error("Unexpected error while saving company and user role: ", e);
                     }
-
                 } else {
                     response.setMessage("Company name already exist");
-                    response.setResponseEntity(null);
                 }
             } else {
                 response.setError("User not found");
@@ -69,6 +82,8 @@ public class CompanyService implements ICompanyService {
             response.setResponseCode(OC_BUGS);
         }
         return response;
-
     }
+
+
 }
+

@@ -15,8 +15,6 @@ import lombok.Setter;
 public class CompanyUser extends CoreEntity {
     @Column(name = "user_code")
     private String userCode;
-    @Column(name = "company_id")
-    private Long companyId;
     @Column(name = "role_ref_id")
     @Convert(converter = RoleEnumConverter.class)
     private RoleEnum roleRefId;

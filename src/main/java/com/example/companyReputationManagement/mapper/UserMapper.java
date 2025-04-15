@@ -28,7 +28,6 @@ public class UserMapper {
         companyUser.setEmail(userCreateRequestDTO.getEmail());
         companyUser.setPasswordHash(passwordEncoder.encode(userCreateRequestDTO.getPassword()));
         companyUser.setRoleRefId(RoleEnum.USER);
-        companyUser.setCompanyId(null);
         companyUser.setUserCode(generateCode.generateCode(companyUser));
         return companyUser;
     }
@@ -36,10 +35,11 @@ public class UserMapper {
     public UserCreateResponseDTO mapUserToUserDtoResponse(CompanyUser companyUser) {
         return new UserCreateResponseDTO(companyUser.getEmail(), companyUser.getUsername());
     }
+
     public UserLoginResponseDTO mapTokensToUserLoginResponseDTO(List<OAuth2AccessToken> tokens) {
         long timeAccess = tokens.getFirst().getExpiresAt().getEpochSecond() - tokens.getFirst().getIssuedAt().getEpochSecond();
-        long timeRefresh =  tokens.getLast().getExpiresAt().getEpochSecond() - tokens.getLast().getIssuedAt().getEpochSecond();
+        long timeRefresh = tokens.getLast().getExpiresAt().getEpochSecond() - tokens.getLast().getIssuedAt().getEpochSecond();
 
-        return new UserLoginResponseDTO(tokens.getFirst().getTokenValue(),timeAccess, tokens.get(1).getTokenValue(),timeRefresh);
+        return new UserLoginResponseDTO(tokens.getFirst().getTokenValue(), timeAccess, tokens.get(1).getTokenValue(), timeRefresh);
     }
 }

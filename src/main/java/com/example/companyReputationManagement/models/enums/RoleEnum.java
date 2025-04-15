@@ -6,7 +6,10 @@ import lombok.Getter;
 @Getter
 public enum RoleEnum {
     USER(0L, "USER", "USER"),
-    ADMIN(1L, "ADMIN", "ADMIN");
+    ADMIN(1L, "ADMIN", "ADMIN"),
+    OWNER(2L,"OWNER", "OWNER");
+    ;
+
     private final String role;
     private final long id;
     private final String code;
