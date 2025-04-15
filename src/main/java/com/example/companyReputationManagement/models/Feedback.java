@@ -2,10 +2,7 @@ package com.example.companyReputationManagement.models;
 
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
 import com.example.companyReputationManagement.models.enums.converters.SentimentTypeRefConverter;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,6 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @Table(name = "feedback")
+@PrimaryKeyJoinColumn(name = "feedback_id")
 public class Feedback extends CoreEntity {
     @Column(name = "feedback_code")
     private String feedbackCode;

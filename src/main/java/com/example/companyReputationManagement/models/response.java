@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "response")
+@PrimaryKeyJoinColumn(name = "response_id")
 public class response extends CoreEntity {
     @Column(name = "response_code")
     private String responseCode;

@@ -7,6 +7,7 @@ import java.util.UUID;
 @Component
 public class GenerateCode {
     public String generateCode(Object o) {
-        return o.getClass().getSimpleName() + "-" + UUID.randomUUID().toString();
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        return o.getClass().getSimpleName() + "-" + timestamp;
     }
 }

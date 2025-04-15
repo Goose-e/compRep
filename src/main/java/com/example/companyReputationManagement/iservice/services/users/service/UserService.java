@@ -1,12 +1,12 @@
 package com.example.companyReputationManagement.iservice.services.users.service;
 
 import com.example.companyReputationManagement.dao.UserDao;
-import com.example.companyReputationManagement.dto.user.dto.create.UserCreateRequestDTO;
-import com.example.companyReputationManagement.dto.user.dto.create.UserCreateResponse;
-import com.example.companyReputationManagement.dto.user.dto.create.UserCreateResponseDTO;
-import com.example.companyReputationManagement.dto.user.dto.login.UserLoginRequestDTO;
-import com.example.companyReputationManagement.dto.user.dto.login.UserLoginResponse;
-import com.example.companyReputationManagement.dto.user.dto.login.UserLoginResponseDTO;
+import com.example.companyReputationManagement.dto.user.create.UserCreateRequestDTO;
+import com.example.companyReputationManagement.dto.user.create.UserCreateResponse;
+import com.example.companyReputationManagement.dto.user.create.UserCreateResponseDTO;
+import com.example.companyReputationManagement.dto.user.login.UserLoginRequestDTO;
+import com.example.companyReputationManagement.dto.user.login.UserLoginResponse;
+import com.example.companyReputationManagement.dto.user.login.UserLoginResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.IUserService;
 import com.example.companyReputationManagement.jwt.TokenService;

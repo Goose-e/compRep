@@ -73,6 +73,7 @@ public final class SysConst {
     public static final String INVALID_ENTITY_ATTR = "INVALID ENTITY ATTR";
     public static final String SAVE_USER_ERROR = "SAVE USER ERROR";
     public static final String CREATE_USER_ERROR = "CREATE USER ERROR";
+    public static final String CREATE_COMPANY_ERROR = "CREATE COMPANY ERROR";
 
     public static final Class<Void> VOID_CLASS = Void.class;
     public static final Class<BigDecimal> BIGDECIMAL_CLASS = BigDecimal.class;
@@ -82,4 +83,5 @@ public final class SysConst {
     public static final Class<Boolean> BOOLEAN_CLASS = Boolean.class;
     public static final Class<Integer> INTEGER_CLASS = Integer.class;
     public static final Class<Long> LONG_CLASS = Long.class;
+
 }

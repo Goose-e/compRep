@@ -1,8 +1,8 @@
 package com.example.companyReputationManagement.mapper;
 
-import com.example.companyReputationManagement.dto.user.dto.create.UserCreateRequestDTO;
-import com.example.companyReputationManagement.dto.user.dto.create.UserCreateResponseDTO;
-import com.example.companyReputationManagement.dto.user.dto.login.UserLoginResponseDTO;
+import com.example.companyReputationManagement.dto.user.create.UserCreateRequestDTO;
+import com.example.companyReputationManagement.dto.user.create.UserCreateResponseDTO;
+import com.example.companyReputationManagement.dto.user.login.UserLoginResponseDTO;
 import com.example.companyReputationManagement.iservice.generate.GenerateCode;
 import com.example.companyReputationManagement.models.CompanyUser;
 import com.example.companyReputationManagement.models.enums.RoleEnum;

@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.dto.user.dto.create;
+package com.example.companyReputationManagement.dto.user.create;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;

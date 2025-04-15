@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.dto.user.dto.jwt;
+package com.example.companyReputationManagement.dto.jwt;
 
 import com.example.companyReputationManagement.httpResponse.ResponseDto;
 import lombok.Data;

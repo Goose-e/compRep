@@ -1,13 +1,13 @@
-package com.example.companyReputationManagement.dto.user.dto.jwt;
+package com.example.companyReputationManagement.dto.user.login;
 
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 
 import static com.example.companyReputationManagement.constants.SysConst.EMPTY_STRING;
 
-public class RefreshResponse extends HttpResponseBody<RefreshResponseDTO> {
+public class UserLoginResponse extends HttpResponseBody<UserLoginResponseDTO> {
     private String httpRequestId = EMPTY_STRING;
 
-    public RefreshResponse() {
+    public UserLoginResponse() {
         super(EMPTY_STRING);
     }
 

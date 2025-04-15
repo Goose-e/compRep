@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.dto.user.dto.login;
+package com.example.companyReputationManagement.dto.user.login;
 
 import com.example.companyReputationManagement.httpResponse.ResponseDto;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.dto.user.dto.create;
+package com.example.companyReputationManagement.dto.user.create;
 
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 

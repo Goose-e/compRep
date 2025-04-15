@@ -1,9 +1,9 @@
 package com.example.companyReputationManagement.jwt;
 
 import com.example.companyReputationManagement.dao.UserDao;
-import com.example.companyReputationManagement.dto.user.dto.jwt.RefreshRequestDTO;
-import com.example.companyReputationManagement.dto.user.dto.jwt.RefreshResponse;
-import com.example.companyReputationManagement.dto.user.dto.jwt.RefreshResponseDTO;
+import com.example.companyReputationManagement.dto.jwt.RefreshRequestDTO;
+import com.example.companyReputationManagement.dto.jwt.RefreshResponse;
+import com.example.companyReputationManagement.dto.jwt.RefreshResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.mapper.JwtMapper;
 import com.example.companyReputationManagement.models.CompanyUser;
@@ -37,7 +37,6 @@ public class TokenService {
             String tokenType = jwt.getClaim("tokenType");
             return "refresh".equals(tokenType) && !expiresAt.isBefore(Instant.now());
         } catch (Exception e) {
-
             return false;
         }
     }
@@ -55,6 +54,7 @@ public class TokenService {
                 .subject(userCode)
                 .claim("username", username)            // Добавляем имя пользователя в claims
                 .claim("role", role.name())
+                .claim("tokenType", "access")
                 .build();
         String accessToken = jwtEncoder.encode(JwtEncoderParameters.from(accessTokenClaims)).getTokenValue();
 
@@ -87,6 +87,7 @@ public class TokenService {
                 .subject(userCode)
                 .claim("username", username)
                 .claim("role", role.name())
+                .claim("tokenType", "access")
                 .build();
         String accessToken = jwtEncoder.encode(JwtEncoderParameters.from(accessTokenClaims)).getTokenValue();
 

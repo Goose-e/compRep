@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "review")
+@PrimaryKeyJoinColumn(name = "review_id")
 public class review extends CoreEntity {
     @Column(name = "review_code")
     private String reviewCode;

@@ -1,18 +1,21 @@
 package com.example.companyReputationManagement.config;
 
+import com.example.companyReputationManagement.jwt.CustomJwtAuthenticationConverter;
+import com.example.companyReputationManagement.jwt.security.CustomAuthenticationEntryPoint;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,6 +25,7 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -44,16 +48,36 @@ import static com.example.companyReputationManagement.jwt.security.KeyLoader.loa
 @EnableWebSecurity
 public class WebSecurityConfig {
 
+    @Value("${app.secretKey}")
+    private String secretKey;
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/", "/home").permitAll()
-                        .requestMatchers("/auth/*").permitAll()
-                        .requestMatchers("/auth/login").permitAll()
-                        .requestMatchers("/.well-known/**", "/oauth2/**").permitAll()
-                        .anyRequest().authenticated()
-                ).oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
-                .logout((logout) -> logout.permitAll()).csrf(AbstractHttpConfigurer::disable);
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint entryPoint) throws Exception {
+        try {
+
+            http.exceptionHandling(exceptionHandling ->
+                            exceptionHandling
+                                    .authenticationEntryPoint(entryPoint)
+                    )
+                    .authorizeHttpRequests
+
+                            ((requests) -> requests
+                                    .requestMatchers("/", "/home").permitAll()
+                                    .requestMatchers("/auth/*").permitAll()
+                                    .requestMatchers("/auth/login").permitAll()
+                                    .requestMatchers("/company/*").authenticated()
+                                    .requestMatchers("/.well-known/**", "/oauth2/**").permitAll()
+                                    .anyRequest().authenticated()
+
+                            ).oauth2ResourceServer(oauth2 -> oauth2
+                            .jwt(jwt -> jwt
+                                    .jwtAuthenticationConverter(new CustomJwtAuthenticationConverter())
+                            ).authenticationEntryPoint(entryPoint)
+                    )
+                    .logout(LogoutConfigurer::permitAll).csrf(AbstractHttpConfigurer::disable);
+        } catch (JwtException e) {
+            System.out.println(e.getMessage());
+        }
         return http.build();
     }
 
@@ -84,7 +108,6 @@ public class WebSecurityConfig {
         return new ProviderManager(provider);
     }
 
-
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
         RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
@@ -112,9 +135,10 @@ public class WebSecurityConfig {
         RSAPublicKey publicKey = loadPublicKey(publicKeyPem);
         RSAPrivateKey privateKey = loadPrivateKey(privateKeyPem);
 
+
         RSAKey rsaKey = new RSAKey.Builder(publicKey)
                 .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
+                .keyID(secretKey)
                 .build();
 
         JWKSet jwkSet = new JWKSet(rsaKey);

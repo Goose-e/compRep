@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.dto.user.dto.login;
+package com.example.companyReputationManagement.dto.user.login;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

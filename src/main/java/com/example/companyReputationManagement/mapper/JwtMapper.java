@@ -1,6 +1,6 @@
 package com.example.companyReputationManagement.mapper;
 
-import com.example.companyReputationManagement.dto.user.dto.jwt.RefreshResponseDTO;
+import com.example.companyReputationManagement.dto.jwt.RefreshResponseDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.stereotype.Component;

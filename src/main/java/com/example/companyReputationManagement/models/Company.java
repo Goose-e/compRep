@@ -1,7 +1,9 @@
 package com.example.companyReputationManagement.models;
 
-import com.example.companyReputationManagement.models.enums.StatusEnum;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,7 +11,8 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "company")
-public class Company extends CoreEntity  {
+@PrimaryKeyJoinColumn(name = "company_id")
+public class Company extends CoreEntity {
 
 
     @Column(name = "company_code")
@@ -20,9 +23,6 @@ public class Company extends CoreEntity  {
     private String industry;
     @Column(name = "website")
     private String website;
-
-
-
 
 
 }
