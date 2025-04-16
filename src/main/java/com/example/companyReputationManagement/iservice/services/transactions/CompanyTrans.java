@@ -18,7 +18,7 @@ public class CompanyTrans {
     private final CompanyDao companyDao;
     private final UserDao userDao;
     private final UserCompanyRolesDao userCompanyRolesdao;
-//dasf
+
     @Transactional
     public void save(Company company, UserCompanyRoles userCompanyRoles) {
         Logger logger = LoggerFactory.getLogger(getClass());
