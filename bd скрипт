@@ -2,7 +2,7 @@ CREATE USER company_rep_adm WITH PASSWORD 'comprep';
 
 create table public.status_ref
 (
-    status_id   serial
+    status_id   bigint       not null
         primary key,
     status_code varchar(100) not null
         unique,
@@ -14,7 +14,7 @@ alter table public.status_ref
 
 create table public.core_entities
 (
-    core_entity_id serial
+    core_entity_id bigint    default nextval('core_entities_core_entity_id_seq'::regclass) not null
         primary key,
     status_id      bigint
         references public.status_ref,
@@ -27,12 +27,12 @@ alter table public.core_entities
 
 create table public.company
 (
-    company_id   serial
+    company_id   bigint default nextval('company_company_id_seq'::regclass) not null
         primary key
         references public.core_entities,
-    company_code varchar(100) not null
+    company_code varchar(100)                                               not null
         unique,
-    name         varchar(255) not null,
+    name         varchar(255)                                               not null,
     industry     varchar(255),
     website      varchar(255)
 );
@@ -42,13 +42,13 @@ alter table public.company
 
 create table public.source
 (
-    source_id   serial
+    source_id   bigint default nextval('source_source_id_seq'::regclass) not null
         primary key
         references public.core_entities,
-    source_code varchar(100) not null
+    source_code varchar(100)                                             not null
         unique,
-    name        varchar(255) not null,
-    url         varchar(255) not null
+    name        varchar(255)                                             not null,
+    url         varchar(255)                                             not null
         unique
 );
 
@@ -69,21 +69,21 @@ alter table public.sentiment_type_ref
 
 create table public.review
 (
-    review_id         serial
+    review_id         bigint default nextval('review_review_id_seq'::regclass) not null
         primary key
         references public.core_entities,
-    review_code       varchar(100) not null
+    review_code       varchar(100)                                             not null
         unique,
-    company_id        serial
+    company_id        bigint                                                   not null
         references public.company
             on delete cascade,
-    source_id         serial
-                                   references public.source
-                                       on delete set null,
+    source_id         bigint                                                   not null
+        references public.source
+            on delete set null,
     rating            integer
         constraint review_rating_check
             check ((rating >= 1) AND (rating <= 5)),
-    content           text         not null,
+    content           text                                                     not null,
     sentiment_type_id bigint
         references public.sentiment_type_ref,
     reviewer_name     varchar(255),
@@ -107,18 +107,18 @@ alter table public.role_ref
 
 create table public.company_user
 (
-    user_id       serial
+    user_id       bigint default nextval('company_user_user_id_seq'::regclass) not null
         primary key
         constraint user_id_fkey
             references public.core_entities,
-    user_code     varchar(100) not null
+    user_code     varchar(100)                                                 not null
         unique,
     role_ref_id   bigint
         references public.role_ref,
-    username      varchar(255) not null,
-    email         varchar(255) not null
+    username      varchar(255)                                                 not null,
+    email         varchar(255)                                                 not null
         unique,
-    password_hash text         not null
+    password_hash text                                                         not null
 );
 
 alter table public.company_user
@@ -126,24 +126,24 @@ alter table public.company_user
 
 create table public.feedback
 (
-    feedback_id       serial
+    feedback_id       bigint default nextval('feedback_feedback_id_seq'::regclass) not null
         primary key,
-    feedback_code     varchar(100) not null
+    feedback_code     varchar(100)                                                 not null
         unique,
-    company_id        serial
+    company_id        bigint                                                       not null
         references public.company
             on delete cascade,
-    source_id         serial
-                                   references public.source
-                                       on delete set null,
-    type              varchar(20)  not null
+    source_id         integer                                                      not null
+        references public.source
+            on delete set null,
+    type              varchar(20)                                                  not null
         constraint feedback_type_check
             check ((type)::text = ANY
                    (ARRAY [('mention'::character varying)::text, ('review'::character varying)::text])),
     rating            integer
         constraint feedback_rating_check
             check ((rating >= 1) AND (rating <= 5)),
-    content           text         not null,
+    content           text                                                         not null,
     sentiment_type_id bigint
         references public.sentiment_type_ref,
     published_at      timestamp
@@ -154,17 +154,17 @@ alter table public.feedback
 
 create table public.response
 (
-    response_id   serial
+    response_id   bigint default nextval('response_response_id_seq'::regclass) not null
         primary key,
-    response_code varchar(100) not null
+    response_code varchar(100)                                                 not null
         unique,
-    feedback_id   serial
+    feedback_id   bigint                                                       not null
         references public.feedback
             on delete cascade,
-    company_id    serial
+    company_id    bigint                                                       not null
         references public.company
             on delete cascade,
-    response_text text         not null
+    response_text text                                                         not null
 );
 
 alter table public.response
@@ -188,4 +188,6 @@ create table public.user_company_roles
 
 alter table public.user_company_roles
     owner to company_rep_adm;
+
+
 

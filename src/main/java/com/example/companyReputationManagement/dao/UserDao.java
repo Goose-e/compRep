@@ -3,7 +3,6 @@ package com.example.companyReputationManagement.dao;
 import com.example.companyReputationManagement.models.CompanyUser;
 import com.example.companyReputationManagement.repo.UserRepo;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
@@ -21,6 +20,9 @@ public class UserDao {
     }
     public CompanyUser findUserByLoginOrEmail(String userLoginOrEmail) {
         return userRepo.findUserByUsernameOrEmail(userLoginOrEmail,userLoginOrEmail);
+    }
+    public Long findIdByUsernameOrEmail(String usernameOrEmail) {
+        return userRepo.findCoreEntityIdByUsernameOrEmail(usernameOrEmail,usernameOrEmail);
     }
 
 }

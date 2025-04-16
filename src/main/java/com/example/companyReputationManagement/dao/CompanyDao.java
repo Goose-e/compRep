@@ -15,4 +15,8 @@ public class CompanyDao {
     public Company save(Company company) {
         return companyRepo.save(company);
     }
+
+    public Company findByCompanyName(String companyName) {
+        return companyRepo.findByName(companyName);
+    }
 }

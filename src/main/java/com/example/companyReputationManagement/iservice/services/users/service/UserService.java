@@ -77,6 +77,8 @@ public class UserService implements IUserService {
                 System.out.println(user.getPasswordHash());
                 response.setMessage("Incorrect password");
             }
+        }else {
+            response.setMessage("User not found");
         }
         if (response.getErrors().isEmpty()) {
             response.setResponseCode(OC_OK);

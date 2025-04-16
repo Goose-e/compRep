@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserCompanyRolesRepo extends JpaRepository<UserCompanyRoles, Long> {
     UserCompanyRoles save(UserCompanyRoles userCompanyRoles);
+    UserCompanyRoles findByUserIdAndCompanyId(Long id, Long companyId);
 }

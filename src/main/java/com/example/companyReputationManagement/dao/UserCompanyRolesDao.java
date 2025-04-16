@@ -9,7 +9,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserCompanyRolesDao {
     private final UserCompanyRolesRepo userCompanyRolesRepo;
+
     public UserCompanyRoles save(UserCompanyRoles userCompanyRoles) {
         return userCompanyRolesRepo.save(userCompanyRoles);
+    }
+
+    public UserCompanyRoles findByUserId(Long userId, Long companyId) {
+        return userCompanyRolesRepo.findByUserIdAndCompanyId(userId, companyId);
     }
 }
