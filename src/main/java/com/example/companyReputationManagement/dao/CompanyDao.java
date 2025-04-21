@@ -14,6 +14,9 @@ public class CompanyDao {
     public boolean existByCompanyName(String companyName) {
         return companyRepo.existsByName(companyName);
     }
+    public Company findByCompanyCode(String companyCode) {
+        return companyRepo.findByCompanyCode(companyCode);
+    }
     public Company save(Company company) {
         return companyRepo.save(company);
     }

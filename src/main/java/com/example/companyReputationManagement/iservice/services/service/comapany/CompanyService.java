@@ -10,6 +10,9 @@ import com.example.companyReputationManagement.dto.company.create.CompanyCreateR
 import com.example.companyReputationManagement.dto.company.delete.DeleteCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.delete.DeleteCompanyResponse;
 import com.example.companyReputationManagement.dto.company.delete.DeleteCompanyResponseDTO;
+import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
+import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponse;
+import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
 import com.example.companyReputationManagement.dto.company.get.AllCompaniesResponseDTO;
 import com.example.companyReputationManagement.dto.company.get.GetAllCompaniesResponse;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
@@ -156,6 +159,60 @@ public class CompanyService implements ICompanyService {
             response.setResponseEntity(allCompaniesResponseDTO);
             response.setMessage("All companies found");
         }
+        if (response.getErrors().isEmpty()) {
+            response.setResponseCode(OC_OK);
+        } else {
+            response.setResponseCode(OC_BUGS);
+        }
+        return response;
+    }
+
+    @Override
+    public HttpResponseBody<EditCompanyResponseDTO> editCompany(EditCompanyRequestDTO editCompanyRequestDTO) {
+        HttpResponseBody<EditCompanyResponseDTO> response = new EditCompanyResponse();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        try {
+            Company company = companyDao.findByCompanyCode(editCompanyRequestDTO.getCompanyCode());
+
+            if (company == null) {
+                response.setError("Company not found");
+                response.setMessage("Company not found");
+            } else {
+                Jwt jwt = (Jwt) authentication.getPrincipal();
+                String username = jwt.getClaim("username");
+                Long userId = userDao.findIdByUsernameOrEmail(username);
+                UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
+                if (userCompanyRoles == null) {
+                    response.setError("User not in company");
+                    response.setMessage("User not in company");
+                } else {
+                    if (userCompanyRoles.getRole() != RoleEnum.OWNER) {
+                        response.setMessage("User doesnt have enough rights");
+                    } else {
+                        company = companyMapper.mapCompanyToEditedCompany(company, editCompanyRequestDTO);
+                        EditCompanyResponseDTO editCompanyResponseDTO = companyMapper.mapCompanyToEditCompanyResponseDTO(company);
+                        try {
+                            companyTrans.updateCompany(company);
+                            response.setMessage("Company deleted successfully");
+                            response.setResponseEntity(editCompanyResponseDTO);
+                        } catch (DataIntegrityViolationException e) {
+                            response.setError("Transaction failed");
+                            response.setMessage("Data integrity violation: " + e.getMessage());
+                            logger.error("Data integrity error while saving company and user role: ", e);
+                        } catch (Exception e) {
+                            response.setError("Transaction failed");
+                            response.setMessage("Unexpected error: " + e.getMessage());
+                            logger.error("Unexpected error while saving company and user role: ", e);
+                        }
+                    }
+                }
+            }
+        } catch (
+                JwtException e) {
+            response.setError("get user error");
+            response.setMessage("get user error");
+        }
+
         if (response.getErrors().isEmpty()) {
             response.setResponseCode(OC_OK);
         } else {

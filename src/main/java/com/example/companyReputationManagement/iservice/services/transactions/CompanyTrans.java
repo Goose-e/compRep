@@ -18,13 +18,26 @@ public class CompanyTrans {
     private final CompanyDao companyDao;
     private final UserDao userDao;
     private final UserCompanyRolesDao userCompanyRolesdao;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Transactional
     public void save(Company company, UserCompanyRoles userCompanyRoles) {
-        Logger logger = LoggerFactory.getLogger(getClass());
-        try {
+        try{
             companyDao.save(company);
             userCompanyRolesdao.save(userCompanyRoles);
+        } catch (DataIntegrityViolationException e) {
+            logger.error("Data integrity violation during save operation", e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error during save operation", e);
+            throw new RuntimeException("Unexpected error", e);
+        }
+    }
+
+    @Transactional
+    public void updateCompany(Company company) {
+        try {
+            companyDao.save(company);
         } catch (DataIntegrityViolationException e) {
             logger.error("Data integrity violation during save operation", e);
             throw e;

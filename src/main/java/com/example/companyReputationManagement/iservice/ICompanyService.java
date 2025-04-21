@@ -5,6 +5,8 @@ import com.example.companyReputationManagement.dto.company.create.CompanyCreateR
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
 import com.example.companyReputationManagement.dto.company.delete.DeleteCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.delete.DeleteCompanyResponseDTO;
+import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
+import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
 import com.example.companyReputationManagement.dto.company.get.AllCompaniesResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 
@@ -12,4 +14,5 @@ public interface ICompanyService {
     HttpResponseBody<CompanyCreateResponseDTO> createCompany(CompanyCreateRequestDTO companyCreateRequestDTO);
     HttpResponseBody<DeleteCompanyResponseDTO> deleteCompany(DeleteCompanyRequestDTO deleteCompanyRequestDTO);
     HttpResponseBody<AllCompaniesResponseDTO> getAllCompanies();
+    HttpResponseBody<EditCompanyResponseDTO> editCompany(EditCompanyRequestDTO editCompanyRequestDTO);
 }

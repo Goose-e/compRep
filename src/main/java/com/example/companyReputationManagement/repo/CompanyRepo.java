@@ -9,4 +9,6 @@ public interface CompanyRepo extends JpaRepository<Company, Long> {
     boolean existsByName(String name);
 
     Company findByName(String name);
+
+    Company findByCompanyCode(String companyCode);
 }

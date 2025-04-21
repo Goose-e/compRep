@@ -3,6 +3,8 @@ package com.example.companyReputationManagement.mapper;
 
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateRequestDTO;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
+import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
+import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
 import com.example.companyReputationManagement.dto.company.get.GetAllCompaniesResponseDTO;
 import com.example.companyReputationManagement.iservice.generate.GenerateCode;
 import com.example.companyReputationManagement.models.Company;
@@ -11,6 +13,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @AllArgsConstructor
 @Component
@@ -24,6 +27,15 @@ public class CompanyMapper {
         company.setWebsite(companyCreateRequestDTO.getWebsite());
         company.setCompanyCode(generateCode.generateCode(company));
         return company;
+    }
+
+    public EditCompanyResponseDTO mapCompanyToEditCompanyResponseDTO(Company company) {
+        return new EditCompanyResponseDTO(
+                company.getName(),
+                company.getIndustry(),
+                company.getWebsite()
+
+        );
     }
 
     public Company deleteCompany(Company company) {
@@ -43,5 +55,12 @@ public class CompanyMapper {
                 company.getIndustry(),
                 company.getWebsite()
         );
+    }
+
+    public Company mapCompanyToEditedCompany(Company company, EditCompanyRequestDTO editCompanyRequestDTO) {
+        Optional.ofNullable(editCompanyRequestDTO.getNewCompanyName()).ifPresent(company::setName);
+        Optional.ofNullable(editCompanyRequestDTO.getNewCompanyIndustry()).ifPresent(company::setIndustry);
+        Optional.ofNullable(editCompanyRequestDTO.getNewCompanyWebsite()).ifPresent(company::setWebsite);
+        return company;
     }
 }
