@@ -10,6 +10,8 @@ import com.example.companyReputationManagement.dto.company.create.CompanyCreateR
 import com.example.companyReputationManagement.dto.company.delete.DeleteCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.delete.DeleteCompanyResponse;
 import com.example.companyReputationManagement.dto.company.delete.DeleteCompanyResponseDTO;
+import com.example.companyReputationManagement.dto.company.get.AllCompaniesResponseDTO;
+import com.example.companyReputationManagement.dto.company.get.GetAllCompaniesResponse;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.ICompanyService;
 import com.example.companyReputationManagement.iservice.services.transactions.CompanyTrans;
@@ -28,6 +30,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 import static com.example.companyReputationManagement.constants.SysConst.OC_BUGS;
 import static com.example.companyReputationManagement.constants.SysConst.OC_OK;
@@ -130,6 +134,27 @@ public class CompanyService implements ICompanyService {
                 JwtException e) {
             response.setError("get user error");
             response.setMessage("get user error");
+        }
+        if (response.getErrors().isEmpty()) {
+            response.setResponseCode(OC_OK);
+        } else {
+            response.setResponseCode(OC_BUGS);
+        }
+        return response;
+    }
+
+    @Override
+    public HttpResponseBody<AllCompaniesResponseDTO> getAllCompanies() {
+        HttpResponseBody<AllCompaniesResponseDTO> response = new GetAllCompaniesResponse();
+        List<Company> companiesList = companyDao.findAll();
+        if (companiesList.isEmpty()) {
+            response.setMessage("Companies not found");
+            response.setResponseEntity(null);
+        } else {
+            AllCompaniesResponseDTO allCompaniesResponseDTO = new AllCompaniesResponseDTO(companiesList.stream().map(
+                    companyMapper::mapCompanyToGetAllCompaniesResponseDTO).toList());
+            response.setResponseEntity(allCompaniesResponseDTO);
+            response.setMessage("All companies found");
         }
         if (response.getErrors().isEmpty()) {
             response.setResponseCode(OC_OK);

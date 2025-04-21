@@ -3,6 +3,7 @@ package com.example.companyReputationManagement.mapper;
 
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateRequestDTO;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
+import com.example.companyReputationManagement.dto.company.get.GetAllCompaniesResponseDTO;
 import com.example.companyReputationManagement.iservice.generate.GenerateCode;
 import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.models.enums.StatusEnum;
@@ -24,12 +25,23 @@ public class CompanyMapper {
         company.setCompanyCode(generateCode.generateCode(company));
         return company;
     }
-public Company deleteCompany(Company company) {
-    company.setStatus(StatusEnum.CLOSED);
-    company.setDeleteDate(LocalDateTime.now());
-    return company;
-}
+
+    public Company deleteCompany(Company company) {
+        company.setStatus(StatusEnum.CLOSED);
+        company.setDeleteDate(LocalDateTime.now());
+        return company;
+    }
+
     public CompanyCreateResponseDTO mapCompanyToCompanyCreateResponseDTO(Company company) {
         return new CompanyCreateResponseDTO(company.getName(), company.getWebsite(), company.getIndustry(), company.getCompanyCode());
+    }
+
+    public GetAllCompaniesResponseDTO mapCompanyToGetAllCompaniesResponseDTO(Company company) {
+        return new GetAllCompaniesResponseDTO(
+                company.getName(),
+                company.getCompanyCode(),
+                company.getIndustry(),
+                company.getWebsite()
+        );
     }
 }

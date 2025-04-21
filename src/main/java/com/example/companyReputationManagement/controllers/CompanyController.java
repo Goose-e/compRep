@@ -5,6 +5,8 @@ import com.example.companyReputationManagement.dto.company.create.CompanyCreateR
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
 import com.example.companyReputationManagement.dto.company.delete.DeleteCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.delete.DeleteCompanyResponseDTO;
+import com.example.companyReputationManagement.dto.company.get.AllCompaniesResponseDTO;
+import com.example.companyReputationManagement.dto.company.get.GetAllCompaniesResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.ICompanyService;
 import jakarta.validation.Valid;
@@ -26,5 +28,10 @@ public class CompanyController {
     @PostMapping(value = "/delete")
     public HttpResponseBody<DeleteCompanyResponseDTO> deleteCompany(@Valid @RequestBody DeleteCompanyRequestDTO deleteCompanyRequestDTO) {
         return companyService.deleteCompany(deleteCompanyRequestDTO);
+    }
+
+    @GetMapping(value = "/get_all")
+    public HttpResponseBody<AllCompaniesResponseDTO> getAllCompanies(){
+        return companyService.getAllCompanies();
     }
 }

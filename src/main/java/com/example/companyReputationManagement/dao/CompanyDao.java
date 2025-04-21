@@ -5,6 +5,8 @@ import com.example.companyReputationManagement.repo.CompanyRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Component
 public class CompanyDao {
@@ -18,5 +20,8 @@ public class CompanyDao {
 
     public Company findByCompanyName(String companyName) {
         return companyRepo.findByName(companyName);
+    }
+    public List<Company> findAll() {
+        return companyRepo.findAll();
     }
 }
