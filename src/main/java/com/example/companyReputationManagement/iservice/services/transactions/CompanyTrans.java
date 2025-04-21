@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class CompanyTrans {
     private final CompanyDao companyDao;
-    private final UserDao userDao;
     private final UserCompanyRolesDao userCompanyRolesdao;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -48,7 +47,7 @@ public class CompanyTrans {
     }
 
     @Transactional
-    public void saveUserRole(UserCompanyRoles userCompanyRoles) {
+    public void saveCompanyUserRole(UserCompanyRoles userCompanyRoles) {
         try {
             userCompanyRolesdao.save(userCompanyRoles);
         } catch (DataIntegrityViolationException e) {

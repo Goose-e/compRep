@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.dto.company.delete;
+package com.example.companyReputationManagement.dto.company.change_user_company_status;
 
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import lombok.Getter;
@@ -8,13 +8,12 @@ import java.io.Serial;
 import static com.example.companyReputationManagement.constants.SysConst.EMPTY_STRING;
 
 @Getter
-public class ChangeCompanyStatus extends HttpResponseBody<ChangeCompanyStatusResponseDTO> {
+public class ChangeCompanyUserStatusResponse extends HttpResponseBody<ChangeCompanyUserStatusResponseDTO> {
     @Serial
     private static final long serialVersionUID = 1L;
-    private String httpRequestId = EMPTY_STRING;
+    private final String httpRequestId = EMPTY_STRING;
 
-    public ChangeCompanyStatus() {
+    public ChangeCompanyUserStatusResponse() {
         super(EMPTY_STRING);
     }
-
 }

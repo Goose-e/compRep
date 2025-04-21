@@ -23,7 +23,7 @@ public class UserCompanyRolesMapper {
         return userCompanyRoles;
     }
 
-    public UserCompanyRoles changeOwnerStatus(UserCompanyRoles userCompanyRoles, Long newStatus) {
+    public UserCompanyRoles changeUserStatus(UserCompanyRoles userCompanyRoles, Long newStatus) {
         userCompanyRoles.setStatus(StatusEnum.fromId(newStatus.intValue()));
         userCompanyRoles.setDeleteDate(LocalDateTime.now());
         return userCompanyRoles;

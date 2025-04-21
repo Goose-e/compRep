@@ -3,12 +3,14 @@ package com.example.companyReputationManagement.controllers;
 
 import com.example.companyReputationManagement.dto.company.add_user.AddUserRequestDTO;
 import com.example.companyReputationManagement.dto.company.add_user.AddUserResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusRequestDTO;
 import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserCompanyRoleRequestDTO;
 import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserRoleResponseDTO;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateRequestDTO;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
-import com.example.companyReputationManagement.dto.company.delete.ChangeCompanyStatusRequestDTO;
-import com.example.companyReputationManagement.dto.company.delete.ChangeCompanyStatusResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusResponseDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
 import com.example.companyReputationManagement.dto.company.get.AllCompaniesResponseDTO;
@@ -54,4 +56,10 @@ public class CompanyController {
     public HttpResponseBody<AddUserResponseDTO> addUserToCompany(@Valid @RequestBody AddUserRequestDTO addUserRequestDTO) {
         return companyService.addUser(addUserRequestDTO);
     }
+
+    @PostMapping(value = "/change_user_status")
+    public HttpResponseBody<ChangeCompanyUserStatusResponseDTO> changeUserStatus(@Valid @RequestBody ChangeCompanyUserStatusRequestDTO changeCompanyUserStatusRequestDTO) {
+        return companyService.changeUserStatus(changeCompanyUserStatusRequestDTO);
+    }
+
 }

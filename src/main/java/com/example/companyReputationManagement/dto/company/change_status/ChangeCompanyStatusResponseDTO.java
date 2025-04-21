@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.dto.company.delete;
+package com.example.companyReputationManagement.dto.company.change_status;
 
 import com.example.companyReputationManagement.httpResponse.ResponseDto;
 import lombok.Data;

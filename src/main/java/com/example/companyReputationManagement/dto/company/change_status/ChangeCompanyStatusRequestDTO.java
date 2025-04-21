@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.dto.company.delete;
+package com.example.companyReputationManagement.dto.company.change_status;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

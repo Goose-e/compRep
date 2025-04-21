@@ -3,12 +3,14 @@ package com.example.companyReputationManagement.iservice;
 
 import com.example.companyReputationManagement.dto.company.add_user.AddUserRequestDTO;
 import com.example.companyReputationManagement.dto.company.add_user.AddUserResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusResponseDTO;
 import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserCompanyRoleRequestDTO;
 import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserRoleResponseDTO;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateRequestDTO;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
-import com.example.companyReputationManagement.dto.company.delete.ChangeCompanyStatusRequestDTO;
-import com.example.companyReputationManagement.dto.company.delete.ChangeCompanyStatusResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusResponseDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
 import com.example.companyReputationManagement.dto.company.get.AllCompaniesResponseDTO;
@@ -26,4 +28,6 @@ public interface ICompanyService {
     HttpResponseBody<ChangeUserRoleResponseDTO> changeUserRole(ChangeUserCompanyRoleRequestDTO changeUserCompanyRoleRequestDTO);
 
     HttpResponseBody<AddUserResponseDTO> addUser(AddUserRequestDTO addUserRequestDTO);
+
+    HttpResponseBody<ChangeCompanyUserStatusResponseDTO> changeUserStatus(ChangeCompanyUserStatusRequestDTO changeCompanyUserStatusRequestDTO);
 }

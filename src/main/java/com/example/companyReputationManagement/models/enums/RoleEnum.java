@@ -30,6 +30,7 @@ public enum RoleEnum {
     }
 
 
+
     public static RoleEnum fromId(int id) {
         for (RoleEnum roleEnum : RoleEnum.values()) {
             if (roleEnum.getId() == id) {

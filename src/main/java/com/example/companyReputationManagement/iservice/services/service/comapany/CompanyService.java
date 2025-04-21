@@ -7,15 +7,18 @@ import com.example.companyReputationManagement.dao.UserDao;
 import com.example.companyReputationManagement.dto.company.add_user.AddUserRequestDTO;
 import com.example.companyReputationManagement.dto.company.add_user.AddUserResponse;
 import com.example.companyReputationManagement.dto.company.add_user.AddUserResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatus;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusResponse;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusResponseDTO;
 import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserCompanyRoleRequestDTO;
 import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserRoleResponse;
 import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserRoleResponseDTO;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateRequestDTO;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponse;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
-import com.example.companyReputationManagement.dto.company.delete.ChangeCompanyStatus;
-import com.example.companyReputationManagement.dto.company.delete.ChangeCompanyStatusResponseDTO;
-import com.example.companyReputationManagement.dto.company.delete.ChangeCompanyStatusRequestDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponse;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
@@ -42,6 +45,7 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 import static com.example.companyReputationManagement.constants.SysConst.OC_BUGS;
 import static com.example.companyReputationManagement.constants.SysConst.OC_OK;
@@ -116,8 +120,8 @@ public class CompanyService implements ICompanyService {
                         response.setMessage("User doesnt have enough rights");
                     } else {
                         try {
-                            userCompanyRoles = userCompanyRolesMapper.changeOwnerStatus(userCompanyRoles,changeCompanyStatusRequestDTO.getNewStatusId());
-                            company = companyMapper.changeCompanyStatus(company,changeCompanyStatusRequestDTO.getNewStatusId());
+                            userCompanyRoles = userCompanyRolesMapper.changeUserStatus(userCompanyRoles, changeCompanyStatusRequestDTO.getNewStatusId());
+                            company = companyMapper.changeCompanyStatus(company, changeCompanyStatusRequestDTO.getNewStatusId());
                             companyTrans.save(company, userCompanyRoles);
                             response.setMessage("Company deleted successfully");
                             StatusEnum newStatus = StatusEnum.fromId(changeCompanyStatusRequestDTO.getNewStatusId().intValue());
@@ -228,7 +232,7 @@ public class CompanyService implements ICompanyService {
                     response.setError("Users not in company");
                     response.setMessage("Users not in company");
                 } else {
-                    if (!hasPermissionToChangeRole(userCompanyRolesAdmin.getRole())) {
+                    if (hasPermissionToChangeRole(userCompanyRolesAdmin.getRole())) {
                         response.setMessage("User doesnt have enough rights");
                     } else {
                         Long userCandidateId = userDao.findIdByUsernameOrEmail(changeUserCompanyRoleRequestDTO.getUsername());
@@ -255,7 +259,7 @@ public class CompanyService implements ICompanyService {
                                         companyTrans.changeUserRoleOwner(userCompanyRolesAdmin, userCompanyRolesCandidate);
                                         response.setMessage("User role owner successfully");
                                     } else {
-                                        companyTrans.saveUserRole(userCompanyRolesCandidate);
+                                        companyTrans.saveCompanyUserRole(userCompanyRolesCandidate);
                                         response.setMessage("User role successfully");
                                     }
                                     ChangeUserRoleResponseDTO changeUserRoleResponseDTO = userCompanyRolesMapper.changeUserRole(userCompanyRolesCandidate, changeUserCompanyRoleRequestDTO.getUsername());
@@ -293,7 +297,6 @@ public class CompanyService implements ICompanyService {
             if (company == null) {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
-                return response;
             } else {
                 Long userId = userDao.findIdByUsernameOrEmail(extractUsernameFromJwt());
                 UserCompanyRoles userCompanyRolesAdmin = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
@@ -301,7 +304,7 @@ public class CompanyService implements ICompanyService {
                     response.setError("Users not in company");
                     response.setMessage("Users not in company");
                 } else {
-                    if (!hasPermissionToChangeRole(userCompanyRolesAdmin.getRole())) {
+                    if (hasPermissionToChangeRole(userCompanyRolesAdmin.getRole())) {
                         response.setMessage("User doesnt have enough rights");
                     } else {
                         Long userCandidateId = userDao.findIdByUsernameOrEmail(addUserRequestDTO.getUsername());
@@ -315,7 +318,7 @@ public class CompanyService implements ICompanyService {
                             } else {
                                 userCompanyRolesCandidate = userCompanyRolesMapper.addUser(userCandidateId, company.getCoreEntityId());
                                 try {
-                                    companyTrans.saveUserRole(userCompanyRolesCandidate);
+                                    companyTrans.saveCompanyUserRole(userCompanyRolesCandidate);
                                     AddUserResponseDTO addUserResponseDTO = userCompanyRolesMapper.mapNewUserToAddUserResponse(addUserRequestDTO.getUsername());
                                     response.setResponseEntity(addUserResponseDTO);
                                 } catch (DataIntegrityViolationException e) {
@@ -343,6 +346,67 @@ public class CompanyService implements ICompanyService {
         return response;
     }
 
+    @Override
+    public HttpResponseBody<ChangeCompanyUserStatusResponseDTO> changeUserStatus(ChangeCompanyUserStatusRequestDTO changeCompanyUserStatusRequestDTO) {
+        HttpResponseBody<ChangeCompanyUserStatusResponseDTO> response = new ChangeCompanyUserStatusResponse();
+        try {
+            Company company = companyDao.findByCompanyName(changeCompanyUserStatusRequestDTO.getCompanyName());
+            if (company == null) {
+                response.setError("Company not found");
+                response.setMessage("Company not found");
+            } else {
+                String username = extractUsernameFromJwt();
+                Long userId = userDao.findIdByUsernameOrEmail(username);
+                UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
+                if (userCompanyRoles == null) {
+                    response.setError("User not in company");
+                    response.setMessage("User not in company");
+                } else {
+                    if (hasPermissionToChangeRole(userCompanyRoles.getRole())) {
+                        response.setMessage("User doesnt have enough rights");
+                    } else {
+                        try {
+                            Long userCandidateId = userDao.findIdByUsernameOrEmail(changeCompanyUserStatusRequestDTO.getUsername());
+                            if (Objects.equals(userCandidateId, userId)) {
+                                response.setMessage("You cant ban yourself");
+                            } else {
+                                UserCompanyRoles userCandidate = userCompanyRolesdao.findByUserId(userCandidateId, company.getCoreEntityId());
+                                if (userCandidate == null) {
+                                    response.setError("User not in company");
+                                } else {
+                                    if (!hasHigherRole(userCompanyRoles.getRole(),userCandidate.getRole())) {
+                                        response.setMessage("You cant ban admin or owner");
+                                    } else {
+                                        userCandidate = userCompanyRolesMapper.changeUserStatus(userCandidate, changeCompanyUserStatusRequestDTO.getNewStatusId());
+                                        companyTrans.saveCompanyUserRole(userCandidate);
+                                        response.setMessage("User changed status successfully");
+                                        StatusEnum newStatus = StatusEnum.fromId(changeCompanyUserStatusRequestDTO.getNewStatusId().intValue());
+                                        response.setResponseEntity(new ChangeCompanyUserStatusResponseDTO(changeCompanyUserStatusRequestDTO.getUsername(), newStatus.getStatus()));
+                                    }
+                                }
+                            }
+                        } catch (DataIntegrityViolationException e) {
+                            response.setError("Transaction failed");
+                            response.setMessage("Data integrity violation: " + e.getMessage());
+                            logger.error("Data integrity error while saving company and user role: ", e);
+                        } catch (Exception e) {
+                            response.setError("Transaction failed");
+                            response.setMessage("Unexpected error: " + e.getMessage());
+                            logger.error("Unexpected error while saving company and user role: ", e);
+                        }
+                    }
+                }
+            }
+        } catch (
+                JwtException e) {
+            response.setError("get user error");
+            response.setMessage("get user error");
+        }
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+
+        return response;
+    }
+
     private String extractUsernameFromJwt() throws JwtException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) authentication.getPrincipal();
@@ -350,8 +414,11 @@ public class CompanyService implements ICompanyService {
     }
 
     private boolean hasPermissionToChangeRole(RoleEnum currentRole) {
-        return currentRole.equals(RoleEnum.OWNER) || currentRole.equals(RoleEnum.ADMIN);
+        return !currentRole.equals(RoleEnum.OWNER) && !currentRole.equals(RoleEnum.ADMIN);
     }
-
+    private boolean hasHigherRole(RoleEnum current, RoleEnum target) {
+        if (current == null || target == null) return false;
+        return current.getId() > target.getId();
+    }
 }
 
