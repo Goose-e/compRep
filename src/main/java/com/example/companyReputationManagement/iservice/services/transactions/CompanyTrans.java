@@ -47,5 +47,32 @@ public class CompanyTrans {
         }
     }
 
+    @Transactional
+    public void saveUserRole(UserCompanyRoles userCompanyRoles) {
+        try {
+            userCompanyRolesdao.save(userCompanyRoles);
+        } catch (DataIntegrityViolationException e) {
+            logger.error("Data integrity violation during save operation", e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error during save operation", e);
+            throw new RuntimeException("Unexpected error", e);
+        }
+    }
+
+    @Transactional
+    public void changeUserRoleOwner(UserCompanyRoles userCompanyRolesOwner,UserCompanyRoles userCompanyRolesNewOwner) {
+        try {
+            userCompanyRolesdao.save(userCompanyRolesOwner);
+            userCompanyRolesdao.save(userCompanyRolesNewOwner);
+        } catch (DataIntegrityViolationException e) {
+            logger.error("Data integrity violation during save operation", e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error during save operation", e);
+            throw new RuntimeException("Unexpected error", e);
+        }
+    }
+
 
 }

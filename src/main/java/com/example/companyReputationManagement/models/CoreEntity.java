@@ -1,7 +1,6 @@
 package com.example.companyReputationManagement.models;
 
 import com.example.companyReputationManagement.models.enums.StatusEnum;
-import com.example.companyReputationManagement.models.enums.converters.SentimentTypeRefConverter;
 import com.example.companyReputationManagement.models.enums.converters.StatusEnumConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -9,7 +8,6 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.Random;
-import java.util.UUID;
 
 
 @Setter
@@ -28,6 +26,7 @@ public class CoreEntity {
     private LocalDateTime createDate;
     @Column(name = "delete_date", nullable = true)
     private LocalDateTime deleteDate;
+
     @PrePersist
     public void prePersist() {
         if (createDate == null) {
@@ -36,11 +35,13 @@ public class CoreEntity {
         if (status == null) {
             status = StatusEnum.ACTUAL;
         }
-    }public CoreEntity() {
-        Random random = new Random();
-        this.coreEntityId = random.nextLong(9000) + 1000;  // Диапазон от 1000 до 9999
     }
 
+    public CoreEntity() {
+        long timePart = System.currentTimeMillis() % 1_000_000_000L;
+        int randomPart = new Random().nextInt(1000);
+        this.coreEntityId = timePart * 1000 + randomPart;
+    }
 
 
 }

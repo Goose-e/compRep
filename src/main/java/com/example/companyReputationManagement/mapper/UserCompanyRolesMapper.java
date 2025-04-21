@@ -1,5 +1,7 @@
 package com.example.companyReputationManagement.mapper;
 
+import com.example.companyReputationManagement.dto.company.add_user.AddUserResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserRoleResponseDTO;
 import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.models.CompanyUser;
 import com.example.companyReputationManagement.models.UserCompanyRoles;
@@ -20,9 +22,26 @@ public class UserCompanyRolesMapper {
         userCompanyRoles.setRole(RoleEnum.OWNER);
         return userCompanyRoles;
     }
-    public UserCompanyRoles deleteOwner(UserCompanyRoles userCompanyRoles) {
-        userCompanyRoles.setStatus(StatusEnum.CLOSED);
+
+    public UserCompanyRoles changeOwnerStatus(UserCompanyRoles userCompanyRoles, Long newStatus) {
+        userCompanyRoles.setStatus(StatusEnum.fromId(newStatus.intValue()));
         userCompanyRoles.setDeleteDate(LocalDateTime.now());
         return userCompanyRoles;
+    }
+
+    public ChangeUserRoleResponseDTO changeUserRole(UserCompanyRoles userCompanyRoles, String username) {
+        return new ChangeUserRoleResponseDTO(username, userCompanyRoles.getRole().getRole());
+    }
+
+    public UserCompanyRoles addUser(Long userId, Long company) {
+        UserCompanyRoles userCompanyRoles = new UserCompanyRoles();
+        userCompanyRoles.setCompanyId(company);
+        userCompanyRoles.setUserId(userId);
+        userCompanyRoles.setRole(RoleEnum.USER);
+        return userCompanyRoles;
+    }
+
+    public AddUserResponseDTO mapNewUserToAddUserResponse(String username) {
+        return new AddUserResponseDTO(username);
     }
 }

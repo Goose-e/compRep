@@ -38,8 +38,8 @@ public class CompanyMapper {
         );
     }
 
-    public Company deleteCompany(Company company) {
-        company.setStatus(StatusEnum.CLOSED);
+    public Company changeCompanyStatus(Company company,Long newStatus) {
+        company.setStatus(StatusEnum.fromId(newStatus.intValue()));
         company.setDeleteDate(LocalDateTime.now());
         return company;
     }
