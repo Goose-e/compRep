@@ -25,7 +25,7 @@ public class UserCompanyRolesMapper {
 
     public UserCompanyRoles changeUserStatus(UserCompanyRoles userCompanyRoles, Long newStatus) {
         userCompanyRoles.setStatus(StatusEnum.fromId(newStatus.intValue()));
-        userCompanyRoles.setDeleteDate(LocalDateTime.now());
+        userCompanyRoles.setDeleteDate(newStatus.equals(StatusEnum.CLOSED.getId()) ? LocalDateTime.now() : null);
         return userCompanyRoles;
     }
 

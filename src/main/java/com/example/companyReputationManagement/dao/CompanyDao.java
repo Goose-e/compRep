@@ -25,6 +25,6 @@ public class CompanyDao {
         return companyRepo.findByName(companyName);
     }
     public List<Company> findAll() {
-        return companyRepo.findAll();
+        return companyRepo.findAllActiveCompany();
     }
 }
