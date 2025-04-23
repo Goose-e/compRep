@@ -29,8 +29,6 @@ public class Feedback extends CoreEntity {
     @Column(name = "sentiment_type_id")
     @Convert(converter = SentimentTypeRefConverter.class)
     private SentimentTypeEnum sentimentTypeId;
-    @Column(name = "published_at")
-    private LocalDateTime publishedAt;
 
 
 }

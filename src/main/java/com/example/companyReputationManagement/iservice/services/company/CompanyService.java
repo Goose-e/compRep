@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.iservice.services.service.comapany;
+package com.example.companyReputationManagement.iservice.services.company;
 
 
 import com.example.companyReputationManagement.dao.CompanyDao;

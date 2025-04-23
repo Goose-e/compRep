@@ -1,12 +1,11 @@
 package com.example.companyReputationManagement.models;
 
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
+import com.example.companyReputationManagement.models.enums.SourcesEnum;
 import com.example.companyReputationManagement.models.enums.converters.SentimentTypeRefConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 
 @Setter
@@ -15,13 +14,13 @@ import java.time.LocalDateTime;
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "review")
 @PrimaryKeyJoinColumn(name = "review_id")
-public class review extends CoreEntity {
+public class Review extends CoreEntity {
     @Column(name = "review_code")
     private String reviewCode;
     @Column(name = "company_id")
     private Long companyId;
     @Column(name = "source_id")
-    private Long sourceId;
+    private SourcesEnum sourceId;
     @Column(name = "rating")
     private int rating;
     @Column(name = "content")
@@ -31,8 +30,6 @@ public class review extends CoreEntity {
     private SentimentTypeEnum sentimentTypeId;
     @Column(name = "reviewer_name")
     private String reviewerName;
-    @Column(name = "published_at")
-    private LocalDateTime publishedAt;
 
 
 }

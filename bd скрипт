@@ -1,5 +1,4 @@
 CREATE USER company_rep_adm WITH PASSWORD 'comprep';
-
 create table public.status_ref
 (
     status_id   bigint       not null
@@ -8,6 +7,9 @@ create table public.status_ref
         unique,
     status_name varchar(120) not null
 );
+
+alter table public.status_ref
+    owner to company_rep_adm;
 
 alter table public.status_ref
     owner to company_rep_adm;
@@ -29,7 +31,9 @@ create table public.company
 (
     company_id   bigint default nextval('company_company_id_seq'::regclass) not null
         primary key
-        references public.core_entities,
+        constraint company_id_fk
+            references public.core_entities
+            on delete cascade,
     company_code varchar(100)                                               not null
         unique,
     name         varchar(255)                                               not null,
@@ -40,19 +44,23 @@ create table public.company
 alter table public.company
     owner to company_rep_adm;
 
-create table public.source
+create table public.source_ref
 (
     source_id   bigint default nextval('source_source_id_seq'::regclass) not null
-        primary key
-        references public.core_entities,
+        constraint source_pkey
+            primary key
+        constraint source_source_id_fkey
+            references public.core_entities,
     source_code varchar(100)                                             not null
-        unique,
+        constraint source_source_code_key
+            unique,
     name        varchar(255)                                             not null,
     url         varchar(255)                                             not null
-        unique
+        constraint source_url_key
+            unique
 );
 
-alter table public.source
+alter table public.source_ref
     owner to company_rep_adm;
 
 create table public.sentiment_type_ref
@@ -77,17 +85,16 @@ create table public.review
     company_id        bigint                                                   not null
         references public.company
             on delete cascade,
-    source_id         bigint                                                   not null
-        references public.source
-            on delete set null,
+    source_id         bigint
+                                                                               references public.source_ref
+                                                                                   on delete set null,
     rating            integer
         constraint review_rating_check
             check ((rating >= 1) AND (rating <= 5)),
     content           text                                                     not null,
     sentiment_type_id bigint
         references public.sentiment_type_ref,
-    reviewer_name     varchar(255),
-    published_at      timestamp
+    reviewer_name     varchar(255)
 );
 
 alter table public.review
@@ -134,7 +141,7 @@ create table public.feedback
         references public.company
             on delete cascade,
     source_id         integer                                                      not null
-        references public.source
+        references public.source_ref
             on delete set null,
     type              varchar(20)                                                  not null
         constraint feedback_type_check
@@ -145,8 +152,7 @@ create table public.feedback
             check ((rating >= 1) AND (rating <= 5)),
     content           text                                                         not null,
     sentiment_type_id bigint
-        references public.sentiment_type_ref,
-    published_at      timestamp
+        references public.sentiment_type_ref
 );
 
 alter table public.feedback
@@ -180,7 +186,8 @@ create table public.user_company_roles
             references public.company_user,
     company_id            bigint not null
         constraint fk_user_company_roles_company_id
-            references public.company,
+            references public.company
+            on delete cascade,
     role                  bigint not null
         constraint user_company_roles_role_ref_role_ref_id_fk
             references public.role_ref
@@ -188,6 +195,4 @@ create table public.user_company_roles
 
 alter table public.user_company_roles
     owner to company_rep_adm;
-
-
 

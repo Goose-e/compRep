@@ -1,11 +1,8 @@
 package com.example.companyReputationManagement.models;
 
-import com.example.companyReputationManagement.models.enums.StatusEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 
 @Setter
@@ -14,7 +11,7 @@ import java.time.LocalDateTime;
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "response")
 @PrimaryKeyJoinColumn(name = "response_id")
-public class response extends CoreEntity {
+public class Response extends CoreEntity {
     @Column(name = "response_code")
     private String responseCode;
     @Column(name = "feedback_id")

@@ -2,9 +2,11 @@ package com.example.companyReputationManagement.models.enums;
 
 import com.example.companyReputationManagement.models.RoleRefEntity;
 import com.example.companyReputationManagement.models.SentimentTypeEntity;
+import com.example.companyReputationManagement.models.SourceRef;
 import com.example.companyReputationManagement.models.StatusRefEntity;
 import com.example.companyReputationManagement.repo.RoleRefRepo;
 import com.example.companyReputationManagement.repo.SentimentTypeRepo;
+import com.example.companyReputationManagement.repo.SourceRepo;
 import com.example.companyReputationManagement.repo.StatusRefRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +19,13 @@ public class EnumInit {
     private final StatusRefRepository statusRefRepository;
     private final RoleRefRepo roleRefRepository;
     private final SentimentTypeRepo sentimentTypeRepo;
-
+    private final SourceRepo sourceRepo;
     @PostConstruct
     public void initAllRefs() {
         initStatusRef();
         initRoleRef();
         initSentimentTypeRef();
+        initSourceRef();
     }
 
     private void initStatusRef() {
@@ -50,6 +53,19 @@ public class EnumInit {
             }
         }
     }
+    private void initSourceRef() {
+        for (SourcesEnum sourceEnum : SourcesEnum.values()) {
+            if (!sourceRepo.existsById(sourceEnum.getSourceCode())) {
+                SourceRef entity = SourceRef.builder()
+                        .sourceId(sourceEnum.getSourceCode())
+                        .name(sourceEnum.getName())
+                        .url(sourceEnum.getUrl())
+                        .build();
+                sourceRepo.save(entity);
+            }
+        }
+    }
+
 
     private void initSentimentTypeRef() {
         for (SentimentTypeEnum sentiment : SentimentTypeEnum.values()) {

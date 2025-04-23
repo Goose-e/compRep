@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.iservice.services.users.service;
+package com.example.companyReputationManagement.iservice.services.users;
 
 import com.example.companyReputationManagement.dao.UserDao;
 import com.example.companyReputationManagement.dto.user.create.UserCreateRequestDTO;

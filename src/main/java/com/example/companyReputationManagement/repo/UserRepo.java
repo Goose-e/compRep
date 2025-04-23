@@ -5,9 +5,11 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.stereotype.Repository;
 
 @EnableJpaRepositories("com.example.companyReputationManagement.repo")
 @EntityScan("com.example.companyReputationManagement.models")
+@Repository
 public interface UserRepo extends JpaRepository<CompanyUser, Long> {
     CompanyUser findUserByUsernameOrEmail(String username, String email);
 
