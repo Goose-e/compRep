@@ -99,10 +99,10 @@ public class UserService implements IUserService {
     public HttpResponseBody<EditUserResponseDTO> edit(EditUserRequestDTO editUserRequestDTO) {
         HttpResponseBody<EditUserResponseDTO> response = new EditUserResponse();
         StringBuilder errorMessage = new StringBuilder();
-        if (userDao.findUserByUserName(editUserRequestDTO.getNewUsername()) != null) {
+        if (editUserRequestDTO.getNewUsername() != null && userDao.findUserByUserName(editUserRequestDTO.getNewUsername()) != null) {
             errorMessage.append("Username is already taken. ");
         }
-        if (userDao.findIdByUsernameOrEmail(editUserRequestDTO.getNewEmail()) != null) {
+        if (editUserRequestDTO.getNewEmail() != null && userDao.findIdByUsernameOrEmail(editUserRequestDTO.getNewEmail()) != null) {
             errorMessage.append("Email is already taken. ");
         }
 
