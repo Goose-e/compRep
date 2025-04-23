@@ -2,6 +2,8 @@ package com.example.companyReputationManagement.mapper;
 
 import com.example.companyReputationManagement.dto.user.create.UserCreateRequestDTO;
 import com.example.companyReputationManagement.dto.user.create.UserCreateResponseDTO;
+import com.example.companyReputationManagement.dto.user.edit.EditUserRequestDTO;
+import com.example.companyReputationManagement.dto.user.edit.EditUserResponseDTO;
 import com.example.companyReputationManagement.dto.user.login.UserLoginResponseDTO;
 import com.example.companyReputationManagement.iservice.generate.GenerateCode;
 import com.example.companyReputationManagement.models.CompanyUser;
@@ -30,6 +32,18 @@ public class UserMapper {
         companyUser.setRoleRefId(RoleEnum.USER);
         companyUser.setUserCode(generateCode.generateCode(companyUser));
         return companyUser;
+    }
+
+    public CompanyUser mapUserDtoToUser(EditUserRequestDTO editUserRequestDTO, CompanyUser companyUser) {
+        companyUser.setUsername(editUserRequestDTO.getNewUsername() == null ? companyUser.getUsername() : editUserRequestDTO.getNewUsername());
+        companyUser.setEmail(editUserRequestDTO.getNewEmail() == null ? companyUser.getEmail() : editUserRequestDTO.getNewEmail());
+        return companyUser;
+    }
+
+    public EditUserResponseDTO mapUserToUserResponse(CompanyUser companyUser) {
+        return new EditUserResponseDTO(
+                companyUser.getUsername(), companyUser.getEmail()
+        );
     }
 
     public UserCreateResponseDTO mapUserToUserDtoResponse(CompanyUser companyUser) {

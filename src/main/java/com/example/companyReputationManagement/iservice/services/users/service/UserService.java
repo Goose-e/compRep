@@ -4,6 +4,9 @@ import com.example.companyReputationManagement.dao.UserDao;
 import com.example.companyReputationManagement.dto.user.create.UserCreateRequestDTO;
 import com.example.companyReputationManagement.dto.user.create.UserCreateResponse;
 import com.example.companyReputationManagement.dto.user.create.UserCreateResponseDTO;
+import com.example.companyReputationManagement.dto.user.edit.EditUserRequestDTO;
+import com.example.companyReputationManagement.dto.user.edit.EditUserResponse;
+import com.example.companyReputationManagement.dto.user.edit.EditUserResponseDTO;
 import com.example.companyReputationManagement.dto.user.login.UserLoginRequestDTO;
 import com.example.companyReputationManagement.dto.user.login.UserLoginResponse;
 import com.example.companyReputationManagement.dto.user.login.UserLoginResponseDTO;
@@ -13,8 +16,12 @@ import com.example.companyReputationManagement.jwt.TokenService;
 import com.example.companyReputationManagement.mapper.UserMapper;
 import com.example.companyReputationManagement.models.CompanyUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -77,7 +84,7 @@ public class UserService implements IUserService {
                 System.out.println(user.getPasswordHash());
                 response.setMessage("Incorrect password");
             }
-        }else {
+        } else {
             response.setMessage("User not found");
         }
         if (response.getErrors().isEmpty()) {
@@ -86,5 +93,43 @@ public class UserService implements IUserService {
             response.setResponseCode(OC_BUGS);
         }
         return response;
+    }
+
+    @Override
+    public HttpResponseBody<EditUserResponseDTO> edit(EditUserRequestDTO editUserRequestDTO) {
+        HttpResponseBody<EditUserResponseDTO> response = new EditUserResponse();
+        StringBuilder errorMessage = new StringBuilder();
+        if (userDao.findUserByUserName(editUserRequestDTO.getNewUsername()) != null) {
+            errorMessage.append("Username is already taken. ");
+        }
+        if (userDao.findIdByUsernameOrEmail(editUserRequestDTO.getNewEmail()) != null) {
+            errorMessage.append("Email is already taken. ");
+        }
+
+        if (!errorMessage.isEmpty()) {
+            response.setMessage(errorMessage.toString().trim());
+            response.setError(errorMessage.toString().trim());
+            response.setResponseEntity(null);
+        } else {
+            CompanyUser user = userDao.findUserByUserCode(extractUsernameFromJwt());
+            if (user == null) {
+                response.setMessage("User not found");
+                response.setResponseEntity(null);
+                response.setError("User not found");
+            } else {
+                user = userMapper.mapUserDtoToUser(editUserRequestDTO, user);
+                userDao.save(user);
+                response.setMessage("User updated successfully");
+                response.setResponseEntity(userMapper.mapUserToUserResponse(user));
+            }
+        }
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+        return response;
+    }
+
+    private String extractUsernameFromJwt() throws JwtException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        return jwt.getClaim("userCode");
     }
 }

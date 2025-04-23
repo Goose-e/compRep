@@ -24,5 +24,11 @@ public class UserDao {
     public Long findIdByUsernameOrEmail(String usernameOrEmail) {
         return userRepo.findCoreEntityIdByUsernameOrEmail(usernameOrEmail,usernameOrEmail);
     }
+    public CompanyUser findUserByUserCode(String userCode) {
+        return userRepo.findCompanyUserByUserCode(userCode);
+    }
+    public Long findUserIdByUserCode(String userCode) {
+        return userRepo.findCompanyUserIdByUserCode(userCode);
+    }
 
 }

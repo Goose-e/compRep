@@ -44,7 +44,7 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Abstract
                     .collect(Collectors.toList());
         }
 
-        return List.of(); // если нет ролей
+        return List.of();
     }
 
 }

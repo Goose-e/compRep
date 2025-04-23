@@ -52,7 +52,7 @@ public class TokenService {
                 .issuedAt(now)
                 .expiresAt(accessTokenExpiresAt)
                 .subject(userCode)
-                .claim("username", username)            // Добавляем имя пользователя в claims
+                .claim("userCode", userCode)            // Добавляем имя пользователя в claims
                 .claim("role", role.name())
                 .claim("tokenType", "access")
                 .build();
@@ -64,7 +64,7 @@ public class TokenService {
                 .issuedAt(now)
                 .expiresAt(refreshTokenExpiresAt)
                 .subject(userCode)
-                .claim("username", username)
+                .claim("userCode", userCode)
                 .claim("tokenType", "refresh")
                 .build();
         String refreshToken = jwtEncoder.encode(JwtEncoderParameters.from(refreshTokenClaims)).getTokenValue();
@@ -85,7 +85,7 @@ public class TokenService {
                 .issuedAt(now)
                 .expiresAt(accessTokenExpiresAt)
                 .subject(userCode)
-                .claim("username", username)
+                .claim("userCode", userCode)
                 .claim("role", role.name())
                 .claim("tokenType", "access")
                 .build();
@@ -97,7 +97,7 @@ public class TokenService {
                 .issuedAt(now)
                 .expiresAt(refreshTokenExpiresAt)
                 .subject(userCode)
-                .claim("username", username)
+                .claim("userCode", userCode)
                 .claim("tokenType", "refresh")
                 .build();
         String newRefreshToken = jwtEncoder.encode(JwtEncoderParameters.from(refreshTokenClaims)).getTokenValue();

@@ -14,4 +14,10 @@ public interface UserRepo extends JpaRepository<CompanyUser, Long> {
     CompanyUser findUserByUsername(String username);
     @Query("SELECT c.coreEntityId FROM CompanyUser c WHERE c.username = :username OR c.email = :email")
     Long findCoreEntityIdByUsernameOrEmail(String username, String email);
+
+    CompanyUser findCompanyUserByUserCode(String userCode);
+
+
+    @Query("SELECT c.coreEntityId FROM CompanyUser c WHERE c.userCode = :userCode")
+    Long findCompanyUserIdByUserCode(String userCode);
 }

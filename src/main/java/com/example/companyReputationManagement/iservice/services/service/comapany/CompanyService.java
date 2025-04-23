@@ -65,8 +65,8 @@ public class CompanyService implements ICompanyService {
     public HttpResponseBody<CompanyCreateResponseDTO> createCompany(CompanyCreateRequestDTO companyCreateRequestDTO) {
         HttpResponseBody<CompanyCreateResponseDTO> response = new CompanyCreateResponse();
         try {
-            String username = extractUsernameFromJwt();
-            CompanyUser user = userDao.findUserByUserName(username);
+            String userCode = extractUsernameFromJwt();
+            CompanyUser user = userDao.findUserByUserCode(userCode);
             if (user != null) {
                 if (!companyDao.existByCompanyName(companyCreateRequestDTO.getCompanyName())) {
                     Company company = companyMapper.mapCompanyCreateRequestDTOToCompany(companyCreateRequestDTO);
@@ -109,8 +109,8 @@ public class CompanyService implements ICompanyService {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
             } else {
-                String username = extractUsernameFromJwt();
-                Long userId = userDao.findIdByUsernameOrEmail(username);
+                String userCode = extractUsernameFromJwt();
+                Long userId = userDao.findUserIdByUserCode(userCode);
                 UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRoles == null) {
                     response.setError("User not in company");
@@ -175,8 +175,8 @@ public class CompanyService implements ICompanyService {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
             } else {
-                String username = extractUsernameFromJwt();
-                Long userId = userDao.findIdByUsernameOrEmail(username);
+                String userCode = extractUsernameFromJwt();
+                Long userId = userDao.findUserIdByUserCode(userCode);
                 UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRoles == null) {
                     response.setError("User not in company");
@@ -225,8 +225,8 @@ public class CompanyService implements ICompanyService {
                 response.setMessage("Company not found");
                 return response;
             } else {
-                String username = extractUsernameFromJwt();
-                Long userId = userDao.findIdByUsernameOrEmail(username);
+                String userCode = extractUsernameFromJwt();
+                Long userId = userDao.findUserIdByUserCode(userCode);
                 UserCompanyRoles userCompanyRolesAdmin = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRolesAdmin == null) {
                     response.setError("Users not in company");
@@ -298,7 +298,8 @@ public class CompanyService implements ICompanyService {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
             } else {
-                Long userId = userDao.findIdByUsernameOrEmail(extractUsernameFromJwt());
+                Long userId = userDao.findUserIdByUserCode(extractUsernameFromJwt());
+                System.out.println(userId);
                 UserCompanyRoles userCompanyRolesAdmin = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRolesAdmin == null) {
                     response.setError("Users not in company");
@@ -355,8 +356,7 @@ public class CompanyService implements ICompanyService {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
             } else {
-                String username = extractUsernameFromJwt();
-                Long userId = userDao.findIdByUsernameOrEmail(username);
+                Long userId = userDao.findUserIdByUserCode(extractUsernameFromJwt());
                 UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRoles == null) {
                     response.setError("User not in company");
@@ -374,7 +374,7 @@ public class CompanyService implements ICompanyService {
                                 if (userCandidate == null) {
                                     response.setError("User not in company");
                                 } else {
-                                    if (!hasHigherRole(userCompanyRoles.getRole(),userCandidate.getRole())) {
+                                    if (!hasHigherRole(userCompanyRoles.getRole(), userCandidate.getRole())) {
                                         response.setMessage("You cant ban admin or owner");
                                     } else {
                                         userCandidate = userCompanyRolesMapper.changeUserStatus(userCandidate, changeCompanyUserStatusRequestDTO.getNewStatusId());
@@ -410,12 +410,13 @@ public class CompanyService implements ICompanyService {
     private String extractUsernameFromJwt() throws JwtException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) authentication.getPrincipal();
-        return jwt.getClaim("username");
+        return jwt.getClaim("userCode");
     }
 
     private boolean hasPermissionToChangeRole(RoleEnum currentRole) {
         return !currentRole.equals(RoleEnum.OWNER) && !currentRole.equals(RoleEnum.ADMIN);
     }
+
     private boolean hasHigherRole(RoleEnum current, RoleEnum target) {
         if (current == null || target == null) return false;
         return current.getId() > target.getId();
