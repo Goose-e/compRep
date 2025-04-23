@@ -1,5 +1,13 @@
 CREATE USER company_rep_adm WITH PASSWORD 'comprep';
-create table public.status_ref
+create sequence core_entities_core_entity_id_seq;
+
+alter sequence core_entities_core_entity_id_seq owner to postgres;
+
+create sequence company_company_id_seq;
+
+alter sequence company_company_id_seq owner to postgres;
+
+create table status_ref
 (
     status_id   bigint       not null
         primary key,
@@ -8,62 +16,54 @@ create table public.status_ref
     status_name varchar(120) not null
 );
 
-alter table public.status_ref
+alter table status_ref
     owner to company_rep_adm;
 
-alter table public.status_ref
-    owner to company_rep_adm;
-
-create table public.core_entities
+create table core_entities
 (
-    core_entity_id bigint    default nextval('core_entities_core_entity_id_seq'::regclass) not null
+    core_entity_id bigint not null
         primary key,
     status_id      bigint
-        references public.status_ref,
+        references status_ref,
     create_date    timestamp default now(),
     delete_date    timestamp
 );
 
-alter table public.core_entities
+alter table core_entities
     owner to company_rep_adm;
 
-create table public.company
+create table company
 (
-    company_id   bigint default nextval('company_company_id_seq'::regclass) not null
+    company_id   bigint       not null
         primary key
         constraint company_id_fk
-            references public.core_entities
+            references core_entities
             on delete cascade,
-    company_code varchar(100)                                               not null
+    company_code varchar(100) not null
         unique,
-    name         varchar(255)                                               not null,
+    name         varchar(255) not null,
     industry     varchar(255),
     website      varchar(255)
 );
 
-alter table public.company
+alter table company
     owner to company_rep_adm;
 
-create table public.source_ref
+create table source_ref
 (
-    source_id   bigint default nextval('source_source_id_seq'::regclass) not null
+    source_id bigint       not null
         constraint source_pkey
-            primary key
-        constraint source_source_id_fkey
-            references public.core_entities,
-    source_code varchar(100)                                             not null
-        constraint source_source_code_key
-            unique,
-    name        varchar(255)                                             not null,
-    url         varchar(255)                                             not null
+            primary key,
+    name      varchar(255) not null,
+    url       varchar(255) not null
         constraint source_url_key
             unique
 );
 
-alter table public.source_ref
+alter table source_ref
     owner to company_rep_adm;
 
-create table public.sentiment_type_ref
+create table sentiment_type_ref
 (
     sentiment_type_id   bigint       not null
         primary key,
@@ -72,35 +72,35 @@ create table public.sentiment_type_ref
     sentiment_name      varchar(20)  not null
 );
 
-alter table public.sentiment_type_ref
+alter table sentiment_type_ref
     owner to company_rep_adm;
 
-create table public.review
+create table review
 (
-    review_id         bigint default nextval('review_review_id_seq'::regclass) not null
+    review_id         bigint       not null
         primary key
-        references public.core_entities,
-    review_code       varchar(100)                                             not null
+        references core_entities,
+    review_code       varchar(100) not null
         unique,
-    company_id        bigint                                                   not null
-        references public.company
+    company_id        bigint       not null
+        references company
             on delete cascade,
     source_id         bigint
-                                                                               references public.source_ref
-                                                                                   on delete set null,
+                                   references source_ref
+                                       on delete set null,
     rating            integer
         constraint review_rating_check
             check ((rating >= 1) AND (rating <= 5)),
-    content           text                                                     not null,
+    content           text         not null,
     sentiment_type_id bigint
-        references public.sentiment_type_ref,
+        references sentiment_type_ref,
     reviewer_name     varchar(255)
 );
 
-alter table public.review
+alter table review
     owner to company_rep_adm;
 
-create table public.role_ref
+create table role_ref
 (
     role_ref_id bigint       not null
         primary key,
@@ -109,90 +109,90 @@ create table public.role_ref
     role_name   varchar(100) not null
 );
 
-alter table public.role_ref
+alter table role_ref
     owner to company_rep_adm;
 
-create table public.company_user
+create table company_user
 (
-    user_id       bigint default nextval('company_user_user_id_seq'::regclass) not null
+    user_id       bigint       not null
         primary key
         constraint user_id_fkey
-            references public.core_entities,
-    user_code     varchar(100)                                                 not null
+            references core_entities,
+    user_code     varchar(100) not null
         unique,
     role_ref_id   bigint
-        references public.role_ref,
-    username      varchar(255)                                                 not null,
-    email         varchar(255)                                                 not null
+        references role_ref,
+    username      varchar(255) not null,
+    email         varchar(255) not null
         unique,
-    password_hash text                                                         not null
+    password_hash text         not null
 );
 
-alter table public.company_user
+alter table company_user
     owner to company_rep_adm;
 
-create table public.feedback
+create table feedback
 (
-    feedback_id       bigint default nextval('feedback_feedback_id_seq'::regclass) not null
+    feedback_id       bigint       not null
         primary key,
-    feedback_code     varchar(100)                                                 not null
+    feedback_code     varchar(100) not null
         unique,
-    company_id        bigint                                                       not null
-        references public.company
+    company_id        bigint       not null
+        references company
             on delete cascade,
-    source_id         integer                                                      not null
-        references public.source_ref
+    source_id         integer      not null
+        references source_ref
             on delete set null,
-    type              varchar(20)                                                  not null
+    type              varchar(20)  not null
         constraint feedback_type_check
             check ((type)::text = ANY
                    (ARRAY [('mention'::character varying)::text, ('review'::character varying)::text])),
     rating            integer
         constraint feedback_rating_check
             check ((rating >= 1) AND (rating <= 5)),
-    content           text                                                         not null,
+    content           text         not null,
     sentiment_type_id bigint
-        references public.sentiment_type_ref
+        references sentiment_type_ref
 );
 
-alter table public.feedback
+alter table feedback
     owner to company_rep_adm;
 
-create table public.response
+create table response
 (
-    response_id   bigint default nextval('response_response_id_seq'::regclass) not null
+    response_id   bigint       not null
         primary key,
-    response_code varchar(100)                                                 not null
+    response_code varchar(100) not null
         unique,
-    feedback_id   bigint                                                       not null
-        references public.feedback
+    feedback_id   bigint       not null
+        references feedback
             on delete cascade,
-    company_id    bigint                                                       not null
-        references public.company
+    company_id    bigint       not null
+        references company
             on delete cascade,
-    response_text text                                                         not null
+    response_text text         not null
 );
 
-alter table public.response
+alter table response
     owner to company_rep_adm;
 
-create table public.user_company_roles
+create table user_company_roles
 (
     user_company_roles_id bigserial
         constraint user_company_roles_id
             primary key,
     user_id               bigint not null
         constraint fk_user_company_roles_user_id
-            references public.company_user,
+            references company_user,
     company_id            bigint not null
         constraint fk_user_company_roles_company_id
-            references public.company
+            references company
             on delete cascade,
     role                  bigint not null
         constraint user_company_roles_role_ref_role_ref_id_fk
-            references public.role_ref
+            references role_ref
 );
 
-alter table public.user_company_roles
+alter table user_company_roles
     owner to company_rep_adm;
 
