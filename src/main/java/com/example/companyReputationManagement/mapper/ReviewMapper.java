@@ -24,6 +24,9 @@ public class ReviewMapper {
         review.setSourceId(SourcesEnum.fromId(id));
         review.setRating(rating);
         switch (rating) {
+            case 0:
+                review.setSentimentTypeId(null);
+                break;
             case 1:
             case 2:
                 review.setSentimentTypeId(SentimentTypeEnum.NEGATIVE);
@@ -35,6 +38,7 @@ public class ReviewMapper {
             case 5:
                 review.setSentimentTypeId(SentimentTypeEnum.POSITIVE);
                 break;
+
             default:
                 throw new IllegalArgumentException("Invalid rating: " + rating);
         }
@@ -44,6 +48,7 @@ public class ReviewMapper {
     }
 
     public ReviewResponseDto mapReviewToReviewResponseDto(Review review) {
-        return new ReviewResponseDto(review.getReviewerName(), review.getContent(), review.getRating(),review.getSentimentTypeId().getType());
+        return new ReviewResponseDto(review.getReviewerName(), review.getContent(), review.getRating(),
+                review.getSentimentTypeId() != null ? review.getSentimentTypeId().getType() : null);
     }
 }

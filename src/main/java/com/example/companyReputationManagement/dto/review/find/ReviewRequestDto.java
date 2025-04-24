@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 @Data
 public class ReviewRequestDto implements Serializable {
-    @NotNull
+
     private String url;
     @NotNull
     private String companyCode;

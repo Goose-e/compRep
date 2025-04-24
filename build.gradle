@@ -31,6 +31,10 @@ ext {
 }
 
 dependencies {
+    // https://mvnrepository.com/artifact/com.github.albfernandez/juniversalchardet
+    // https://mvnrepository.com/artifact/com.ibm.icu/icu4j
+    implementation("com.ibm.icu:icu4j:77.1")
+    implementation("com.github.albfernandez:juniversalchardet:2.5.0")
     implementation("org.jsoup:jsoup:1.7.2")
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'

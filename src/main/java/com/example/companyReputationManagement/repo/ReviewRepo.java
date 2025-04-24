@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface ReviewRepo extends JpaRepository<Review, Long> {
 
+    boolean existsByContentAndCompanyId(String content,Long companyId);
+    List<Review> findAllByCompanyId(Long companyId);
 }
