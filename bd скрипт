@@ -1,12 +1,4 @@
 CREATE USER company_rep_adm WITH PASSWORD 'comprep';
-create sequence core_entities_core_entity_id_seq;
-
-alter sequence core_entities_core_entity_id_seq owner to postgres;
-
-create sequence company_company_id_seq;
-
-alter sequence company_company_id_seq owner to postgres;
-
 create table status_ref
 (
     status_id   bigint       not null
@@ -90,15 +82,20 @@ create table review
                                        on delete set null,
     rating            integer
         constraint review_rating_check
-            check ((rating >= 1) AND (rating <= 5)),
+            check ((rating >= 0) AND (rating <= 5)),
     content           text         not null,
     sentiment_type_id bigint
         references sentiment_type_ref,
-    reviewer_name     varchar(255)
+    reviewer_name     varchar(255),
+    constraint unique_review
+        unique (content, company_id)
 );
 
 alter table review
     owner to company_rep_adm;
+
+create index idx_review_content_company
+    on review (content, company_id);
 
 create table role_ref
 (
@@ -195,4 +192,5 @@ create table user_company_roles
 
 alter table user_company_roles
     owner to company_rep_adm;
+
 
