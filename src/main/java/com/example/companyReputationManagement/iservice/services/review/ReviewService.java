@@ -108,7 +108,6 @@ public class ReviewService implements IReviewScraperService {
                     }
                 }
                 if (!reviews.isEmpty()) {
-                    reviews.forEach(review -> System.out.println(review.getContent()));
                     reviews.forEach(
                             review -> {
                                 if (!reviewDao.existsByIdAndText(review.getCompanyId(), review.getContent())) {
