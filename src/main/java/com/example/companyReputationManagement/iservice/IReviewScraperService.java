@@ -8,6 +8,6 @@ import java.io.IOException;
 
 public interface IReviewScraperService {
 
-    HttpResponseBody<ReviewResponseListDto> getReviews(ReviewRequestDto reviewRequestDto) throws IOException, InterruptedException;
+    HttpResponseBody<ReviewResponseListDto> getReviews(ReviewRequestDto reviewRequestDto) throws Exception;
 
 }

@@ -8,12 +8,11 @@ import java.io.Serializable;
 @Data
 public class ReviewRequestDto implements Serializable {
 
-    private String url;
+
     @NotNull
     private String companyCode;
 
-    public ReviewRequestDto(String url, String companyCode) {
-        this.url = url;
+    public ReviewRequestDto(String companyCode) {
         this.companyCode = companyCode;
     }
 
