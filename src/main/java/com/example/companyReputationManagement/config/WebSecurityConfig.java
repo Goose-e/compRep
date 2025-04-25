@@ -65,7 +65,7 @@ public class WebSecurityConfig {
                                     .requestMatchers("/", "/home").permitAll()
                                     .requestMatchers("/auth/*").permitAll()
                                     .requestMatchers("/auth/login").permitAll()
-                                    .requestMatchers("/user/edit").permitAll()
+                                    .requestMatchers("/user/edit").authenticated()
                                     .requestMatchers("/company/get_all").permitAll()
                                     .requestMatchers("/company/*").authenticated()
                                     .requestMatchers("/review/*").authenticated()
