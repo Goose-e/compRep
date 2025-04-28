@@ -201,19 +201,18 @@ public class ReviewService implements IReviewService {
             List<Review> reviews = reviewDao.findAllByCompanyIdSorted(comp.getCoreEntityId());
             if (reviews.isEmpty()) {
                 response.setMessage("No reviews found");
-
             } else {
                 DefaultCategoryDataset dataset = new DefaultCategoryDataset();
                 for (Review review : reviews) {
+                    if (review.getRating() == 0) continue;
                     String formattedDate = review.getPublishedDate()
                             .toLocalDateTime()
                             .toLocalDate()
                             .toString();
-                    System.out.println(formattedDate);
                     dataset.addValue(review.getRating(), "Rating", formattedDate);
                 }
                 JFreeChart chart = ChartFactory.createLineChart(
-                        comp.getName()+" Rating", // Заголовок
+                        comp.getName() + " Rating", // Заголовок
                         comp.getName(),         // Ось X
                         "Rating",          // Ось Y
                         dataset,           // Набор данных
@@ -240,8 +239,7 @@ public class ReviewService implements IReviewService {
                 byte[] chartImage = byteArrayOutputStream.toByteArray();
                 response.setResponseEntity(new GenerateChartResponseDto(chartImage));
                 response.setMessage("Chart generated successfully");
-                ImageIO.write(image, "PNG", new File("test_chart.png"));
-
+//                ImageIO.write(image, "PNG", new File("test_chart.png"));
             }
         }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);

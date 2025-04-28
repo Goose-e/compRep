@@ -35,7 +35,8 @@ create table company
         unique,
     name         varchar(255) not null,
     industry     varchar(255),
-    website      varchar(255)
+    website      varchar(255),
+    otzovik_url  varchar
 );
 
 alter table company
@@ -87,6 +88,7 @@ create table review
     sentiment_type_id bigint
         references sentiment_type_ref,
     reviewer_name     varchar(255),
+    published_date    timestamp,
     constraint unique_review
         unique (content, company_id)
 );
@@ -192,5 +194,4 @@ create table user_company_roles
 
 alter table user_company_roles
     owner to company_rep_adm;
-
 
