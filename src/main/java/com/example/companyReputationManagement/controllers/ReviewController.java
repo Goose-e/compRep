@@ -11,7 +11,6 @@ import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.IReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -41,6 +40,6 @@ public class ReviewController {
 
     @PostMapping(value = "/get_review_chart")
     public HttpResponseBody<GenerateChartResponseDto> getReviews(@Valid @RequestBody GenerateChartRequestDto generateChartRequestDto) throws IOException {
-        return reviewService.generateChart(generateChartRequestDto);
+        return reviewService.generateChartAverageRate(generateChartRequestDto);
     }
 }

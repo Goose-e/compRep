@@ -119,7 +119,6 @@ public class CompanyService implements ICompanyService {
                             Company company = companyMapper.mapCompanyCreateRequestDTOToCompany(companyCreateRequestDTO, url);
                             UserCompanyRoles userCompanyRoles = userCompanyRolesMapper.mapUserAndCompanyToUserCompanyRoles(user, company);
                             try {
-                                System.out.println(11);
                                 companyTrans.save(company, userCompanyRoles);
                             } catch (DataIntegrityViolationException e) {
                                 logger.error("Data integrity error while saving company and user role: ", e);

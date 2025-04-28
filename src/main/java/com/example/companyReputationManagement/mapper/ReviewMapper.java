@@ -29,7 +29,7 @@ public class ReviewMapper {
         review.setPublishedDate(date);
         switch (rating) {
             case 0:
-                review.setSentimentTypeId(null);
+                review.setSentimentTypeId(SentimentTypeEnum.UNRATED);
                 break;
             case 1:
             case 2:

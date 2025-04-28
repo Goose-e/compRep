@@ -6,7 +6,9 @@ import lombok.Getter;
 public enum SentimentTypeEnum {
     POSITIVE(1L, "POSITIVE", "Positive"),
     NEUTRAL(2L, "NEUTRAL", "Neutral"),
-    NEGATIVE(3L, "NEGATIVE", "Negative");
+    NEGATIVE(3L, "NEGATIVE", "Negative"),
+    UNRATED(4L, "UNRATED", "Unrated");;
+
     private final Long id;
     private final String code;
     private final String Type;
