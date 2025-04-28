@@ -12,4 +12,6 @@ public interface ReviewRepo extends JpaRepository<Review, Long> {
     boolean existsByContentAndCompanyId(String content,Long companyId);
     List<Review> findAllByCompanyId(Long companyId);
 
+    List<Review> findAllByCompanyIdOrderByPublishedDateAsc(Long companyId);
+
 }

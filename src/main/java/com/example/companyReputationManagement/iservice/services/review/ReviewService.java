@@ -5,6 +5,9 @@ import com.example.companyReputationManagement.dao.ReviewDao;
 import com.example.companyReputationManagement.dto.review.find.ReviewRequestDto;
 import com.example.companyReputationManagement.dto.review.find.ReviewResponse;
 import com.example.companyReputationManagement.dto.review.find.ReviewResponseListDto;
+import com.example.companyReputationManagement.dto.review.generate_chart.GenerateChartRequestDto;
+import com.example.companyReputationManagement.dto.review.generate_chart.GenerateChartResponse;
+import com.example.companyReputationManagement.dto.review.generate_chart.GenerateChartResponseDto;
 import com.example.companyReputationManagement.dto.review.get_all.GetReviewRequestDto;
 import com.example.companyReputationManagement.dto.review.get_all.GetReviewResponse;
 import com.example.companyReputationManagement.dto.review.get_all.GetReviewResponseListDto;
@@ -16,6 +19,14 @@ import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.models.Review;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartRenderingInfo;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -23,6 +34,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -97,7 +113,7 @@ public class ReviewService implements IReviewService {
 
     }
 
-    void parseReviews(Company company) throws Exception {
+    void parseReviews(Company company) {
         List<Review> reviews = new ArrayList<>();
         String url = company.getOtzovikUrl();
         if (url == null) {
@@ -151,6 +167,7 @@ public class ReviewService implements IReviewService {
         return companyDao.findByCompanyCode(companyCode);
     }
 
+
     @Override
     public HttpResponseBody<GetReviewResponseListDto> getReviews(GetReviewRequestDto getReviewRequestDto) {
         HttpResponseBody<GetReviewResponseListDto> response = new GetReviewResponse();
@@ -167,6 +184,63 @@ public class ReviewService implements IReviewService {
                 response.setMessage("No reviews found");
             } else {
                 response.setResponseEntity(getReviewResponseListDto);
+
+            }
+        }
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+        return response;
+    }
+
+    @Override
+    public HttpResponseBody<GenerateChartResponseDto> generateChart(GenerateChartRequestDto generateChartRequestDto) throws IOException {
+        HttpResponseBody<GenerateChartResponseDto> response = new GenerateChartResponse();
+        Company comp = findCompanyByCode(generateChartRequestDto.getCompanyCode());
+        if (comp == null) {
+            response.setMessage("Company not found");
+        } else {
+            List<Review> reviews = reviewDao.findAllByCompanyIdSorted(comp.getCoreEntityId());
+            if (reviews.isEmpty()) {
+                response.setMessage("No reviews found");
+
+            } else {
+                DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+                for (Review review : reviews) {
+                    String formattedDate = review.getPublishedDate()
+                            .toLocalDateTime()
+                            .toLocalDate()
+                            .toString();
+                    System.out.println(formattedDate);
+                    dataset.addValue(review.getRating(), "Rating", formattedDate);
+                }
+                JFreeChart chart = ChartFactory.createLineChart(
+                        comp.getName()+" Rating", // Заголовок
+                        comp.getName(),         // Ось X
+                        "Rating",          // Ось Y
+                        dataset,           // Набор данных
+                        PlotOrientation.VERTICAL,
+                        true,              // Легенда
+                        true,              // Подсказки
+                        false              // Статистика
+                );
+                CategoryPlot plot = (CategoryPlot) chart.getPlot();
+                CategoryAxis xAxis = plot.getDomainAxis();
+
+                xAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4));
+
+                xAxis.setTickLabelFont(new Font("SansSerif", Font.PLAIN, 10));
+
+                plot.setBackgroundPaint(Color.WHITE);
+
+                plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
+                ChartRenderingInfo info = new ChartRenderingInfo();
+                BufferedImage image = chart.createBufferedImage(900, 750, info);
+
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                ImageIO.write(image, "PNG", byteArrayOutputStream);
+                byte[] chartImage = byteArrayOutputStream.toByteArray();
+                response.setResponseEntity(new GenerateChartResponseDto(chartImage));
+                response.setMessage("Chart generated successfully");
+                ImageIO.write(image, "PNG", new File("test_chart.png"));
 
             }
         }

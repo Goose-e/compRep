@@ -36,6 +36,8 @@ dependencies {
     implementation("org.seleniumhq.selenium:selenium-java:4.31.0")
     implementation 'io.github.bonigarcia:webdrivermanager:6.1.0'
     // WebDriver для Chrome
+    // https://mvnrepository.com/artifact/org.jfree/jfreechart
+    implementation("org.jfree:jfreechart:1.5.5")
     implementation("org.seleniumhq.selenium:selenium-chrome-driver:4.31.0")
     implementation("com.ibm.icu:icu4j:77.1")
     implementation("com.github.albfernandez:juniversalchardet:2.5.0")

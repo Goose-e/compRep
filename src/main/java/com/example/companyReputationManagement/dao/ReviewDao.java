@@ -19,6 +19,9 @@ public class ReviewDao {
     public List<Review> findAllByCompanyId(Long companyId) {
         return reviewRepo.findAllByCompanyId(companyId);
     }
+    public List<Review> findAllByCompanyIdSorted(Long companyId) {
+        return reviewRepo.findAllByCompanyIdOrderByPublishedDateAsc(companyId);
+    }
 
     public void save(Review review) {
         reviewRepo.save(review);
