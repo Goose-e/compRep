@@ -4,7 +4,7 @@ import lombok.Getter;
 
 public enum SourcesEnum {
 
-    OTZOVIK(1L, "Otzovik", "https://otzovik.by/places/"),
+    OTZOVIK(1L, "Otzovik", "https://otzovik.by/"),
     GOOGLE_REVIEWS(2L, "Google Reviews", "https://google.com"),
     YELP(3L, "Yelp", "https://yelp.com");
 

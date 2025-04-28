@@ -2,6 +2,7 @@ package com.example.companyReputationManagement.mapper;
 
 
 import com.example.companyReputationManagement.dto.review.find.ReviewResponseDto;
+import com.example.companyReputationManagement.dto.review.get_all.GetReviewResponseDto;
 import com.example.companyReputationManagement.iservice.generate.GenerateCode;
 import com.example.companyReputationManagement.models.Review;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
@@ -9,13 +10,15 @@ import com.example.companyReputationManagement.models.enums.SourcesEnum;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.sql.Timestamp;
+
 @AllArgsConstructor
 @Component
 public class ReviewMapper {
     private final GenerateCode generateCode;
 
 
-    public Review createReview(String content, String author, int rating, Long companyId, Long id) {
+    public Review createReview(String content, String author, int rating, Long companyId, Long id, Timestamp date) {
         Review review = new Review();
         review.setContent(content);
         review.setReviewerName(author);
@@ -23,6 +26,7 @@ public class ReviewMapper {
         review.setCompanyId(companyId);
         review.setSourceId(SourcesEnum.fromId(id));
         review.setRating(rating);
+        review.setPublishedDate(date);
         switch (rating) {
             case 0:
                 review.setSentimentTypeId(null);
@@ -49,6 +53,11 @@ public class ReviewMapper {
 
     public ReviewResponseDto mapReviewToReviewResponseDto(Review review) {
         return new ReviewResponseDto(review.getReviewerName(), review.getContent(), review.getRating(),
-                review.getSentimentTypeId() != null ? review.getSentimentTypeId().getType() : null);
+                review.getSentimentTypeId() != null ? review.getSentimentTypeId().getType() : null, review.getPublishedDate());
+    }
+
+    public GetReviewResponseDto mapReviewToGetReviewResponseDto(Review review) {
+        return new GetReviewResponseDto(review.getReviewerName(), review.getContent(), review.getRating(),
+                review.getSentimentTypeId() != null ? review.getSentimentTypeId().getType() : null, review.getPublishedDate());
     }
 }

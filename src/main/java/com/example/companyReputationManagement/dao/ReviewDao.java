@@ -27,4 +27,6 @@ public class ReviewDao {
     public boolean existsByIdAndText(Long id, String text) {
         return reviewRepo.existsByContentAndCompanyId(text, id);
     }
+
+
 }

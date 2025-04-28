@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.sql.Timestamp;
+
 
 @Setter
 @Getter
@@ -30,6 +32,7 @@ public class Review extends CoreEntity {
     private SentimentTypeEnum sentimentTypeId;
     @Column(name = "reviewer_name")
     private String reviewerName;
-
+    @Column(name = "published_date")
+    private Timestamp publishedDate;
 
 }
