@@ -9,11 +9,14 @@ public class CompanyCreateResponseDTO implements ResponseDto {
     private String companyWebSite;
     private String companyIndustry;
     private String companyCode;
+    private String companyOtzovikUrl;
 
-    public CompanyCreateResponseDTO(String companyName, String companyWebSite, String companyIndustry, String companyCode) {
+    public CompanyCreateResponseDTO(String companyName, String companyWebSite, String companyIndustry, String companyCode, String companyOtzovikUrl) {
         this.companyName = companyName;
         this.companyWebSite = companyWebSite;
         this.companyIndustry = companyIndustry;
         this.companyCode = companyCode;
+        this.companyOtzovikUrl = companyOtzovikUrl;
     }
+
 }

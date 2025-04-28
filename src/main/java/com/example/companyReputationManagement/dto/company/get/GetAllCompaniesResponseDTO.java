@@ -13,11 +13,13 @@ public class GetAllCompaniesResponseDTO implements ResponseDto {
     private String companyCode;
     private String industry;
     private String website;
+    private String otzovikUrl;
 
-    public GetAllCompaniesResponseDTO(String companyName, String companyCode, String industry, String website) {
+    public GetAllCompaniesResponseDTO(String companyName, String companyCode, String industry, String website, String otzovikUrl) {
         this.companyName = companyName;
         this.companyCode = companyCode;
         this.industry = industry;
         this.website = website;
+        this.otzovikUrl = otzovikUrl != null ? otzovikUrl : "Company url does not exists or try later";
     }
 }

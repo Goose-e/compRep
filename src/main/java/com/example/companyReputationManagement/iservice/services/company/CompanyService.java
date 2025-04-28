@@ -33,8 +33,16 @@ import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.models.CompanyUser;
 import com.example.companyReputationManagement.models.UserCompanyRoles;
 import com.example.companyReputationManagement.models.enums.RoleEnum;
+import com.example.companyReputationManagement.models.enums.SourcesEnum;
 import com.example.companyReputationManagement.models.enums.StatusEnum;
 import lombok.RequiredArgsConstructor;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -44,8 +52,10 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 import static com.example.companyReputationManagement.constants.SysConst.OC_BUGS;
 import static com.example.companyReputationManagement.constants.SysConst.OC_OK;
@@ -61,6 +71,36 @@ public class CompanyService implements ICompanyService {
     private final CompanyTrans companyTrans;
     private static final Logger logger = LoggerFactory.getLogger(CompanyService.class);
 
+    private WebDriver createWebDriver() {
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--blink-settings=imagesEnabled=false");
+        options.addArguments("--disable-extensions");
+        options.addArguments("--disable-popup-blocking");
+        options.addArguments("--disable-default-apps");
+        options.addArguments("--headless", "--disable-gpu", "--window-size=1920x1080");
+        return new ChromeDriver(options);
+    }
+
+    private String findCompanyUrl(String companyName, SourcesEnum source) throws Exception {
+        WebDriver driver = createWebDriver();
+        try {
+            driver.get(source.getUrl());
+
+            WebElement input = driver.findElement(By.cssSelector("input.is-search-input"));
+            input.sendKeys(companyName);
+
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
+            WebElement firstSuggestion = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".is-title a")));
+
+            return firstSuggestion.getAttribute("href");
+        } catch (Exception e) {
+            logger.error("Error while finding company URL for: " + companyName, e);
+            throw new Exception("Error while finding company URL: " + e.getMessage());
+        } finally {
+            driver.quit();
+        }
+    }
+
     @Override
     public HttpResponseBody<CompanyCreateResponseDTO> createCompany(CompanyCreateRequestDTO companyCreateRequestDTO) {
         HttpResponseBody<CompanyCreateResponseDTO> response = new CompanyCreateResponse();
@@ -68,22 +108,27 @@ public class CompanyService implements ICompanyService {
             String userCode = extractUsernameFromJwt();
             CompanyUser user = userDao.findUserByUserCode(userCode);
             if (user != null) {
-                if (!companyDao.existByCompanyName(companyCreateRequestDTO.getCompanyName())) {
-                    Company company = companyMapper.mapCompanyCreateRequestDTOToCompany(companyCreateRequestDTO);
-                    UserCompanyRoles userCompanyRoles = userCompanyRolesMapper.mapUserAndCompanyToUserCompanyRoles(user, company);
-                    try {
-                        companyTrans.save(company, userCompanyRoles);
-                        response.setMessage("Company created successfully.User role changed successfully.");
-                        response.setResponseEntity(companyMapper.mapCompanyToCompanyCreateResponseDTO(company));
-                    } catch (DataIntegrityViolationException e) {
-                        response.setError("Transaction failed");
-                        response.setMessage("Data integrity violation: " + e.getMessage());
-                        logger.error("Data integrity error while saving company and user role: ", e);
-                    } catch (Exception e) {
-                        response.setError("Transaction failed");
-                        response.setMessage("Unexpected error: " + e.getMessage());
-                        logger.error("Unexpected error while saving company and user role: ", e);
-                    }
+                boolean companyExists = companyDao.existByCompanyName(companyCreateRequestDTO.getCompanyName());
+                if (!companyExists) {
+                    response.setMessage("Company is being created...");
+                    response.setResponseCode(OC_OK);
+                    response.setResponseEntity(companyMapper.mapCompanyCreateRequestDTOToCompanyCreateResponse(companyCreateRequestDTO, "in process"));
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            String url = findCompanyUrl(companyCreateRequestDTO.getCompanyName(), SourcesEnum.OTZOVIK);
+                            Company company = companyMapper.mapCompanyCreateRequestDTOToCompany(companyCreateRequestDTO, url);
+                            UserCompanyRoles userCompanyRoles = userCompanyRolesMapper.mapUserAndCompanyToUserCompanyRoles(user, company);
+                            try {
+                                companyTrans.save(company, userCompanyRoles);
+                            } catch (DataIntegrityViolationException e) {
+                                logger.error("Data integrity error while saving company and user role: ", e);
+                            } catch (Exception e) {
+                                logger.error("Unexpected error while saving company and user role: ", e);
+                            }
+                        } catch (Exception e) {
+                            logger.error("Error occurred while creating company in background task: ", e);
+                        }
+                    });
                 } else {
                     response.setMessage("Company name already exist");
                 }

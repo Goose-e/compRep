@@ -13,11 +13,13 @@ public class EditCompanyRequestDTO implements Serializable {
     private String newCompanyName;
     private String newCompanyWebsite;
     private String newCompanyIndustry;
+    private String newOtzovikUrl;
 
-    public EditCompanyRequestDTO(String companyCode, String newCompanyName, String newCompanyWebsite, String newCompanyIndustry) {
+    public EditCompanyRequestDTO(String companyCode, String newCompanyName, String newCompanyWebsite, String newCompanyIndustry, String newOtzovikUrl) {
         this.companyCode = companyCode;
         this.newCompanyName = newCompanyName;
         this.newCompanyWebsite = newCompanyWebsite;
         this.newCompanyIndustry = newCompanyIndustry;
+        this.newOtzovikUrl = newOtzovikUrl;
     }
 }
