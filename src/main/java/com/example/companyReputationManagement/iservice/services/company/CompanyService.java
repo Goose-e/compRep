@@ -2,6 +2,7 @@ package com.example.companyReputationManagement.iservice.services.company;
 
 
 import com.example.companyReputationManagement.dao.CompanyDao;
+import com.example.companyReputationManagement.dao.CompanySourceUrlDao;
 import com.example.companyReputationManagement.dao.UserCompanyRolesDao;
 import com.example.companyReputationManagement.dao.UserDao;
 import com.example.companyReputationManagement.dto.company.add_user.AddUserRequestDTO;
@@ -24,12 +25,15 @@ import com.example.companyReputationManagement.dto.company.edit.EditCompanyRespo
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
 import com.example.companyReputationManagement.dto.company.get.AllCompaniesResponseDTO;
 import com.example.companyReputationManagement.dto.company.get.GetAllCompaniesResponse;
+import com.example.companyReputationManagement.dto.company.get.GetAllCompaniesResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.ICompanyService;
 import com.example.companyReputationManagement.iservice.services.transactions.CompanyTrans;
 import com.example.companyReputationManagement.mapper.CompanyMapper;
+import com.example.companyReputationManagement.mapper.CompanySourceUrlMapper;
 import com.example.companyReputationManagement.mapper.UserCompanyRolesMapper;
 import com.example.companyReputationManagement.models.Company;
+import com.example.companyReputationManagement.models.CompanySourceUrl;
 import com.example.companyReputationManagement.models.CompanyUser;
 import com.example.companyReputationManagement.models.UserCompanyRoles;
 import com.example.companyReputationManagement.models.enums.RoleEnum;
@@ -70,6 +74,8 @@ public class CompanyService implements ICompanyService {
     private final UserCompanyRolesMapper userCompanyRolesMapper;
     private final CompanyTrans companyTrans;
     private static final Logger logger = LoggerFactory.getLogger(CompanyService.class);
+    private final CompanySourceUrlMapper companySourceUrlMapper;
+    private final CompanySourceUrlDao companySourceUrlDao;
 
     private WebDriver createWebDriver() {
         ChromeOptions options = new ChromeOptions();
@@ -116,10 +122,11 @@ public class CompanyService implements ICompanyService {
                     CompletableFuture.runAsync(() -> {
                         try {
                             String url = findCompanyUrl(companyCreateRequestDTO.getCompanyName(), SourcesEnum.OTZOVIK);
-                            Company company = companyMapper.mapCompanyCreateRequestDTOToCompany(companyCreateRequestDTO, url);
+                            Company company = companyMapper.mapCompanyCreateRequestDTOToCompany(companyCreateRequestDTO);
+                            CompanySourceUrl companySourceUrl = companySourceUrlMapper.create(company.getCoreEntityId(), url);
                             UserCompanyRoles userCompanyRoles = userCompanyRolesMapper.mapUserAndCompanyToUserCompanyRoles(user, company);
                             try {
-                                companyTrans.save(company, userCompanyRoles);
+                                companyTrans.save(company, userCompanyRoles, companySourceUrl);
                             } catch (DataIntegrityViolationException e) {
                                 logger.error("Data integrity error while saving company and user role: ", e);
                             } catch (Exception e) {
@@ -167,7 +174,7 @@ public class CompanyService implements ICompanyService {
                         try {
                             userCompanyRoles = userCompanyRolesMapper.changeUserStatus(userCompanyRoles, changeCompanyStatusRequestDTO.getNewStatusId());
                             company = companyMapper.changeCompanyStatus(company, changeCompanyStatusRequestDTO.getNewStatusId());
-                            companyTrans.save(company, userCompanyRoles);
+                            companyTrans.saveCompanyAndRole(company, userCompanyRoles);
                             response.setMessage("Company deleted successfully");
                             StatusEnum newStatus = StatusEnum.fromId(changeCompanyStatusRequestDTO.getNewStatusId().intValue());
                             response.setResponseEntity(new ChangeCompanyStatusResponseDTO(company.getName(), newStatus.getStatus()));
@@ -196,13 +203,12 @@ public class CompanyService implements ICompanyService {
     @Override
     public HttpResponseBody<AllCompaniesResponseDTO> getAllCompanies() {
         HttpResponseBody<AllCompaniesResponseDTO> response = new GetAllCompaniesResponse();
-        List<Company> companiesList = companyDao.findAll();
+        List<GetAllCompaniesResponseDTO> companiesList = companyDao.findAllWithUrls();
         if (companiesList.isEmpty()) {
             response.setMessage("Companies not found");
             response.setResponseEntity(null);
         } else {
-            AllCompaniesResponseDTO allCompaniesResponseDTO = new AllCompaniesResponseDTO(companiesList.stream().map(
-                    companyMapper::mapCompanyToGetAllCompaniesResponseDTO).toList());
+            AllCompaniesResponseDTO allCompaniesResponseDTO = new AllCompaniesResponseDTO(companiesList);
             response.setResponseEntity(allCompaniesResponseDTO);
             response.setMessage("All companies found");
         }
@@ -231,9 +237,11 @@ public class CompanyService implements ICompanyService {
                         response.setMessage("User doesnt have enough rights");
                     } else {
                         company = companyMapper.mapCompanyToEditedCompany(company, editCompanyRequestDTO);
-                        EditCompanyResponseDTO editCompanyResponseDTO = companyMapper.mapCompanyToEditCompanyResponseDTO(company);
+                        CompanySourceUrl companySourceUrl = companySourceUrlDao.findByCompanyId(company.getCoreEntityId());
+                        companySourceUrl = companySourceUrlMapper.edit(editCompanyRequestDTO.getNewOtzovikUrl(), companySourceUrl);
+                        EditCompanyResponseDTO editCompanyResponseDTO = companyMapper.mapCompanyToEditCompanyResponseDTO(company, companySourceUrl);
                         try {
-                            companyTrans.updateCompany(company);
+                            companyTrans.updateCompany(company, companySourceUrl);
                             response.setMessage("Company edited successfully");
                             response.setResponseEntity(editCompanyResponseDTO);
                         } catch (DataIntegrityViolationException e) {

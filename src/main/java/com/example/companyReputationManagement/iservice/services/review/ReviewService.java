@@ -1,6 +1,7 @@
 package com.example.companyReputationManagement.iservice.services.review;
 
 import com.example.companyReputationManagement.dao.CompanyDao;
+import com.example.companyReputationManagement.dao.CompanySourceUrlDao;
 import com.example.companyReputationManagement.dao.ReviewDao;
 import com.example.companyReputationManagement.dao.UserCompanyRolesDao;
 import com.example.companyReputationManagement.dto.review.find.ReviewRequestDto;
@@ -21,6 +22,7 @@ import com.example.companyReputationManagement.iservice.IReviewService;
 import com.example.companyReputationManagement.iservice.services.transactions.ReviewsTrans;
 import com.example.companyReputationManagement.mapper.ReviewMapper;
 import com.example.companyReputationManagement.models.Company;
+import com.example.companyReputationManagement.models.CompanySourceUrl;
 import com.example.companyReputationManagement.models.Review;
 import com.example.companyReputationManagement.models.enums.RoleEnum;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
@@ -76,6 +78,7 @@ public class ReviewService implements IReviewService {
     private final ReviewsTrans reviewsTrans;
     private final ReviewDao reviewDao;
     private final UserCompanyRolesDao userCompanyRolesDao;
+    private final CompanySourceUrlDao companySourceUrlDao;
 
     private Timestamp dateFormat(String date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
@@ -84,7 +87,7 @@ public class ReviewService implements IReviewService {
     }
 
     private void findReviewsOtzovik(Company company, List<Review> reviews, HttpResponseBody<ReviewResponseListDto> response) {
-        String url = company.getOtzovikUrl();
+        String url = findUrl(company.getCoreEntityId());
         if (url == null) {
             response.setError("company not found on site");
             response.setMessage("Company not found on site");
@@ -208,9 +211,14 @@ public class ReviewService implements IReviewService {
         return companyDao.findByCompanyCode(companyCode);
     }
 
+    private String findUrl(Long companyId) {
+        CompanySourceUrl url = companySourceUrlDao.findByCompanyId(companyId);
+        return url == null ? null : url.getSourceUrl();
+    }
+
     void parseReviews(Company company) {
         List<Review> reviews = new ArrayList<>();
-        String url = company.getOtzovikUrl();
+        String url = findUrl(company.getCoreEntityId());
         if (url == null) {
             log.error("company not found on site");
         } else {

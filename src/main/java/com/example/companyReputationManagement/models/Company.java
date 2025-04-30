@@ -23,7 +23,6 @@ public class Company extends CoreEntity {
     private String industry;
     @Column(name = "website")
     private String website;
-    @Column(name = "otzovik_url")
-    private String otzovikUrl;
+
 
 }

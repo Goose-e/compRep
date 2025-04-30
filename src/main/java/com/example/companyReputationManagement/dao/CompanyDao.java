@@ -1,5 +1,6 @@
 package com.example.companyReputationManagement.dao;
 
+import com.example.companyReputationManagement.dto.company.get.GetAllCompaniesResponseDTO;
 import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.repo.CompanyRepo;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,9 @@ public class CompanyDao {
 
     public Company findByCompanyName(String companyName) {
         return companyRepo.findByName(companyName);
+    }
+    public List<GetAllCompaniesResponseDTO> findAllWithUrls() {
+        return companyRepo.findAllActiveCompanyWithUrls();
     }
     public List<Company> findAll() {
         return companyRepo.findAllActiveCompany();

@@ -35,8 +35,7 @@ create table company
         unique,
     name         varchar(255) not null,
     industry     varchar(255),
-    website      varchar(255),
-    otzovik_url  varchar
+    website      varchar(255)
 );
 
 alter table company
@@ -88,16 +87,17 @@ create table review
     sentiment_type_id bigint
         references sentiment_type_ref,
     reviewer_name     varchar(255),
-    published_date    timestamp,
-    constraint unique_review
-        unique (content, company_id)
+    published_date    timestamp
 );
 
 alter table review
     owner to company_rep_adm;
 
+create unique index unique_review_md5_idx
+    on review (md5(content), company_id);
+
 create index idx_review_content_company
-    on review (content, company_id);
+    on review (md5(content), company_id);
 
 create table role_ref
 (
@@ -157,24 +157,6 @@ create table feedback
 alter table feedback
     owner to company_rep_adm;
 
-create table response
-(
-    response_id   bigint       not null
-        primary key,
-    response_code varchar(100) not null
-        unique,
-    feedback_id   bigint       not null
-        references feedback
-            on delete cascade,
-    company_id    bigint       not null
-        references company
-            on delete cascade,
-    response_text text         not null
-);
-
-alter table response
-    owner to company_rep_adm;
-
 create table user_company_roles
 (
     user_company_roles_id bigserial
@@ -194,4 +176,23 @@ create table user_company_roles
 
 alter table user_company_roles
     owner to company_rep_adm;
+
+create table company_source_url
+(
+    company_source_url_id   bigint                               not null
+        primary key
+        constraint company_source_url_id_fk
+            references core_entities
+            on delete cascade,
+    company_id              bigint                               not null
+        constraint company_source_url_company_fk
+            references company
+            on delete cascade,
+    source_url              varchar(255)                         not null,
+    company_source_url_code varchar default unique_key_recheck() not null,
+    source_type             bigint                               not null
+);
+
+alter table company_source_url
+    owner to postgres;
 
