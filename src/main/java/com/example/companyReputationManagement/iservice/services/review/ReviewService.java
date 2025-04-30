@@ -22,7 +22,6 @@ import com.example.companyReputationManagement.iservice.services.transactions.Re
 import com.example.companyReputationManagement.mapper.ReviewMapper;
 import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.models.Review;
-import com.example.companyReputationManagement.models.UserCompanyRoles;
 import com.example.companyReputationManagement.models.enums.RoleEnum;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
 import lombok.RequiredArgsConstructor;
@@ -260,22 +259,26 @@ public class ReviewService implements IReviewService {
             response.setMessage("Company not found");
             response.setError(OC_BUGS);
         } else {
-            List<Review> reviews = new ArrayList<>();
-            findReviewsOtzovik(comp, reviews, response);
-            if (!reviews.isEmpty()) {
-                try {
-                    reviewsTrans.saveAll(reviews);
-                } catch (Exception e) {
-                    response.setError("Error while saving reviews");
-
-                    Thread.currentThread().interrupt();
-                }
-                reviews = reviewDao.findAllByCompanyId(comp.getCoreEntityId());
-                ReviewResponseListDto reviewResponseListDto = new ReviewResponseListDto(
-                        reviews.stream().map(reviewMapper::mapReviewToReviewResponseDto).toList());
-                response.setResponseEntity(reviewResponseListDto);
+            if (!hasPermission(comp.getCoreEntityId())) {
+                response.setMessage("User hasn't permission");
             } else {
-                response.setError("Responses has 100+ messages .Checking response in process...");
+                List<Review> reviews = new ArrayList<>();
+                findReviewsOtzovik(comp, reviews, response);
+                if (!reviews.isEmpty()) {
+                    try {
+                        reviewsTrans.saveAll(reviews);
+                    } catch (Exception e) {
+                        response.setError("Error while saving reviews");
+
+                        Thread.currentThread().interrupt();
+                    }
+                    reviews = reviewDao.findAllByCompanyId(comp.getCoreEntityId());
+                    ReviewResponseListDto reviewResponseListDto = new ReviewResponseListDto(
+                            reviews.stream().map(reviewMapper::mapReviewToReviewResponseDto).toList());
+                    response.setResponseEntity(reviewResponseListDto);
+                } else {
+                    response.setError("Responses has 100+ messages .Checking response in process...");
+                }
             }
         }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
@@ -295,18 +298,12 @@ public class ReviewService implements IReviewService {
             response.setMessage("Company not found");
             response.setResponseCode(OC_BUGS);
         } else {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            Jwt jwt = (Jwt) authentication.getPrincipal();
-            String userCode = jwt.getClaim("userCode");
-            UserCompanyRoles userCompanyRoles = userCompanyRolesDao.findByUserCode(userCode, comp.getCoreEntityId());
-            if (userCompanyRoles.getRole().getRole().equals(RoleEnum.USER.getRole())) {
-                response.setMessage("User doesnt have enough rights");
+            if (!checkEmployment(comp.getCoreEntityId())) {
+                response.setMessage("User not in company");
             } else {
-
                 List<Review> responseListDto = reviewDao.findAllByCompanyId(comp.getCoreEntityId());
                 GetReviewResponseListDto getReviewResponseListDto = new GetReviewResponseListDto(
                         responseListDto.stream().map(reviewMapper::mapReviewToGetReviewResponseDto).toList());
-
                 if (getReviewResponseListDto.getReviewList().isEmpty()) {
                     response.setMessage("No reviews found");
                 } else {
@@ -326,61 +323,66 @@ public class ReviewService implements IReviewService {
         if (comp == null) {
             response.setMessage("Company not found");
         } else {
-            List<Review> reviews = reviewDao.findAllByCompanyIdSorted(comp.getCoreEntityId());
-            if (reviews.isEmpty()) {
-                response.setMessage("No reviews found");
+            if (checkEmployment(comp.getCoreEntityId())) {
+                response.setMessage("User not in company");
+
             } else {
-                DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+                List<Review> reviews = reviewDao.findAllByCompanyIdSorted(comp.getCoreEntityId());
+                if (reviews.isEmpty()) {
+                    response.setMessage("No reviews found");
+                } else {
+                    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 
-                Map<String, List<Integer>> reviewsByDate = new HashMap<>();
-                for (Review review : reviews) {
-                    if (review.getRating() == 0) continue;
-                    String formattedDate = review.getPublishedDate().toLocalDateTime().toLocalDate().toString().substring(0, 7); // Группировка по году-месяцу
-                    reviewsByDate.computeIfAbsent(formattedDate, k -> new ArrayList<>()).add(review.getRating());
+                    Map<String, List<Integer>> reviewsByDate = new HashMap<>();
+                    for (Review review : reviews) {
+                        if (review.getRating() == 0) continue;
+                        String formattedDate = review.getPublishedDate().toLocalDateTime().toLocalDate().toString().substring(0, 7); // Группировка по году-месяцу
+                        reviewsByDate.computeIfAbsent(formattedDate, k -> new ArrayList<>()).add(review.getRating());
+                    }
+
+                    for (Map.Entry<String, List<Integer>> entry : reviewsByDate.entrySet()) {
+                        double averageRating = entry.getValue().stream().mapToDouble(Integer::doubleValue).average().orElse(0);
+                        dataset.addValue(averageRating, "Average Rating", entry.getKey());
+                    }
+
+                    JFreeChart chart = ChartFactory.createLineChart(
+                            comp.getName() + " Average Rating", // Заголовок
+                            "Date",         // Ось X
+                            "Average Rating",          // Ось Y
+                            dataset,           // Набор данных
+                            PlotOrientation.VERTICAL,
+                            true,              // Легенда
+                            true,              // Подсказки
+                            false              // Статистика
+                    );
+
+                    CategoryPlot plot = (CategoryPlot) chart.getPlot();
+                    CategoryAxis xAxis = plot.getDomainAxis();
+
+                    // Поворот меток оси X для лучшего отображения
+                    xAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4));
+
+                    // Установка шрифта для меток на оси X
+                    xAxis.setTickLabelFont(new Font("SansSerif", Font.PLAIN, 10));
+
+                    // Установка фона графика и линии сетки
+                    plot.setBackgroundPaint(Color.WHITE);
+                    plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
+
+                    // Генерация изображения
+                    ChartRenderingInfo info = new ChartRenderingInfo();
+                    BufferedImage image = chart.createBufferedImage(900, 750, info);
+
+                    // Сохранение изображения в байтовый массив
+                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                    ImageIO.write(image, "PNG", byteArrayOutputStream);
+                    byte[] chartImage = byteArrayOutputStream.toByteArray();
+                    response.setResponseEntity(new GenerateChartResponseDto(chartImage));
+                    response.setMessage("Chart generated successfully");
+
+                    // Сохранение изображения в файл
+                    ImageIO.write(image, "PNG", new File("test_chart.png"));
                 }
-
-                for (Map.Entry<String, List<Integer>> entry : reviewsByDate.entrySet()) {
-                    double averageRating = entry.getValue().stream().mapToDouble(Integer::doubleValue).average().orElse(0);
-                    dataset.addValue(averageRating, "Average Rating", entry.getKey());
-                }
-
-                JFreeChart chart = ChartFactory.createLineChart(
-                        comp.getName() + " Average Rating", // Заголовок
-                        "Date",         // Ось X
-                        "Average Rating",          // Ось Y
-                        dataset,           // Набор данных
-                        PlotOrientation.VERTICAL,
-                        true,              // Легенда
-                        true,              // Подсказки
-                        false              // Статистика
-                );
-
-                CategoryPlot plot = (CategoryPlot) chart.getPlot();
-                CategoryAxis xAxis = plot.getDomainAxis();
-
-                // Поворот меток оси X для лучшего отображения
-                xAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4));
-
-                // Установка шрифта для меток на оси X
-                xAxis.setTickLabelFont(new Font("SansSerif", Font.PLAIN, 10));
-
-                // Установка фона графика и линии сетки
-                plot.setBackgroundPaint(Color.WHITE);
-                plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
-
-                // Генерация изображения
-                ChartRenderingInfo info = new ChartRenderingInfo();
-                BufferedImage image = chart.createBufferedImage(900, 750, info);
-
-                // Сохранение изображения в байтовый массив
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                ImageIO.write(image, "PNG", byteArrayOutputStream);
-                byte[] chartImage = byteArrayOutputStream.toByteArray();
-                response.setResponseEntity(new GenerateChartResponseDto(chartImage));
-                response.setMessage("Chart generated successfully");
-
-                // Сохранение изображения в файл
-                ImageIO.write(image, "PNG", new File("test_chart.png"));
             }
         }
 
@@ -396,18 +398,36 @@ public class ReviewService implements IReviewService {
             response.setMessage("Company not found");
             response.setResponseCode(OC_BUGS);
         } else {
-            SentimentTypeEnum type = SentimentTypeEnum.fromId(Math.toIntExact(allBySentRequestDTO.sentId()));
-            List<GetAllBySentResponseDTO> reviewList = reviewDao.findAllBySentType(comp.getCoreEntityId(), type);
-            if (reviewList.isEmpty()) {
-                response.setMessage("No reviews found");
+            if (checkEmployment(comp.getCoreEntityId())) {
+                response.setMessage("User not in company");
             } else {
-                GetAllBySentResponseListDTO reviewResponseList = reviewMapper.mapListToGetAllBySentResponseListDTO(comp.getName(), reviewList, type.getType());
-                response.setResponseEntity(reviewResponseList);
-                response.setMessage("All reviews found");
+                SentimentTypeEnum type = SentimentTypeEnum.fromId(Math.toIntExact(allBySentRequestDTO.sentId()));
+                List<GetAllBySentResponseDTO> reviewList = reviewDao.findAllBySentType(comp.getCoreEntityId(), type);
+                if (reviewList.isEmpty()) {
+                    response.setMessage("No reviews found");
+                } else {
+                    GetAllBySentResponseListDTO reviewResponseList = reviewMapper.mapListToGetAllBySentResponseListDTO(comp.getName(), reviewList, type.getType());
+                    response.setResponseEntity(reviewResponseList);
+                    response.setMessage("All reviews found");
+                }
             }
         }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
         return response;
     }
 
+    private boolean hasPermission(Long compId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String userCode = jwt.getClaim("userCode");
+        RoleEnum currentRole = userCompanyRolesDao.findRoleByUserCode(userCode, compId);
+        return currentRole.equals(RoleEnum.OWNER) || currentRole.equals(RoleEnum.ADMIN);
+    }
+
+    private boolean checkEmployment(Long compId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String userCode = jwt.getClaim("userCode");
+        return !userCompanyRolesDao.userExistInCompanyByUserCoe(userCode, compId);
+    }
 }

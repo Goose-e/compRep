@@ -344,7 +344,6 @@ public class CompanyService implements ICompanyService {
                 response.setMessage("Company not found");
             } else {
                 Long userId = userDao.findUserIdByUserCode(extractUsernameFromJwt());
-                System.out.println(userId);
                 UserCompanyRoles userCompanyRolesAdmin = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRolesAdmin == null) {
                     response.setError("Users not in company");
