@@ -1,6 +1,8 @@
 package com.example.companyReputationManagement.dao;
 
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseDTO;
 import com.example.companyReputationManagement.models.Review;
+import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
 import com.example.companyReputationManagement.repo.ReviewRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -31,5 +33,7 @@ public class ReviewDao {
         return reviewRepo.existsByContentAndCompanyId(text, id);
     }
 
-
+    public List<GetAllBySentResponseDTO> findAllBySentType(Long compId, SentimentTypeEnum sentId){
+        return reviewRepo.findAllByCompanyIdAndSentimentTypeId(compId,sentId);
+    }
 }

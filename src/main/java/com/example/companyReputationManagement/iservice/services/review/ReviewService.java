@@ -2,6 +2,7 @@ package com.example.companyReputationManagement.iservice.services.review;
 
 import com.example.companyReputationManagement.dao.CompanyDao;
 import com.example.companyReputationManagement.dao.ReviewDao;
+import com.example.companyReputationManagement.dao.UserCompanyRolesDao;
 import com.example.companyReputationManagement.dto.review.find.ReviewRequestDto;
 import com.example.companyReputationManagement.dto.review.find.ReviewResponse;
 import com.example.companyReputationManagement.dto.review.find.ReviewResponseListDto;
@@ -11,12 +12,19 @@ import com.example.companyReputationManagement.dto.review.generate_chart.Generat
 import com.example.companyReputationManagement.dto.review.get_all.GetReviewRequestDto;
 import com.example.companyReputationManagement.dto.review.get_all.GetReviewResponse;
 import com.example.companyReputationManagement.dto.review.get_all.GetReviewResponseListDto;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentRequestDTO;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponse;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseDTO;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseListDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.IReviewService;
 import com.example.companyReputationManagement.iservice.services.transactions.ReviewsTrans;
 import com.example.companyReputationManagement.mapper.ReviewMapper;
 import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.models.Review;
+import com.example.companyReputationManagement.models.UserCompanyRoles;
+import com.example.companyReputationManagement.models.enums.RoleEnum;
+import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jfree.chart.ChartFactory;
@@ -38,6 +46,9 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -67,6 +78,7 @@ public class ReviewService implements IReviewService {
     private final CompanyDao companyDao;
     private final ReviewsTrans reviewsTrans;
     private final ReviewDao reviewDao;
+    private final UserCompanyRolesDao userCompanyRolesDao;
 
     private Timestamp dateFormat(String date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
@@ -283,15 +295,24 @@ public class ReviewService implements IReviewService {
             response.setMessage("Company not found");
             response.setResponseCode(OC_BUGS);
         } else {
-            List<Review> responseListDto = reviewDao.findAllByCompanyId(comp.getCoreEntityId());
-            GetReviewResponseListDto getReviewResponseListDto = new GetReviewResponseListDto(
-                    responseListDto.stream().map(reviewMapper::mapReviewToGetReviewResponseDto).toList());
-
-            if (getReviewResponseListDto.getReviewList().isEmpty()) {
-                response.setMessage("No reviews found");
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Jwt jwt = (Jwt) authentication.getPrincipal();
+            String userCode = jwt.getClaim("userCode");
+            UserCompanyRoles userCompanyRoles = userCompanyRolesDao.findByUserCode(userCode, comp.getCoreEntityId());
+            if (userCompanyRoles.getRole().getRole().equals(RoleEnum.USER.getRole())) {
+                response.setMessage("User doesnt have enough rights");
             } else {
-                response.setResponseEntity(getReviewResponseListDto);
 
+                List<Review> responseListDto = reviewDao.findAllByCompanyId(comp.getCoreEntityId());
+                GetReviewResponseListDto getReviewResponseListDto = new GetReviewResponseListDto(
+                        responseListDto.stream().map(reviewMapper::mapReviewToGetReviewResponseDto).toList());
+
+                if (getReviewResponseListDto.getReviewList().isEmpty()) {
+                    response.setMessage("No reviews found");
+                } else {
+                    response.setResponseEntity(getReviewResponseListDto);
+
+                }
             }
         }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
@@ -363,6 +384,28 @@ public class ReviewService implements IReviewService {
             }
         }
 
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+        return response;
+    }
+
+    @Override
+    public HttpResponseBody<GetAllBySentResponseListDTO> getAllReviewsBySentType(GetAllBySentRequestDTO allBySentRequestDTO) {
+        HttpResponseBody<GetAllBySentResponseListDTO> response = new GetAllBySentResponse();
+        Company comp = findCompanyByCode(allBySentRequestDTO.companyCode());
+        if (comp == null) {
+            response.setMessage("Company not found");
+            response.setResponseCode(OC_BUGS);
+        } else {
+            SentimentTypeEnum type = SentimentTypeEnum.fromId(Math.toIntExact(allBySentRequestDTO.sentId()));
+            List<GetAllBySentResponseDTO> reviewList = reviewDao.findAllBySentType(comp.getCoreEntityId(), type);
+            if (reviewList.isEmpty()) {
+                response.setMessage("No reviews found");
+            } else {
+                GetAllBySentResponseListDTO reviewResponseList = reviewMapper.mapListToGetAllBySentResponseListDTO(comp.getName(), reviewList, type.getType());
+                response.setResponseEntity(reviewResponseList);
+                response.setMessage("All reviews found");
+            }
+        }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
         return response;
     }

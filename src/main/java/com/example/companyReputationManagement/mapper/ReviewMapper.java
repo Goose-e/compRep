@@ -3,6 +3,8 @@ package com.example.companyReputationManagement.mapper;
 
 import com.example.companyReputationManagement.dto.review.find.ReviewResponseDto;
 import com.example.companyReputationManagement.dto.review.get_all.GetReviewResponseDto;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseDTO;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseListDTO;
 import com.example.companyReputationManagement.iservice.generate.GenerateCode;
 import com.example.companyReputationManagement.models.Review;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
@@ -11,6 +13,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @AllArgsConstructor
 @Component
@@ -59,5 +62,9 @@ public class ReviewMapper {
     public GetReviewResponseDto mapReviewToGetReviewResponseDto(Review review) {
         return new GetReviewResponseDto(review.getReviewerName(), review.getContent(), review.getRating(),
                 review.getSentimentTypeId() != null ? review.getSentimentTypeId().getType() : null, review.getPublishedDate());
+    }
+
+    public GetAllBySentResponseListDTO mapListToGetAllBySentResponseListDTO(String compName, List<GetAllBySentResponseDTO> listReviews, String sentType) {
+        return new GetAllBySentResponseListDTO(compName, sentType, listReviews);
     }
 }

@@ -6,10 +6,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
 @SpringBootApplication(scanBasePackages = "com.example.companyReputationManagement")
-public class CompanyReputationManagmentApplication {
+public class CompanyReputationManagementApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(CompanyReputationManagmentApplication.class, args);
+        SpringApplication.run(CompanyReputationManagementApplication.class, args);
     }
 
 }

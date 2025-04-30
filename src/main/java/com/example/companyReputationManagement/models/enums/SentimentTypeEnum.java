@@ -7,7 +7,7 @@ public enum SentimentTypeEnum {
     POSITIVE(1L, "POSITIVE", "Positive"),
     NEUTRAL(2L, "NEUTRAL", "Neutral"),
     NEGATIVE(3L, "NEGATIVE", "Negative"),
-    UNRATED(4L, "UNRATED", "Unrated");;
+    UNRATED(4L, "UNRATED", "Unrated");
 
     private final Long id;
     private final String code;

@@ -17,4 +17,7 @@ public class UserCompanyRolesDao {
     public UserCompanyRoles findByUserId(Long userId, Long companyId) {
         return userCompanyRolesRepo.findByUserIdAndCompanyId(userId, companyId);
     }
+    public UserCompanyRoles findByUserCode(String userCode, Long companyId) {
+        return userCompanyRolesRepo.findByUserCodeAndCompanyId(userCode, companyId);
+    }
 }

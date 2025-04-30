@@ -54,13 +54,11 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint entryPoint) throws Exception {
         try {
-
             http.exceptionHandling(exceptionHandling ->
                             exceptionHandling
                                     .authenticationEntryPoint(entryPoint)
                     )
                     .authorizeHttpRequests
-
                             ((requests) -> requests
                                     .requestMatchers("/", "/home").permitAll()
                                     .requestMatchers("/auth/*").permitAll()

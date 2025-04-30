@@ -7,6 +7,8 @@ import com.example.companyReputationManagement.dto.review.generate_chart.Generat
 import com.example.companyReputationManagement.dto.review.generate_chart.GenerateChartResponseDto;
 import com.example.companyReputationManagement.dto.review.get_all.GetReviewRequestDto;
 import com.example.companyReputationManagement.dto.review.get_all.GetReviewResponseListDto;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentRequestDTO;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseListDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.IReviewService;
 import jakarta.validation.Valid;
@@ -41,5 +43,10 @@ public class ReviewController {
     @PostMapping(value = "/get_review_chart")
     public HttpResponseBody<GenerateChartResponseDto> getReviews(@Valid @RequestBody GenerateChartRequestDto generateChartRequestDto) throws IOException {
         return reviewService.generateChartAverageRate(generateChartRequestDto);
+    }
+
+    @PostMapping(value = "/get_reviews_by_sent")
+    public HttpResponseBody<GetAllBySentResponseListDTO> getReviews(@Valid @RequestBody GetAllBySentRequestDTO getAllBySentRequestDTO) throws IOException {
+        return reviewService.getAllReviewsBySentType(getAllBySentRequestDTO);
     }
 }
