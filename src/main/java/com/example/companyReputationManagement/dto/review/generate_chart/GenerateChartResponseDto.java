@@ -7,9 +7,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public class GenerateChartResponseDto implements ResponseDto {
-    private byte[] image;
+    private byte[] chartAvgImage;
+    private byte[] chartBar;
 
-    public GenerateChartResponseDto(byte[] image) {
-        this.image = image;
+    public GenerateChartResponseDto(byte[] chartAvgImage,byte[] chartBar) {
+        this.chartAvgImage = chartAvgImage;
+        this.chartBar = chartBar;
     }
 }

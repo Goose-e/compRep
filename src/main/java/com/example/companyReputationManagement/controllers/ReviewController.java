@@ -42,7 +42,7 @@ public class ReviewController {
 
     @PostMapping(value = "/get_review_chart")
     public HttpResponseBody<GenerateChartResponseDto> getReviews(@Valid @RequestBody GenerateChartRequestDto generateChartRequestDto) throws IOException {
-        return reviewService.generateChartAverageRate(generateChartRequestDto);
+        return reviewService.generateCharts(generateChartRequestDto);
     }
 
     @PostMapping(value = "/get_reviews_by_sent")

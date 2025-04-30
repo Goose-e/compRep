@@ -18,7 +18,7 @@ public interface IReviewService {
 
     HttpResponseBody<GetReviewResponseListDto> getReviews(GetReviewRequestDto getReviewRequestDto);
 
-    HttpResponseBody<GenerateChartResponseDto> generateChartAverageRate(GenerateChartRequestDto generateChartRequestDto) throws IOException;
+    HttpResponseBody<GenerateChartResponseDto> generateCharts(GenerateChartRequestDto generateChartRequestDto) throws IOException;
 
     HttpResponseBody<GetAllBySentResponseListDTO> getAllReviewsBySentType(GetAllBySentRequestDTO allBySentRequestDTO);
 

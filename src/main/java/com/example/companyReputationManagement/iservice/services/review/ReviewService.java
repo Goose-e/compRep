@@ -60,10 +60,8 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static com.example.companyReputationManagement.constants.SysConst.OC_BUGS;
@@ -85,7 +83,7 @@ public class ReviewService implements IReviewService {
         return Timestamp.valueOf(localDateTime);
     }
 
-    void findReviewsOtzovik(Company company, List<Review> reviews, HttpResponseBody<ReviewResponseListDto> response) throws Exception {
+    private void findReviewsOtzovik(Company company, List<Review> reviews, HttpResponseBody<ReviewResponseListDto> response) {
         String url = company.getOtzovikUrl();
         if (url == null) {
             response.setError("company not found on site");
@@ -119,49 +117,18 @@ public class ReviewService implements IReviewService {
                     driver.get(urlCom);
                     WebDriverWait wait = new WebDriverWait(driver, duration);
                     try {
-                        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("description")));
+                        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".wpd-comment")));
                     } catch (TimeoutException e) {
-                        System.out.println("Элемент 'description' не найден. Завершаем обработку.");
-                        hasMore = false; // например, если ты в цикле — останавливаем парсинг
-                        break; // если надо выйти из цикла
+                        System.out.println("Элемент 'comment' не найден. Завершаем обработку.");
+                        hasMore = false;
                     }
                     String pageSource = driver.getPageSource();
                     Document doc = Jsoup.parse(pageSource);
-                    Elements reviewBlocks = doc.select(".description");
-                    Elements ratingBlocks = doc.select(".wpd-cf-value");
-                    Elements authors = doc.select(".wpd-comment-author");
-                    Elements dates = doc.select(".wpd-comment-date");
-                    boolean check = !ratingBlocks.isEmpty();
-                    System.out.println(reviewBlocks.size());
-                    if (reviewBlocks.isEmpty()) {
-                        hasMore = false;
-                    }
-                    for (int i = 0; i < reviewBlocks.size(); i++, rating = 0) {
-                        try {
-                            String dateStr = dates.get(i).attr("title");
-                            Timestamp date = dateFormat(dateStr);
-                            String text = reviewBlocks.get(i).text();
-                            if (check && i < ratingBlocks.size()) {
-                                Elements stars = ratingBlocks.get(i).select(".fas.fa-star");
-                                for (Element star : stars) {
-                                    if (star.hasClass("wcf-active-star")) {
-                                        rating++;
-                                    }
-                                }
-                            }
-                            String author = i < authors.size() ? authors.get(i).text() : "Аноним";
-                            Review review = reviewMapper.createReview(text, author, rating, companyId, 1L, date);
-                            reviews.add(review);
-                        } catch (Exception e) {
-                            log.error("Error while processing reviews", e);
-                            break;
-                        }
-                    }
-
+                    Elements elements = doc.select(".wpd-comment:not(.wpd-reply)");
+                    elementsProc(companyId, reviews, rating, elements);
                     System.out.println(page);
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
-                    hasMore = false;
                 }
             }
 
@@ -170,6 +137,7 @@ public class ReviewService implements IReviewService {
         }
         driver.quit();
         try {
+            System.out.println("saving");
             reviewsTrans.saveAll(reviews);
         } catch (Exception e) {
             log.error("Error saving reviews", e);
@@ -177,8 +145,7 @@ public class ReviewService implements IReviewService {
         }
     }
 
-
-    private void getReviewsList(String url, Long companyId, List<Review> reviews) throws IOException {
+    private void getReviewsList(String url, Long companyId, List<Review> reviews) {
         try {
             int rating = 0;
             Connection.Response response1 = Jsoup.connect(url)
@@ -190,45 +157,56 @@ public class ReviewService implements IReviewService {
                     .method(Connection.Method.GET)
                     .execute();
             Document doc = response1.parse();
-            Elements reviewBlocks = doc.select(".description");
-            if (reviewBlocks.size() >= 99 || reviewBlocks.isEmpty()) {
+
+            Elements elements = doc.select(".wpd-comment:not(.wpd-reply)");
+            if (elements.size() >= 99 || elements.isEmpty()) {
                 CompletableFuture.runAsync(() -> {
                     parseChrome(url, companyId);
                 });
 
             } else {
-                Elements ratingBlocks = doc.select(".wpd-cf-value");
-                Elements authors = doc.select(".wpd-comment-author");
-                Elements dates = doc.select(".wpd-comment-date");
-                boolean check = !ratingBlocks.isEmpty();
-                for (int i = 0; i < reviewBlocks.size(); i++, rating = 0) {
-                    try {
-                        String dateStr = dates.get(i).attr("title");
-                        Timestamp date = dateFormat(dateStr);
-                        String text = reviewBlocks.get(i).text();
-                        if (check) {
-                            Elements stars = ratingBlocks.get(i).select(".fas.fa-star");
-                            for (Element star : stars) {
-                                if (star.hasClass("wcf-active-star")) {
-                                    rating++;
-                                }
-                            }
-                        }
-                        String author = i < authors.size() ? authors.get(i).text() : "Аноним";
-                        Review review = reviewMapper.createReview(text, author, rating, companyId, 1L, date);
-                        System.out.println(i);
-                        reviews.add(review);
-                    } catch (Exception e) {
-                        break;
-                    }
-                }
-
+                elementsProc(companyId, reviews, rating, elements);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
 
+    private void elementsProc(Long companyId, List<Review> reviews, int rating, Elements elements) {
+        for (Element element : elements) {
+            Elements reviewBlocks = element.select(".description");
+            Elements ratingBlocks = element.select(".wpd-cf-value");
+            Elements authors = element.select(".wpd-comment-author");
+            Elements dates = element.select(".wpd-comment-date");
+            boolean check = !ratingBlocks.isEmpty();
+            for (int i = 0; i < reviewBlocks.size(); i++, rating = 0) {
+                try {
+                    String dateStr = dates.get(i).attr("title");
+                    Timestamp date = dateFormat(dateStr);
+                    String text = reviewBlocks.get(i).text();
+                    if (check && i < ratingBlocks.size()) {
+                        Elements stars = ratingBlocks.get(i).select(".fas.fa-star");
+                        for (Element star : stars) {
+                            if (star.hasClass("wcf-active-star")) {
+                                rating++;
+                            }
+                        }
+                    }
+                    String author = i < authors.size() ? authors.get(i).text() : "Аноним";
+                    Review review = reviewMapper.createReview(text, author, rating, companyId, 1L, date);
+                    reviews.add(review);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    log.error("Error while processing reviews", e);
+                    break;
+                }
+            }
+        }
+    }
+
+    private Company findCompanyByCode(String companyCode) {
+        return companyDao.findByCompanyCode(companyCode);
+    }
 
     void parseReviews(Company company) {
         List<Review> reviews = new ArrayList<>();
@@ -251,6 +229,97 @@ public class ReviewService implements IReviewService {
         }
     }
 
+    private boolean hasPermission(Long compId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String userCode = jwt.getClaim("userCode");
+        RoleEnum currentRole = userCompanyRolesDao.findRoleByUserCode(userCode, compId);
+        return currentRole.equals(RoleEnum.OWNER) || currentRole.equals(RoleEnum.ADMIN);
+    }
+
+    private boolean checkEmployment(Long compId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String userCode = jwt.getClaim("userCode");
+        return !userCompanyRolesDao.userExistInCompanyByUserCoe(userCode, compId);
+    }
+
+    private byte[] generateAverageChart(List<Review> reviews, String compName) throws IOException {
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        Map<String, List<Integer>> reviewsByDate = new HashMap<>();
+        for (Review review : reviews) {
+            if (review.getRating() == 0) continue;
+            String formattedDate = review.getPublishedDate().toLocalDateTime().toLocalDate().toString().substring(0, 7); // Группировка по году-месяцу
+            reviewsByDate.computeIfAbsent(formattedDate, k -> new ArrayList<>()).add(review.getRating());
+        }
+        for (Map.Entry<String, List<Integer>> entry : reviewsByDate.entrySet()) {
+            double averageRating = entry.getValue().stream().mapToDouble(Integer::doubleValue).average().orElse(0);
+            dataset.addValue(averageRating, "Average Rating", entry.getKey());
+        }
+        JFreeChart chart = ChartFactory.createLineChart(
+                compName + " Average Rating", // Заголовок
+                "Date",         // Ось X
+                "Average Rating",          // Ось Y
+                dataset,           // Набор данных
+                PlotOrientation.VERTICAL,
+                true,              // Легенда
+                true,              // Подсказки
+                false              // Статистика
+        );
+        CategoryPlot plot = (CategoryPlot) chart.getPlot();
+        CategoryAxis xAxis = plot.getDomainAxis();
+        xAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4));
+        xAxis.setTickLabelFont(new Font("SansSerif", Font.PLAIN, 10));
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
+        ChartRenderingInfo info = new ChartRenderingInfo();
+        BufferedImage image = chart.createBufferedImage(900, 750, info);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ImageIO.write(image, "PNG", byteArrayOutputStream);
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    private byte[] generateSentChart(List<Review> reviews, String compName) throws IOException {
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        Map<SentimentTypeEnum, Integer> countByType = new EnumMap<>(SentimentTypeEnum.class);
+        for (SentimentTypeEnum type : SentimentTypeEnum.values()) {
+            countByType.put(type, 0);
+        }
+        for (Review review : reviews) {
+            SentimentTypeEnum type = review.getSentimentTypeId();
+            countByType.put(type, countByType.get(type) + 1);
+        }
+        for (Map.Entry<SentimentTypeEnum, Integer> entry : countByType.entrySet()) {
+            String label = switch (entry.getKey()) {
+                case POSITIVE -> "Положительный";
+                case NEUTRAL -> "Нейтральный";
+                case NEGATIVE -> "Отрицательный";
+                case UNRATED -> "Неоценённый";
+            };
+            dataset.addValue(entry.getValue(), "Количество отзывов", label);
+        }
+        JFreeChart chart = ChartFactory.createBarChart(
+                compName + " – Количество отзывов по типу", // Заголовок
+                "Тип отзыва",                               // Ось X
+                "Количество",                               // Ось Y
+                dataset,
+                PlotOrientation.VERTICAL,
+                true, true, false
+        );
+        CategoryPlot plot = (CategoryPlot) chart.getPlot();
+        CategoryAxis xAxis = plot.getDomainAxis();
+        xAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4));
+        xAxis.setTickLabelFont(new Font("SansSerif", Font.PLAIN, 10));
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
+        ChartRenderingInfo info = new ChartRenderingInfo();
+        BufferedImage image = chart.createBufferedImage(900, 750, info);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ImageIO.write(image, "PNG", byteArrayOutputStream);
+        ImageIO.write(image, "PNG", new File("test_chart.png"));
+        return byteArrayOutputStream.toByteArray();
+    }
+
     @Override
     public HttpResponseBody<ReviewResponseListDto> findReviews(ReviewRequestDto reviewRequestDto) throws Exception {
         HttpResponseBody<ReviewResponseListDto> response = new ReviewResponse();
@@ -262,6 +331,7 @@ public class ReviewService implements IReviewService {
             if (!hasPermission(comp.getCoreEntityId())) {
                 response.setMessage("User hasn't permission");
             } else {
+
                 List<Review> reviews = new ArrayList<>();
                 findReviewsOtzovik(comp, reviews, response);
                 if (!reviews.isEmpty()) {
@@ -284,11 +354,6 @@ public class ReviewService implements IReviewService {
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
         return response;
     }
-
-    private Company findCompanyByCode(String companyCode) {
-        return companyDao.findByCompanyCode(companyCode);
-    }
-
 
     @Override
     public HttpResponseBody<GetReviewResponseListDto> getReviews(GetReviewRequestDto getReviewRequestDto) {
@@ -317,71 +382,26 @@ public class ReviewService implements IReviewService {
     }
 
     @Override
-    public HttpResponseBody<GenerateChartResponseDto> generateChartAverageRate(GenerateChartRequestDto generateChartRequestDto) throws IOException {
+    public HttpResponseBody<GenerateChartResponseDto> generateCharts(GenerateChartRequestDto generateChartRequestDto) throws IOException {
         HttpResponseBody<GenerateChartResponseDto> response = new GenerateChartResponse();
         Company comp = findCompanyByCode(generateChartRequestDto.getCompanyCode());
         if (comp == null) {
             response.setMessage("Company not found");
         } else {
-            if (checkEmployment(comp.getCoreEntityId())) {
+            if (!checkEmployment(comp.getCoreEntityId())) {
                 response.setMessage("User not in company");
-
             } else {
                 List<Review> reviews = reviewDao.findAllByCompanyIdSorted(comp.getCoreEntityId());
                 if (reviews.isEmpty()) {
                     response.setMessage("No reviews found");
                 } else {
-                    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-
-                    Map<String, List<Integer>> reviewsByDate = new HashMap<>();
-                    for (Review review : reviews) {
-                        if (review.getRating() == 0) continue;
-                        String formattedDate = review.getPublishedDate().toLocalDateTime().toLocalDate().toString().substring(0, 7); // Группировка по году-месяцу
-                        reviewsByDate.computeIfAbsent(formattedDate, k -> new ArrayList<>()).add(review.getRating());
-                    }
-
-                    for (Map.Entry<String, List<Integer>> entry : reviewsByDate.entrySet()) {
-                        double averageRating = entry.getValue().stream().mapToDouble(Integer::doubleValue).average().orElse(0);
-                        dataset.addValue(averageRating, "Average Rating", entry.getKey());
-                    }
-
-                    JFreeChart chart = ChartFactory.createLineChart(
-                            comp.getName() + " Average Rating", // Заголовок
-                            "Date",         // Ось X
-                            "Average Rating",          // Ось Y
-                            dataset,           // Набор данных
-                            PlotOrientation.VERTICAL,
-                            true,              // Легенда
-                            true,              // Подсказки
-                            false              // Статистика
-                    );
-
-                    CategoryPlot plot = (CategoryPlot) chart.getPlot();
-                    CategoryAxis xAxis = plot.getDomainAxis();
-
-                    // Поворот меток оси X для лучшего отображения
-                    xAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4));
-
-                    // Установка шрифта для меток на оси X
-                    xAxis.setTickLabelFont(new Font("SansSerif", Font.PLAIN, 10));
-
-                    // Установка фона графика и линии сетки
-                    plot.setBackgroundPaint(Color.WHITE);
-                    plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
-
-                    // Генерация изображения
-                    ChartRenderingInfo info = new ChartRenderingInfo();
-                    BufferedImage image = chart.createBufferedImage(900, 750, info);
-
-                    // Сохранение изображения в байтовый массив
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    ImageIO.write(image, "PNG", byteArrayOutputStream);
-                    byte[] chartImage = byteArrayOutputStream.toByteArray();
-                    response.setResponseEntity(new GenerateChartResponseDto(chartImage));
+                    byte[] chartAvgImage = generateAverageChart(reviews, comp.getName());
+                    byte[] chartBar = generateSentChart(reviews, comp.getName());
+                    response.setResponseEntity(new GenerateChartResponseDto(chartAvgImage, chartBar));
                     response.setMessage("Chart generated successfully");
 
                     // Сохранение изображения в файл
-                    ImageIO.write(image, "PNG", new File("test_chart.png"));
+                    //  ImageIO.write(image, "PNG", new File("test_chart.png"));
                 }
             }
         }
@@ -416,18 +436,5 @@ public class ReviewService implements IReviewService {
         return response;
     }
 
-    private boolean hasPermission(Long compId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        String userCode = jwt.getClaim("userCode");
-        RoleEnum currentRole = userCompanyRolesDao.findRoleByUserCode(userCode, compId);
-        return currentRole.equals(RoleEnum.OWNER) || currentRole.equals(RoleEnum.ADMIN);
-    }
 
-    private boolean checkEmployment(Long compId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        String userCode = jwt.getClaim("userCode");
-        return !userCompanyRolesDao.userExistInCompanyByUserCoe(userCode, compId);
-    }
 }
