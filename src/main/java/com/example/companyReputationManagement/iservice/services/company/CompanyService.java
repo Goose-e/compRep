@@ -119,14 +119,15 @@ public class CompanyService implements ICompanyService {
                     response.setMessage("Company is being created...");
                     response.setResponseCode(OC_OK);
                     response.setResponseEntity(companyMapper.mapCompanyCreateRequestDTOToCompanyCreateResponse(companyCreateRequestDTO, "in process"));
+                    Company company = companyMapper.mapCompanyCreateRequestDTOToCompany(companyCreateRequestDTO);
+                    UserCompanyRoles userCompanyRoles = userCompanyRolesMapper.mapUserAndCompanyToUserCompanyRoles(user, company);
+                    companyTrans.saveCompanyAndRole(company, userCompanyRoles);
                     CompletableFuture.runAsync(() -> {
                         try {
                             String url = findCompanyUrl(companyCreateRequestDTO.getCompanyName(), SourcesEnum.OTZOVIK);
-                            Company company = companyMapper.mapCompanyCreateRequestDTOToCompany(companyCreateRequestDTO);
                             CompanySourceUrl companySourceUrl = companySourceUrlMapper.create(company.getCoreEntityId(), url);
-                            UserCompanyRoles userCompanyRoles = userCompanyRolesMapper.mapUserAndCompanyToUserCompanyRoles(user, company);
                             try {
-                                companyTrans.save(company, userCompanyRoles, companySourceUrl);
+                                companyTrans.saveCompanySourceUrl(companySourceUrl);
                             } catch (DataIntegrityViolationException e) {
                                 logger.error("Data integrity error while saving company and user role: ", e);
                             } catch (Exception e) {

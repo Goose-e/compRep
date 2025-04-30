@@ -37,6 +37,19 @@ public class CompanyTrans {
         }
     }
     @Transactional
+    public void saveCompanySourceUrl(CompanySourceUrl companySourceUrl) {
+        try{
+            companySourceUrlDao.save(companySourceUrl);
+        } catch (DataIntegrityViolationException e) {
+            logger.error("Data integrity violation during save operation", e);
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error during save operation", e);
+            throw new RuntimeException("Unexpected error", e);
+        }
+    }
+
+    @Transactional
     public void saveCompanyAndRole(Company company, UserCompanyRoles userCompanyRoles) {
         try{
             companyDao.save(company);
