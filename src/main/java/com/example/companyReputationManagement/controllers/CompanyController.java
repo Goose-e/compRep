@@ -3,17 +3,20 @@ package com.example.companyReputationManagement.controllers;
 
 import com.example.companyReputationManagement.dto.company.add_user.AddUserRequestDTO;
 import com.example.companyReputationManagement.dto.company.add_user.AddUserResponseDTO;
-import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusResponseDTO;
 import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusResponseDTO;
 import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserCompanyRoleRequestDTO;
 import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserRoleResponseDTO;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateRequestDTO;
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
-import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusRequestDTO;
-import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusResponseDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
-import com.example.companyReputationManagement.dto.company.get.AllCompaniesResponseDTO;
+import com.example.companyReputationManagement.dto.company.get_all.AllCompaniesResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_all_user_companies.AllUserCompaniesResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeRequestDTO;
+import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.ICompanyService;
 import jakarta.validation.Valid;
@@ -32,15 +35,24 @@ public class CompanyController {
         return companyService.createCompany(companyCreateRequestDTO);
     }
 
+    @PostMapping(value = "/get_by_code")
+    public HttpResponseBody<GetCompanyByCodeResponseDTO> getCompanyByCode(@Valid @RequestBody GetCompanyByCodeRequestDTO companyByCodeRequestDTO) {
+        return companyService.getCompanyByCode(companyByCodeRequestDTO);
+    }
+
     @PostMapping(value = "/delete")
     public HttpResponseBody<ChangeCompanyStatusResponseDTO> deleteCompany(@Valid @RequestBody ChangeCompanyStatusRequestDTO changeCompanyStatusRequestDTO) {
         return companyService.changeCompanyStatus(changeCompanyStatusRequestDTO);
     }
 
     @GetMapping(value = "/get_all")
-    public HttpResponseBody<AllCompaniesResponseDTO> getAllCompanies() {
+    public HttpResponseBody<AllCompaniesResponseListDTO> getAllCompanies() {
         return companyService.getAllCompanies();
     }
+
+    @GetMapping(value = "/get_all_for_user")
+    public HttpResponseBody<AllUserCompaniesResponseListDTO> getAllUserCompanies() {
+        return companyService.getAllUserCompanies();}
 
     @PatchMapping(value = "/edit")
     public HttpResponseBody<EditCompanyResponseDTO> editCompany(@Valid @RequestBody EditCompanyRequestDTO editCompanyRequestCompany) {

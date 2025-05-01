@@ -1,6 +1,9 @@
 package com.example.companyReputationManagement.dao;
 
-import com.example.companyReputationManagement.dto.company.get.GetAllCompaniesResponseDTO;
+import com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponseDTO;
+import com.example.companyReputationManagement.dto.company.get_all_user_companies.GetAllUserCompaniesResponse;
+import com.example.companyReputationManagement.dto.company.get_all_user_companies.GetAllUserCompaniesResponseDTO;
+import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponseDTO;
 import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.repo.CompanyRepo;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +18,12 @@ public class CompanyDao {
     public boolean existByCompanyName(String companyName) {
         return companyRepo.existsByName(companyName);
     }
+
     public Company findByCompanyCode(String companyCode) {
         return companyRepo.findByCompanyCode(companyCode);
     }
+
+
     public Company save(Company company) {
         return companyRepo.save(company);
     }
@@ -30,5 +36,13 @@ public class CompanyDao {
     }
     public List<Company> findAll() {
         return companyRepo.findAllActiveCompany();
+    }
+
+    public List<GetAllUserCompaniesResponseDTO> findAllUsersCompanies(String userCode) {
+        return companyRepo.findAllActiveUserCompanies(userCode);
+    }
+
+    public GetCompanyByCodeResponseDTO findCompanyByCodeWithUrls(String companyCode) {
+        return companyRepo.findCompanyByCodeWithUrls(companyCode);
     }
 }

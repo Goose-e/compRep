@@ -13,7 +13,7 @@ public class ChangeCompanyUserStatusRequestDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
     @NotNull
-    private String companyName;
+    private String companyCode;
     @NotNull
     private String username;
     @NotNull
@@ -21,8 +21,8 @@ public class ChangeCompanyUserStatusRequestDTO implements Serializable {
     @Max(1)
     private Long newStatusId;
 
-    public ChangeCompanyUserStatusRequestDTO(String companyName, String username, Long newStatusId) {
-        this.companyName = companyName;
+    public ChangeCompanyUserStatusRequestDTO(String companyCode, String username, Long newStatusId) {
+        this.companyCode = companyCode;
         this.username = username;
         this.newStatusId = newStatusId;
     }

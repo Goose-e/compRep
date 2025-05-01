@@ -5,7 +5,6 @@ import com.example.companyReputationManagement.dto.company.create.CompanyCreateR
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
-import com.example.companyReputationManagement.dto.company.get.GetAllCompaniesResponseDTO;
 import com.example.companyReputationManagement.iservice.generate.GenerateCode;
 import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.models.CompanySourceUrl;

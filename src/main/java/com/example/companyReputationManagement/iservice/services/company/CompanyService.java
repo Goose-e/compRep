@@ -23,9 +23,15 @@ import com.example.companyReputationManagement.dto.company.create.CompanyCreateR
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponse;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
-import com.example.companyReputationManagement.dto.company.get.AllCompaniesResponseDTO;
-import com.example.companyReputationManagement.dto.company.get.GetAllCompaniesResponse;
-import com.example.companyReputationManagement.dto.company.get.GetAllCompaniesResponseDTO;
+import com.example.companyReputationManagement.dto.company.get_all.AllCompaniesResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponse;
+import com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponseDTO;
+import com.example.companyReputationManagement.dto.company.get_all_user_companies.AllUserCompaniesResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_all_user_companies.GetAllUserCompaniesResponse;
+import com.example.companyReputationManagement.dto.company.get_all_user_companies.GetAllUserCompaniesResponseDTO;
+import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeRequestDTO;
+import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponse;
+import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.ICompanyService;
 import com.example.companyReputationManagement.iservice.services.transactions.CompanyTrans;
@@ -107,11 +113,26 @@ public class CompanyService implements ICompanyService {
         }
     }
 
+    private String extractUserCodeFromJwt() throws JwtException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        return jwt.getClaim("userCode");
+    }
+
+    private boolean hasPermissionToChangeRole(RoleEnum currentRole) {
+        return !currentRole.equals(RoleEnum.OWNER) && !currentRole.equals(RoleEnum.ADMIN);
+    }
+
+    private boolean hasHigherRole(RoleEnum current, RoleEnum target) {
+        if (current == null || target == null) return false;
+        return current.getId() > target.getId();
+    }
+
     @Override
     public HttpResponseBody<CompanyCreateResponseDTO> createCompany(CompanyCreateRequestDTO companyCreateRequestDTO) {
         HttpResponseBody<CompanyCreateResponseDTO> response = new CompanyCreateResponse();
         try {
-            String userCode = extractUsernameFromJwt();
+            String userCode = extractUserCodeFromJwt();
             CompanyUser user = userDao.findUserByUserCode(userCode);
             if (user != null) {
                 boolean companyExists = companyDao.existByCompanyName(companyCreateRequestDTO.getCompanyName());
@@ -157,12 +178,12 @@ public class CompanyService implements ICompanyService {
     public HttpResponseBody<ChangeCompanyStatusResponseDTO> changeCompanyStatus(ChangeCompanyStatusRequestDTO changeCompanyStatusRequestDTO) {
         HttpResponseBody<ChangeCompanyStatusResponseDTO> response = new ChangeCompanyStatus();
         try {
-            Company company = companyDao.findByCompanyName(changeCompanyStatusRequestDTO.getCompanyName());
+            Company company = companyDao.findByCompanyCode(changeCompanyStatusRequestDTO.getCompanyCode());
             if (company == null) {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
             } else {
-                String userCode = extractUsernameFromJwt();
+                String userCode = extractUserCodeFromJwt();
                 Long userId = userDao.findUserIdByUserCode(userCode);
                 UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRoles == null) {
@@ -202,15 +223,15 @@ public class CompanyService implements ICompanyService {
     }
 
     @Override
-    public HttpResponseBody<AllCompaniesResponseDTO> getAllCompanies() {
-        HttpResponseBody<AllCompaniesResponseDTO> response = new GetAllCompaniesResponse();
+    public HttpResponseBody<AllCompaniesResponseListDTO> getAllCompanies() {
+        HttpResponseBody<AllCompaniesResponseListDTO> response = new GetAllCompaniesResponse();
         List<GetAllCompaniesResponseDTO> companiesList = companyDao.findAllWithUrls();
         if (companiesList.isEmpty()) {
             response.setMessage("Companies not found");
             response.setResponseEntity(null);
         } else {
-            AllCompaniesResponseDTO allCompaniesResponseDTO = new AllCompaniesResponseDTO(companiesList);
-            response.setResponseEntity(allCompaniesResponseDTO);
+            AllCompaniesResponseListDTO allCompaniesResponseListDTO = new AllCompaniesResponseListDTO(companiesList);
+            response.setResponseEntity(allCompaniesResponseListDTO);
             response.setMessage("All companies found");
         }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
@@ -227,7 +248,7 @@ public class CompanyService implements ICompanyService {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
             } else {
-                String userCode = extractUsernameFromJwt();
+                String userCode = extractUserCodeFromJwt();
                 Long userId = userDao.findUserIdByUserCode(userCode);
                 UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRoles == null) {
@@ -279,7 +300,7 @@ public class CompanyService implements ICompanyService {
                 response.setMessage("Company not found");
                 return response;
             } else {
-                String userCode = extractUsernameFromJwt();
+                String userCode = extractUserCodeFromJwt();
                 Long userId = userDao.findUserIdByUserCode(userCode);
                 UserCompanyRoles userCompanyRolesAdmin = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRolesAdmin == null) {
@@ -352,7 +373,7 @@ public class CompanyService implements ICompanyService {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
             } else {
-                Long userId = userDao.findUserIdByUserCode(extractUsernameFromJwt());
+                Long userId = userDao.findUserIdByUserCode(extractUserCodeFromJwt());
                 UserCompanyRoles userCompanyRolesAdmin = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRolesAdmin == null) {
                     response.setError("Users not in company");
@@ -404,12 +425,12 @@ public class CompanyService implements ICompanyService {
     public HttpResponseBody<ChangeCompanyUserStatusResponseDTO> changeUserStatus(ChangeCompanyUserStatusRequestDTO changeCompanyUserStatusRequestDTO) {
         HttpResponseBody<ChangeCompanyUserStatusResponseDTO> response = new ChangeCompanyUserStatusResponse();
         try {
-            Company company = companyDao.findByCompanyName(changeCompanyUserStatusRequestDTO.getCompanyName());
+            Company company = companyDao.findByCompanyCode(changeCompanyUserStatusRequestDTO.getCompanyCode());
             if (company == null) {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
             } else {
-                Long userId = userDao.findUserIdByUserCode(extractUsernameFromJwt());
+                Long userId = userDao.findUserIdByUserCode(extractUserCodeFromJwt());
                 UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRoles == null) {
                     response.setError("User not in company");
@@ -460,19 +481,44 @@ public class CompanyService implements ICompanyService {
         return response;
     }
 
-    private String extractUsernameFromJwt() throws JwtException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        return jwt.getClaim("userCode");
+    @Override
+    public HttpResponseBody<GetCompanyByCodeResponseDTO> getCompanyByCode(GetCompanyByCodeRequestDTO getCompanyByCodeRequestDTO) {
+        HttpResponseBody<GetCompanyByCodeResponseDTO> response = new GetCompanyByCodeResponse();
+        GetCompanyByCodeResponseDTO company = companyDao.findCompanyByCodeWithUrls(getCompanyByCodeRequestDTO.companyCode());
+        if (company == null) {
+            response.setMessage("Company not found");
+            response.setResponseEntity(null);
+        } else {
+            response.setResponseEntity(company);
+            response.setMessage("Company found");
+        }
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+
+        return response;
     }
 
-    private boolean hasPermissionToChangeRole(RoleEnum currentRole) {
-        return !currentRole.equals(RoleEnum.OWNER) && !currentRole.equals(RoleEnum.ADMIN);
+    @Override
+    public HttpResponseBody<AllUserCompaniesResponseListDTO> getAllUserCompanies() {
+        HttpResponseBody<AllUserCompaniesResponseListDTO> response = new GetAllUserCompaniesResponse();
+        String code = extractUserCodeFromJwt();
+        if (code == null) {
+            response.setError("User not authorized");
+        } else {
+            List<GetAllUserCompaniesResponseDTO> companiesList = companyDao.findAllUsersCompanies(code);
+            if (companiesList.isEmpty()) {
+                response.setMessage("Companies not found");
+                response.setResponseEntity(null);
+            } else {
+                AllUserCompaniesResponseListDTO allCompaniesResponseListDTO = new AllUserCompaniesResponseListDTO(companiesList);
+                response.setResponseEntity(allCompaniesResponseListDTO);
+                response.setMessage("All companies found");
+            }
+        }
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+
+        return response;
     }
 
-    private boolean hasHigherRole(RoleEnum current, RoleEnum target) {
-        if (current == null || target == null) return false;
-        return current.getId() > target.getId();
-    }
+
 }
 

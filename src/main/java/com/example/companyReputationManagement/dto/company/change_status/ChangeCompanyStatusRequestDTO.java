@@ -13,14 +13,14 @@ public class ChangeCompanyStatusRequestDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
     @NotNull
-    private String companyName;
+    private String companyCode;
     @NotNull
     @Min(0)
     @Max(1)
     private Long newStatusId;
 
-    public ChangeCompanyStatusRequestDTO(String companyName, Long newStatusId) {
-        this.companyName = companyName;
+    public ChangeCompanyStatusRequestDTO(String companyCode, Long newStatusId) {
+        this.companyCode = companyCode;
         this.newStatusId = newStatusId;
     }
 }

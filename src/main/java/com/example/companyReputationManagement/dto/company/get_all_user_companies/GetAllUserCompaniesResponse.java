@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.dto.company.get;
+package com.example.companyReputationManagement.dto.company.get_all_user_companies;
 
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import lombok.Getter;
@@ -6,10 +6,10 @@ import lombok.Getter;
 import static com.example.companyReputationManagement.constants.SysConst.EMPTY_STRING;
 
 @Getter
-public class GetAllCompaniesResponse extends HttpResponseBody<AllCompaniesResponseDTO> {
+public class GetAllUserCompaniesResponse extends HttpResponseBody<AllUserCompaniesResponseListDTO> {
     private final String httpRequestId = EMPTY_STRING;
 
-    public GetAllCompaniesResponse() {
+    public GetAllUserCompaniesResponse() {
         super(EMPTY_STRING);
     }
 
