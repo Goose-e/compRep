@@ -130,33 +130,6 @@ create table company_user
 alter table company_user
     owner to company_rep_adm;
 
-create table feedback
-(
-    feedback_id       bigint       not null
-        primary key,
-    feedback_code     varchar(100) not null
-        unique,
-    company_id        bigint       not null
-        references company
-            on delete cascade,
-    source_id         integer      not null
-        references source_ref
-            on delete set null,
-    type              varchar(20)  not null
-        constraint feedback_type_check
-            check ((type)::text = ANY
-                   (ARRAY [('mention'::character varying)::text, ('review'::character varying)::text])),
-    rating            integer
-        constraint feedback_rating_check
-            check ((rating >= 1) AND (rating <= 5)),
-    content           text         not null,
-    sentiment_type_id bigint
-        references sentiment_type_ref
-);
-
-alter table feedback
-    owner to company_rep_adm;
-
 create table user_company_roles
 (
     user_company_roles_id bigserial
@@ -194,5 +167,7 @@ create table company_source_url
 );
 
 alter table company_source_url
-    owner to postgres;
+    owner to company_rep_adm;
+
+
 
