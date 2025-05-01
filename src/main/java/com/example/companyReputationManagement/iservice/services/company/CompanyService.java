@@ -26,6 +26,10 @@ import com.example.companyReputationManagement.dto.company.edit.EditCompanyRespo
 import com.example.companyReputationManagement.dto.company.get_all.AllCompaniesResponseListDTO;
 import com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponse;
 import com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponseDTO;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersRequestDTO;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponse;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponseDTO;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponseListDTO;
 import com.example.companyReputationManagement.dto.company.get_all_user_companies.AllUserCompaniesResponseListDTO;
 import com.example.companyReputationManagement.dto.company.get_all_user_companies.GetAllUserCompaniesResponse;
 import com.example.companyReputationManagement.dto.company.get_all_user_companies.GetAllUserCompaniesResponseDTO;
@@ -113,9 +117,12 @@ public class CompanyService implements ICompanyService {
         }
     }
 
-    private String extractUserCodeFromJwt() throws JwtException {
+    private String extractUserCodeFromJwt() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt jwt = (Jwt) authentication.getPrincipal();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            return "";
+        }
         return jwt.getClaim("userCode");
     }
 
@@ -484,7 +491,9 @@ public class CompanyService implements ICompanyService {
     @Override
     public HttpResponseBody<GetCompanyByCodeResponseDTO> getCompanyByCode(GetCompanyByCodeRequestDTO getCompanyByCodeRequestDTO) {
         HttpResponseBody<GetCompanyByCodeResponseDTO> response = new GetCompanyByCodeResponse();
-        GetCompanyByCodeResponseDTO company = companyDao.findCompanyByCodeWithUrls(getCompanyByCodeRequestDTO.companyCode());
+        String jwt = extractUserCodeFromJwt();
+
+        GetCompanyByCodeResponseDTO company = companyDao.findCompanyByCodeWithUrls(getCompanyByCodeRequestDTO.companyCode(), jwt);
         if (company == null) {
             response.setMessage("Company not found");
             response.setResponseEntity(null);
@@ -515,6 +524,21 @@ public class CompanyService implements ICompanyService {
         }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
 
+        return response;
+    }
+
+    @Override
+    public HttpResponseBody<GetAllCompanyUsersResponseListDTO> getAllCompanyUsers(GetAllCompanyUsersRequestDTO getAllCompanyUsersRequestDTO) {
+        HttpResponseBody<GetAllCompanyUsersResponseListDTO> response = new GetAllCompanyUsersResponse();
+        List<GetAllCompanyUsersResponseDTO> companyUsersList = companyDao.findAllCompanyUsers(getAllCompanyUsersRequestDTO.companyCode());
+        if (companyUsersList.isEmpty()) {
+            response.setMessage("Company users not found");
+            response.setError("No users in company");
+        } else {
+            response.setMessage("Company users found");
+            response.setResponseEntity(new GetAllCompanyUsersResponseListDTO(companyUsersList));
+        }
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
         return response;
     }
 

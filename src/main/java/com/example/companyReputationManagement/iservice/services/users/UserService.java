@@ -7,6 +7,8 @@ import com.example.companyReputationManagement.dto.user.create.UserCreateRespons
 import com.example.companyReputationManagement.dto.user.edit.EditUserRequestDTO;
 import com.example.companyReputationManagement.dto.user.edit.EditUserResponse;
 import com.example.companyReputationManagement.dto.user.edit.EditUserResponseDTO;
+import com.example.companyReputationManagement.dto.user.get_by_code.GetUserByCodeResponse;
+import com.example.companyReputationManagement.dto.user.get_by_code.GetUserByCodeResponseDTO;
 import com.example.companyReputationManagement.dto.user.login.UserLoginRequestDTO;
 import com.example.companyReputationManagement.dto.user.login.UserLoginResponse;
 import com.example.companyReputationManagement.dto.user.login.UserLoginResponseDTO;
@@ -121,6 +123,27 @@ public class UserService implements IUserService {
                 userDao.save(user);
                 response.setMessage("User updated successfully");
                 response.setResponseEntity(userMapper.mapUserToUserResponse(user));
+            }
+        }
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+        return response;
+    }
+
+    @Override
+    public HttpResponseBody<GetUserByCodeResponseDTO> getUserByCode() {
+        HttpResponseBody<GetUserByCodeResponseDTO> response = new GetUserByCodeResponse();
+        String userCode = extractUsernameFromJwt();
+        if (userCode == null) {
+            response.setMessage("User unauthorized");
+        } else {
+            CompanyUser user = userDao.findUserByUserCode(userCode);
+            if (user == null) {
+                response.setMessage("User not found");
+                response.setError("User not found");
+            } else {
+                GetUserByCodeResponseDTO getUserByCodeResponseDTO = userMapper.mapUserToUserDto(user);
+                response.setMessage("User found successfully");
+                response.setResponseEntity(getUserByCodeResponseDTO);
             }
         }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);

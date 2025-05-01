@@ -14,6 +14,8 @@ import com.example.companyReputationManagement.dto.company.create.CompanyCreateR
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
 import com.example.companyReputationManagement.dto.company.get_all.AllCompaniesResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersRequestDTO;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponseListDTO;
 import com.example.companyReputationManagement.dto.company.get_all_user_companies.AllUserCompaniesResponseListDTO;
 import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeRequestDTO;
 import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponseDTO;
@@ -40,6 +42,11 @@ public class CompanyController {
         return companyService.getCompanyByCode(companyByCodeRequestDTO);
     }
 
+    @PostMapping(value = "/get_all_staff")
+    public HttpResponseBody<GetAllCompanyUsersResponseListDTO> getCompanyByCode(@Valid @RequestBody GetAllCompanyUsersRequestDTO getAllCompanyUsersRequestDTO) {
+        return companyService.getAllCompanyUsers(getAllCompanyUsersRequestDTO);
+    }
+
     @PostMapping(value = "/delete")
     public HttpResponseBody<ChangeCompanyStatusResponseDTO> deleteCompany(@Valid @RequestBody ChangeCompanyStatusRequestDTO changeCompanyStatusRequestDTO) {
         return companyService.changeCompanyStatus(changeCompanyStatusRequestDTO);
@@ -52,7 +59,8 @@ public class CompanyController {
 
     @GetMapping(value = "/get_all_for_user")
     public HttpResponseBody<AllUserCompaniesResponseListDTO> getAllUserCompanies() {
-        return companyService.getAllUserCompanies();}
+        return companyService.getAllUserCompanies();
+    }
 
     @PatchMapping(value = "/edit")
     public HttpResponseBody<EditCompanyResponseDTO> editCompany(@Valid @RequestBody EditCompanyRequestDTO editCompanyRequestCompany) {

@@ -65,6 +65,7 @@ public class WebSecurityConfig {
                                     .requestMatchers("/auth/login").permitAll()
                                     .requestMatchers("/user/*").authenticated()
                                     .requestMatchers("/company/get_all").permitAll()
+                                    .requestMatchers("/company/get_by_code").permitAll()
                                     .requestMatchers("/company/*").authenticated()
                                     .requestMatchers("/review/*").authenticated()
                                     .requestMatchers("/.well-known/**", "/oauth2/**").permitAll()

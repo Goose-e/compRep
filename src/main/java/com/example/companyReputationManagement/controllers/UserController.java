@@ -3,6 +3,7 @@ package com.example.companyReputationManagement.controllers;
 
 import com.example.companyReputationManagement.dto.user.edit.EditUserRequestDTO;
 import com.example.companyReputationManagement.dto.user.edit.EditUserResponseDTO;
+import com.example.companyReputationManagement.dto.user.get_by_code.GetUserByCodeResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.IUserService;
 import jakarta.validation.Valid;
@@ -21,5 +22,9 @@ public class UserController {
         return iUserService.edit(editUserRequestDTO);
     }
 
+    @GetMapping(value = "/get_by_code")
+    public HttpResponseBody<GetUserByCodeResponseDTO> getUserByCode() {
+        return iUserService.getUserByCode();
+    }
 
 }

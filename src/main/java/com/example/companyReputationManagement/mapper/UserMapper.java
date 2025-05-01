@@ -4,6 +4,7 @@ import com.example.companyReputationManagement.dto.user.create.UserCreateRequest
 import com.example.companyReputationManagement.dto.user.create.UserCreateResponseDTO;
 import com.example.companyReputationManagement.dto.user.edit.EditUserRequestDTO;
 import com.example.companyReputationManagement.dto.user.edit.EditUserResponseDTO;
+import com.example.companyReputationManagement.dto.user.get_by_code.GetUserByCodeResponseDTO;
 import com.example.companyReputationManagement.dto.user.login.UserLoginResponseDTO;
 import com.example.companyReputationManagement.iservice.generate.GenerateCode;
 import com.example.companyReputationManagement.models.CompanyUser;
@@ -38,6 +39,10 @@ public class UserMapper {
         companyUser.setUsername(editUserRequestDTO.getNewUsername() == null ? companyUser.getUsername() : editUserRequestDTO.getNewUsername());
         companyUser.setEmail(editUserRequestDTO.getNewEmail() == null ? companyUser.getEmail() : editUserRequestDTO.getNewEmail());
         return companyUser;
+    }
+
+    public GetUserByCodeResponseDTO mapUserToUserDto(CompanyUser companyUser) {
+       return new GetUserByCodeResponseDTO(companyUser.getUsername(),companyUser.getEmail(), companyUser.getUserCode());
     }
 
     public EditUserResponseDTO mapUserToUserResponse(CompanyUser companyUser) {

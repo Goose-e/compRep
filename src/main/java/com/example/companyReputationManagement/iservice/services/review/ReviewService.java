@@ -136,11 +136,10 @@ public class ReviewService implements IReviewService {
             }
 
         } catch (Exception e) {
-            System.out.println("Ошибка запуска драйвера: " + e.getMessage());
+            log.error("Ошибка запуска драйвера: {}", e.getMessage());
         }
         driver.quit();
         try {
-            System.out.println("saving");
             reviewsTrans.saveAll(reviews);
         } catch (Exception e) {
             log.error("Error saving reviews", e);

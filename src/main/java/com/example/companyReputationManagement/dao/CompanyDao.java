@@ -1,7 +1,7 @@
 package com.example.companyReputationManagement.dao;
 
 import com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponseDTO;
-import com.example.companyReputationManagement.dto.company.get_all_user_companies.GetAllUserCompaniesResponse;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponseDTO;
 import com.example.companyReputationManagement.dto.company.get_all_user_companies.GetAllUserCompaniesResponseDTO;
 import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponseDTO;
 import com.example.companyReputationManagement.models.Company;
@@ -42,7 +42,11 @@ public class CompanyDao {
         return companyRepo.findAllActiveUserCompanies(userCode);
     }
 
-    public GetCompanyByCodeResponseDTO findCompanyByCodeWithUrls(String companyCode) {
-        return companyRepo.findCompanyByCodeWithUrls(companyCode);
+    public GetCompanyByCodeResponseDTO findCompanyByCodeWithUrls(String companyCode,String userCode) {
+        return companyRepo.findActiveCompanyByCodeWithUrls(companyCode,userCode);
+    }
+
+    public List<GetAllCompanyUsersResponseDTO> findAllCompanyUsers(String userCode) {
+        return companyRepo.findAllCompanyUsers(userCode);
     }
 }

@@ -14,6 +14,8 @@ import com.example.companyReputationManagement.dto.company.create.CompanyCreateR
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
 import com.example.companyReputationManagement.dto.company.get_all.AllCompaniesResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersRequestDTO;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponseListDTO;
 import com.example.companyReputationManagement.dto.company.get_all_user_companies.AllUserCompaniesResponseListDTO;
 import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeRequestDTO;
 import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponseDTO;
@@ -37,4 +39,6 @@ public interface ICompanyService {
     HttpResponseBody<GetCompanyByCodeResponseDTO> getCompanyByCode(GetCompanyByCodeRequestDTO getCompanyByCodeRequestDTO);
 
     HttpResponseBody<AllUserCompaniesResponseListDTO> getAllUserCompanies();
+
+    HttpResponseBody<GetAllCompanyUsersResponseListDTO> getAllCompanyUsers(GetAllCompanyUsersRequestDTO getAllCompanyUsersRequestDTO);
 }
