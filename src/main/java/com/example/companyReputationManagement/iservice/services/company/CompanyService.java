@@ -507,7 +507,6 @@ public class CompanyService implements ICompanyService {
             List<GetAllUserCompaniesResponseDTO> companiesList = companyDao.findAllUsersCompanies(code);
             if (companiesList.isEmpty()) {
                 response.setMessage("Companies not found");
-                response.setResponseEntity(null);
             } else {
                 AllUserCompaniesResponseListDTO allCompaniesResponseListDTO = new AllUserCompaniesResponseListDTO(companiesList);
                 response.setResponseEntity(allCompaniesResponseListDTO);
