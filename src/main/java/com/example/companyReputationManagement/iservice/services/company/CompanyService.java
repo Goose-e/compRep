@@ -146,8 +146,8 @@ public class CompanyService implements ICompanyService {
                 if (!companyExists) {
                     response.setMessage("Company is being created...");
                     response.setResponseCode(OC_OK);
-                    response.setResponseEntity(companyMapper.mapCompanyCreateRequestDTOToCompanyCreateResponse(companyCreateRequestDTO, "in process"));
                     Company company = companyMapper.mapCompanyCreateRequestDTOToCompany(companyCreateRequestDTO);
+                    response.setResponseEntity(companyMapper.mapCompanyCreateRequestDTOToCompanyCreateResponse(company, "in process"));
                     UserCompanyRoles userCompanyRoles = userCompanyRolesMapper.mapUserAndCompanyToUserCompanyRoles(user, company);
                     companyTrans.saveCompanyAndRole(company, userCompanyRoles);
                     CompletableFuture.runAsync(() -> {
@@ -447,7 +447,8 @@ public class CompanyService implements ICompanyService {
                         response.setMessage("User doesnt have enough rights");
                     } else {
                         try {
-                            Long userCandidateId = userDao.findIdByUsernameOrEmail(changeCompanyUserStatusRequestDTO.getUsername());
+                            CompanyUser userCandidateForId = userDao.findUserByUserCode(changeCompanyUserStatusRequestDTO.getUserCode());
+                            Long userCandidateId = userCandidateForId.getCoreEntityId();
                             if (Objects.equals(userCandidateId, userId)) {
                                 response.setMessage("You cant ban yourself");
                             } else {
@@ -462,7 +463,7 @@ public class CompanyService implements ICompanyService {
                                         companyTrans.saveCompanyUserRole(userCandidate);
                                         response.setMessage("User changed status successfully");
                                         StatusEnum newStatus = StatusEnum.fromId(changeCompanyUserStatusRequestDTO.getNewStatusId().intValue());
-                                        response.setResponseEntity(new ChangeCompanyUserStatusResponseDTO(changeCompanyUserStatusRequestDTO.getUsername(), newStatus.getStatus()));
+                                        response.setResponseEntity(new ChangeCompanyUserStatusResponseDTO(userCandidateForId.getUsername(), newStatus.getStatus()));
                                     }
                                 }
                             }
@@ -515,7 +516,7 @@ public class CompanyService implements ICompanyService {
         } else {
             List<GetAllUserCompaniesResponseDTO> companiesList = companyDao.findAllUsersCompanies(code);
             if (companiesList.isEmpty()) {
-                response.setMessage("Companies not found");
+                    response.setMessage("Companies not found");
             } else {
                 AllUserCompaniesResponseListDTO allCompaniesResponseListDTO = new AllUserCompaniesResponseListDTO(companiesList);
                 response.setResponseEntity(allCompaniesResponseListDTO);

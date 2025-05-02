@@ -18,7 +18,7 @@ public class UserController {
     private final IUserService iUserService;
 
     @PatchMapping(value = "/edit")
-    public HttpResponseBody<EditUserResponseDTO> createCompany(@Valid @RequestBody EditUserRequestDTO editUserRequestDTO) {
+    public HttpResponseBody<EditUserResponseDTO> editUser(@Valid @RequestBody EditUserRequestDTO editUserRequestDTO) {
         return iUserService.edit(editUserRequestDTO);
     }
 

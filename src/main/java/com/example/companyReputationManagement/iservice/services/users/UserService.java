@@ -83,7 +83,6 @@ public class UserService implements IUserService {
                 List<OAuth2AccessToken> tokens = tokenService.createTokens(user.getUserCode(), user.getUsername(), user.getRoleRefId());
                 response.setResponseEntity(userMapper.mapTokensToUserLoginResponseDTO(tokens));
             } else {
-                System.out.println(user.getPasswordHash());
                 response.setMessage("Incorrect password");
             }
         } else {

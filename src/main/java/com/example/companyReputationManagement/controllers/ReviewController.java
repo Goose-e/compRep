@@ -30,6 +30,7 @@ public class ReviewController {
         try {
             response = reviewService.findReviews(reviewRequestDto);
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             e.printStackTrace();
         }
         return response;
@@ -41,12 +42,12 @@ public class ReviewController {
     }
 
     @PostMapping(value = "/get_review_chart")
-    public HttpResponseBody<GenerateChartResponseDto> getReviews(@Valid @RequestBody GenerateChartRequestDto generateChartRequestDto) throws IOException {
+    public HttpResponseBody<GenerateChartResponseDto> getReviewsCharts(@Valid @RequestBody GenerateChartRequestDto generateChartRequestDto) throws IOException {
         return reviewService.generateCharts(generateChartRequestDto);
     }
 
     @PostMapping(value = "/get_reviews_by_sent")
-    public HttpResponseBody<GetAllBySentResponseListDTO> getReviews(@Valid @RequestBody GetAllBySentRequestDTO getAllBySentRequestDTO) throws IOException {
+    public HttpResponseBody<GetAllBySentResponseListDTO> getReviewsBySent(@Valid @RequestBody GetAllBySentRequestDTO getAllBySentRequestDTO) throws IOException {
         return reviewService.getAllReviewsBySentType(getAllBySentRequestDTO);
     }
 }

@@ -43,12 +43,12 @@ public class CompanyController {
     }
 
     @PostMapping(value = "/get_all_staff")
-    public HttpResponseBody<GetAllCompanyUsersResponseListDTO> getCompanyByCode(@Valid @RequestBody GetAllCompanyUsersRequestDTO getAllCompanyUsersRequestDTO) {
+    public HttpResponseBody<GetAllCompanyUsersResponseListDTO> getAllCompanyUsers(@Valid @RequestBody GetAllCompanyUsersRequestDTO getAllCompanyUsersRequestDTO) {
         return companyService.getAllCompanyUsers(getAllCompanyUsersRequestDTO);
     }
 
-    @PostMapping(value = "/delete")
-    public HttpResponseBody<ChangeCompanyStatusResponseDTO> deleteCompany(@Valid @RequestBody ChangeCompanyStatusRequestDTO changeCompanyStatusRequestDTO) {
+    @PostMapping(value = "/change_status")
+    public HttpResponseBody<ChangeCompanyStatusResponseDTO> changeStatus(@Valid @RequestBody ChangeCompanyStatusRequestDTO changeCompanyStatusRequestDTO) {
         return companyService.changeCompanyStatus(changeCompanyStatusRequestDTO);
     }
 

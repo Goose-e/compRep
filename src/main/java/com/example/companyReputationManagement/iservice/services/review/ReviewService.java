@@ -198,7 +198,6 @@ public class ReviewService implements IReviewService {
                     Review review = reviewMapper.createReview(text, author, rating, companyId, 1L, date);
                     reviews.add(review);
                 } catch (Exception e) {
-                    System.out.println(e.getMessage());
                     log.error("Error while processing reviews", e);
                     break;
                 }
@@ -370,7 +369,7 @@ public class ReviewService implements IReviewService {
             response.setMessage("Company not found");
             response.setResponseCode(OC_BUGS);
         } else {
-            if (!checkEmployment(comp.getCoreEntityId())) {
+            if (checkEmployment(comp.getCoreEntityId())) {
                 response.setMessage("User not in company");
             } else {
                 List<Review> responseListDto = reviewDao.findAllByCompanyId(comp.getCoreEntityId());
@@ -395,7 +394,7 @@ public class ReviewService implements IReviewService {
         if (comp == null) {
             response.setMessage("Company not found");
         } else {
-            if (!checkEmployment(comp.getCoreEntityId())) {
+            if (checkEmployment(comp.getCoreEntityId())) {
                 response.setMessage("User not in company");
             } else {
                 List<Review> reviews = reviewDao.findAllByCompanyIdSorted(comp.getCoreEntityId());

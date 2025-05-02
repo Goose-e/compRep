@@ -30,8 +30,8 @@ public class CompanyMapper {
         return company;
     }
 
-    public CompanyCreateResponseDTO mapCompanyCreateRequestDTOToCompanyCreateResponse(CompanyCreateRequestDTO companyCreateRequestDTO, String url) {
-        return new CompanyCreateResponseDTO(companyCreateRequestDTO.getCompanyName(), companyCreateRequestDTO.getWebsite(), companyCreateRequestDTO.getIndustryName(), "in process...", url);
+    public CompanyCreateResponseDTO mapCompanyCreateRequestDTOToCompanyCreateResponse(Company companyCreateRequestDTO, String url) {
+        return new CompanyCreateResponseDTO(companyCreateRequestDTO.getName(), companyCreateRequestDTO.getWebsite(), companyCreateRequestDTO.getIndustry(), "in process...", url);
     }
 
     public EditCompanyResponseDTO mapCompanyToEditCompanyResponseDTO(Company company, CompanySourceUrl companySourceUrl) {
@@ -48,7 +48,6 @@ public class CompanyMapper {
         company.setDeleteDate(newStatus.equals(StatusEnum.CLOSED.getId()) ? LocalDateTime.now() : null);
         return company;
     }
-
 
 
     public Company mapCompanyToEditedCompany(Company company, EditCompanyRequestDTO editCompanyRequestDTO) {

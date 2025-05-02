@@ -15,15 +15,15 @@ public class ChangeCompanyUserStatusRequestDTO implements Serializable {
     @NotNull
     private String companyCode;
     @NotNull
-    private String username;
+    private String userCode;
     @NotNull
     @Min(0)
     @Max(1)
     private Long newStatusId;
 
-    public ChangeCompanyUserStatusRequestDTO(String companyCode, String username, Long newStatusId) {
+    public ChangeCompanyUserStatusRequestDTO(String companyCode, String userCode, Long newStatusId) {
         this.companyCode = companyCode;
-        this.username = username;
+        this.userCode = userCode;
         this.newStatusId = newStatusId;
     }
 }
