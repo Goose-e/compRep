@@ -21,7 +21,7 @@ public class ChangeCompanyUserStatusRequestDTO implements Serializable {
     @Max(1)
     private Long newStatusId;
 
-    public ChangeCompanyUserStatusRequestDTO(String companyCode, String userCode, Long newStatusId) {
+    public ChangeCompanyUserStatusRequestDTO() {
         this.companyCode = companyCode;
         this.userCode = userCode;
         this.newStatusId = newStatusId;

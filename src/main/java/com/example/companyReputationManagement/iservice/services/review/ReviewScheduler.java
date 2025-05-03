@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 @Component
 @RequiredArgsConstructor
 public class ReviewScheduler {
-    private final ReviewDao reviewDao;
     private final CompanyDao companyDao;
     private final ReviewService reviewService;
 

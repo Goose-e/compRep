@@ -3,7 +3,7 @@ package com.example.companyReputationManagement.controllers.jwt;
 import com.example.companyReputationManagement.dto.jwt.RefreshRequestDTO;
 import com.example.companyReputationManagement.dto.jwt.RefreshResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
-import com.example.companyReputationManagement.jwt.TokenService;
+import com.example.companyReputationManagement.iservice.services.jwt.TokenService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;

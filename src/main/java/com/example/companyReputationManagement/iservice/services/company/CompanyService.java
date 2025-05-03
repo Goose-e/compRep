@@ -1,6 +1,5 @@
 package com.example.companyReputationManagement.iservice.services.company;
 
-
 import com.example.companyReputationManagement.dao.CompanyDao;
 import com.example.companyReputationManagement.dao.CompanySourceUrlDao;
 import com.example.companyReputationManagement.dao.UserCompanyRolesDao;
@@ -38,6 +37,7 @@ import com.example.companyReputationManagement.dto.company.get_by_code.GetCompan
 import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.ICompanyService;
+import com.example.companyReputationManagement.iservice.IJwtService;
 import com.example.companyReputationManagement.iservice.services.transactions.CompanyTrans;
 import com.example.companyReputationManagement.mapper.CompanyMapper;
 import com.example.companyReputationManagement.mapper.CompanySourceUrlMapper;
@@ -60,9 +60,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
@@ -86,7 +83,9 @@ public class CompanyService implements ICompanyService {
     private static final Logger logger = LoggerFactory.getLogger(CompanyService.class);
     private final CompanySourceUrlMapper companySourceUrlMapper;
     private final CompanySourceUrlDao companySourceUrlDao;
+    private final IJwtService jwtService;
 
+    //Парсинг
     private WebDriver createWebDriver() {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--blink-settings=imagesEnabled=false");
@@ -97,11 +96,7 @@ public class CompanyService implements ICompanyService {
         return new ChromeDriver(options);
     }
 
-    private boolean checkStatus(StatusEnum userStatus) {
-        return userStatus == StatusEnum.CLOSED;
-    }
-
-    private String findCompanyUrl(String companyName, SourcesEnum source) throws Exception {
+    private String findCompanyUrl(String companyName, SourcesEnum source) {
         WebDriver driver = createWebDriver();
         try {
             driver.get(source.getUrl());
@@ -120,13 +115,9 @@ public class CompanyService implements ICompanyService {
         }
     }
 
-    private String extractUserCodeFromJwt() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
-            return "";
-        }
-        return jwt.getClaim("userCode");
+    //Проверки
+    private boolean checkStatus(StatusEnum userStatus) {
+        return userStatus == StatusEnum.CLOSED;
     }
 
     private boolean hasPermissionToChangeRole(RoleEnum currentRole) {
@@ -138,12 +129,12 @@ public class CompanyService implements ICompanyService {
         return current.getId() > target.getId();
     }
 
+
     @Override
     public HttpResponseBody<CompanyCreateResponseDTO> createCompany(CompanyCreateRequestDTO companyCreateRequestDTO) {
         HttpResponseBody<CompanyCreateResponseDTO> response = new CompanyCreateResponse();
         try {
-            String userCode = extractUserCodeFromJwt();
-            CompanyUser user = userDao.findUserByUserCode(userCode);
+            CompanyUser user = userDao.findUserByUserCode(jwtService.extractUserCodeFromJwt());
             if (user != null) {
                 boolean companyExists = companyDao.existByCompanyName(companyCreateRequestDTO.getCompanyName());
                 if (!companyExists) {
@@ -193,8 +184,8 @@ public class CompanyService implements ICompanyService {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
             } else {
-                String userCode = extractUserCodeFromJwt();
-                Long userId = userDao.findUserIdByUserCode(userCode);
+
+                Long userId = userDao.findUserIdByUserCode(jwtService.extractUserCodeFromJwt());
                 UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRoles == null) {
                     response.setError("User not in company");
@@ -258,13 +249,11 @@ public class CompanyService implements ICompanyService {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
             } else {
-                String userCode = extractUserCodeFromJwt();
-                Long userId = userDao.findUserIdByUserCode(userCode);
+                Long userId = userDao.findUserIdByUserCode(jwtService.extractUserCodeFromJwt());
                 UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRoles == null) {
                     response.setError("User not in company");
                     response.setMessage("User not in company");
-
                 } else {
                     if (checkStatus(userCompanyRoles.getStatus())) {
                         response.setMessage("You banned");
@@ -309,14 +298,12 @@ public class CompanyService implements ICompanyService {
         HttpResponseBody<ChangeUserRoleResponseDTO> response = new ChangeUserRoleResponse();
         boolean isOwner = false;
         try {
-            Company company = companyDao.findByCompanyCode(changeUserCompanyRoleRequestDTO.getCompanyCode());
+            Company company = companyDao.findByCompanyCode(jwtService.extractUserCodeFromJwt());
             if (company == null) {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
-                return response;
             } else {
-                String userCode = extractUserCodeFromJwt();
-                Long userId = userDao.findUserIdByUserCode(userCode);
+                Long userId = userDao.findUserIdByUserCode(jwtService.extractUserCodeFromJwt());
                 UserCompanyRoles userCompanyRolesAdmin = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRolesAdmin == null) {
                     response.setError("Users not in company");
@@ -369,14 +356,12 @@ public class CompanyService implements ICompanyService {
                     }
                 }
             }
-        } catch (
-                JwtException e) {
-            response.setError("get user error");
-            response.setMessage("get user error");
+        } catch (JwtException e) {
+            response.setError("Get user error");
+            response.setMessage("Get user error");
         }
 
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
-
         return response;
     }
 
@@ -384,12 +369,12 @@ public class CompanyService implements ICompanyService {
     public HttpResponseBody<AddUserResponseDTO> addUser(AddUserRequestDTO addUserRequestDTO) {
         HttpResponseBody<AddUserResponseDTO> response = new AddUserResponse();
         try {
-            Company company = companyDao.findByCompanyCode(addUserRequestDTO.getCompanyCode());
+            Company company = companyDao.findByCompanyCode(jwtService.extractUserCodeFromJwt());
             if (company == null) {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
             } else {
-                Long userId = userDao.findUserIdByUserCode(extractUserCodeFromJwt());
+                Long userId = userDao.findUserIdByUserCode(jwtService.extractUserCodeFromJwt());
                 UserCompanyRoles userCompanyRolesAdmin = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRolesAdmin == null) {
                     response.setError("Users not in company");
@@ -415,6 +400,7 @@ public class CompanyService implements ICompanyService {
                                         companyTrans.saveCompanyUserRole(userCompanyRolesCandidate);
                                         AddUserResponseDTO addUserResponseDTO = userCompanyRolesMapper.mapNewUserToAddUserResponse(addUserRequestDTO.getUsername());
                                         response.setResponseEntity(addUserResponseDTO);
+                                        response.setMessage("User added successfully");
                                     } catch (DataIntegrityViolationException e) {
                                         response.setError("Transaction failed");
                                         response.setMessage("Data integrity violation: " + e.getMessage());
@@ -450,7 +436,7 @@ public class CompanyService implements ICompanyService {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
             } else {
-                Long userId = userDao.findUserIdByUserCode(extractUserCodeFromJwt());
+                Long userId = userDao.findUserIdByUserCode(jwtService.extractUserCodeFromJwt());
                 UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());
                 if (userCompanyRoles == null) {
                     response.setError("User not in company");
@@ -509,7 +495,7 @@ public class CompanyService implements ICompanyService {
     @Override
     public HttpResponseBody<GetCompanyByCodeResponseDTO> getCompanyByCode(GetCompanyByCodeRequestDTO getCompanyByCodeRequestDTO) {
         HttpResponseBody<GetCompanyByCodeResponseDTO> response = new GetCompanyByCodeResponse();
-        String jwt = extractUserCodeFromJwt();
+        String jwt = jwtService.extractUserCodeFromJwt();
 
         GetCompanyByCodeResponseDTO company = companyDao.findCompanyByCodeWithUrls(getCompanyByCodeRequestDTO.companyCode(), jwt);
         if (company == null) {
@@ -527,7 +513,7 @@ public class CompanyService implements ICompanyService {
     @Override
     public HttpResponseBody<AllUserCompaniesResponseListDTO> getAllUserCompanies() {
         HttpResponseBody<AllUserCompaniesResponseListDTO> response = new GetAllUserCompaniesResponse();
-        String code = extractUserCodeFromJwt();
+        String code = jwtService.extractUserCodeFromJwt();
         if (code == null) {
             response.setError("User not authorized");
         } else {

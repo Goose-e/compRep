@@ -13,17 +13,13 @@ import com.example.companyReputationManagement.dto.user.login.UserLoginRequestDT
 import com.example.companyReputationManagement.dto.user.login.UserLoginResponse;
 import com.example.companyReputationManagement.dto.user.login.UserLoginResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
+import com.example.companyReputationManagement.iservice.IJwtService;
 import com.example.companyReputationManagement.iservice.IUserService;
-import com.example.companyReputationManagement.jwt.TokenService;
 import com.example.companyReputationManagement.mapper.UserMapper;
 import com.example.companyReputationManagement.models.CompanyUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,7 +34,7 @@ public class UserService implements IUserService {
     private final UserDao userDao;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final TokenService tokenService;
+    private final IJwtService tokenService;
 
     @Override
     public HttpResponseBody<UserCreateResponseDTO> register(UserCreateRequestDTO userCreateRequestDTO) {
@@ -81,6 +77,7 @@ public class UserService implements IUserService {
             if (passwordEncoder.matches(userLoginRequestDTO.getPassword(), user.getPasswordHash())) {
                 response.setMessage("User logged in successfully");
                 List<OAuth2AccessToken> tokens = tokenService.createTokens(user.getUserCode(), user.getUsername(), user.getRoleRefId());
+                System.out.println(tokens.get(1).getTokenType());
                 response.setResponseEntity(userMapper.mapTokensToUserLoginResponseDTO(tokens));
             } else {
                 response.setMessage("Incorrect password");
@@ -112,7 +109,7 @@ public class UserService implements IUserService {
             response.setError(errorMessage.toString().trim());
             response.setResponseEntity(null);
         } else {
-            CompanyUser user = userDao.findUserByUserCode(extractUsernameFromJwt());
+            CompanyUser user = userDao.findUserByUserCode(tokenService.extractUserCodeFromJwt());
             if (user == null) {
                 response.setMessage("User not found");
                 response.setResponseEntity(null);
@@ -131,7 +128,7 @@ public class UserService implements IUserService {
     @Override
     public HttpResponseBody<GetUserByCodeResponseDTO> getUserByCode() {
         HttpResponseBody<GetUserByCodeResponseDTO> response = new GetUserByCodeResponse();
-        String userCode = extractUsernameFromJwt();
+        String userCode = tokenService.extractUserCodeFromJwt();
         if (userCode == null) {
             response.setMessage("User unauthorized");
         } else {
@@ -149,9 +146,5 @@ public class UserService implements IUserService {
         return response;
     }
 
-    private String extractUsernameFromJwt() throws JwtException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        return jwt.getClaim("userCode");
-    }
+
 }

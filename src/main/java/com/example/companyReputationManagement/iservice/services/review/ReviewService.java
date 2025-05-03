@@ -18,6 +18,7 @@ import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAll
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseDTO;
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseListDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
+import com.example.companyReputationManagement.iservice.IJwtService;
 import com.example.companyReputationManagement.iservice.IReviewService;
 import com.example.companyReputationManagement.iservice.services.transactions.ReviewsTrans;
 import com.example.companyReputationManagement.mapper.ReviewMapper;
@@ -56,7 +57,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -79,7 +79,9 @@ public class ReviewService implements IReviewService {
     private final ReviewDao reviewDao;
     private final UserCompanyRolesDao userCompanyRolesDao;
     private final CompanySourceUrlDao companySourceUrlDao;
+    private final IJwtService jwtService;
 
+    //Парсинг
     private Timestamp dateFormat(String date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
@@ -106,11 +108,11 @@ public class ReviewService implements IReviewService {
         int seconds = 10;
         Duration duration = Duration.ofSeconds(seconds);
         ChromeOptions options = new ChromeOptions();
-//        options.addArguments("--blink-settings=imagesEnabled=false");
-//        options.addArguments("--disable-extensions");
-//        options.addArguments("--disable-popup-blocking");
-//        options.addArguments("--disable-default-apps");
-//        options.addArguments("--headless", "--disable-gpu", "--window-size=1920x1080");
+        options.addArguments("--blink-settings=imagesEnabled=false");
+        options.addArguments("--disable-extensions");
+        options.addArguments("--disable-popup-blocking");
+        options.addArguments("--disable-default-apps");
+        options.addArguments("--headless", "--disable-gpu", "--window-size=1920x1080");
         ChromeDriver driver = new ChromeDriver(options);
         try {
             while (hasMore) {
@@ -162,9 +164,7 @@ public class ReviewService implements IReviewService {
 
             Elements elements = doc.select(".wpd-comment:not(.wpd-reply)");
             if (elements.size() >= 99 || elements.isEmpty()) {
-                CompletableFuture.runAsync(() -> {
-                    parseChrome(url, companyId);
-                });
+                CompletableFuture.runAsync(() -> parseChrome(url, companyId));
 
             } else {
                 elementsProc(companyId, reviews, rating, elements);
@@ -235,19 +235,19 @@ public class ReviewService implements IReviewService {
         }
     }
 
-    private boolean hasPermission(Long compId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        String userCode = jwt.getClaim("userCode");
-        RoleEnum currentRole = userCompanyRolesDao.findRoleByUserCode(userCode, compId);
-        return currentRole.equals(RoleEnum.OWNER) || currentRole.equals(RoleEnum.ADMIN);
-    }
-
-    private boolean checkEmployment(Long compId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt jwt = (Jwt) authentication.getPrincipal();
-        String userCode = jwt.getClaim("userCode");
-        return !userCompanyRolesDao.userExistInCompanyByUserCoe(userCode, compId);
+    //Создание картинок графиков
+    private byte[] createChartPng(JFreeChart chart) throws IOException {
+        CategoryPlot plot = (CategoryPlot) chart.getPlot();
+        CategoryAxis xAxis = plot.getDomainAxis();
+        xAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4));
+        xAxis.setTickLabelFont(new Font("SansSerif", Font.PLAIN, 10));
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
+        ChartRenderingInfo info = new ChartRenderingInfo();
+        BufferedImage image = chart.createBufferedImage(900, 750, info);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ImageIO.write(image, "PNG", byteArrayOutputStream);
+        return byteArrayOutputStream.toByteArray();
     }
 
     private byte[] generateAverageChart(List<Review> reviews, String compName) throws IOException {
@@ -272,17 +272,8 @@ public class ReviewService implements IReviewService {
                 true,              // Подсказки
                 false              // Статистика
         );
-        CategoryPlot plot = (CategoryPlot) chart.getPlot();
-        CategoryAxis xAxis = plot.getDomainAxis();
-        xAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4));
-        xAxis.setTickLabelFont(new Font("SansSerif", Font.PLAIN, 10));
-        plot.setBackgroundPaint(Color.WHITE);
-        plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
-        ChartRenderingInfo info = new ChartRenderingInfo();
-        BufferedImage image = chart.createBufferedImage(900, 750, info);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        ImageIO.write(image, "PNG", byteArrayOutputStream);
-        return byteArrayOutputStream.toByteArray();
+
+        return createChartPng(chart);
     }
 
     private byte[] generateSentChart(List<Review> reviews, String compName) throws IOException {
@@ -312,22 +303,27 @@ public class ReviewService implements IReviewService {
                 PlotOrientation.VERTICAL,
                 true, true, false
         );
-        CategoryPlot plot = (CategoryPlot) chart.getPlot();
-        CategoryAxis xAxis = plot.getDomainAxis();
-        xAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4));
-        xAxis.setTickLabelFont(new Font("SansSerif", Font.PLAIN, 10));
-        plot.setBackgroundPaint(Color.WHITE);
-        plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
-        ChartRenderingInfo info = new ChartRenderingInfo();
-        BufferedImage image = chart.createBufferedImage(900, 750, info);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        ImageIO.write(image, "PNG", byteArrayOutputStream);
-        ImageIO.write(image, "PNG", new File("test_chart.png"));
-        return byteArrayOutputStream.toByteArray();
+
+        return createChartPng(chart);
     }
 
+    //Проверки
+    private boolean hasPermission(Long compId) {
+        String userCode = jwtService.extractUserCodeFromJwt();
+        RoleEnum currentRole = userCompanyRolesDao.findRoleByUserCode(userCode, compId);
+        return currentRole.equals(RoleEnum.OWNER) || currentRole.equals(RoleEnum.ADMIN);
+    }
+
+    private boolean checkEmployment(Long compId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = (Jwt) authentication.getPrincipal();
+        String userCode = jwt.getClaim("userCode");
+        return !userCompanyRolesDao.userExistInCompanyByUserCoe(userCode, compId);
+    }
+
+
     @Override
-    public HttpResponseBody<ReviewResponseListDto> findReviews(ReviewRequestDto reviewRequestDto) throws Exception {
+    public HttpResponseBody<ReviewResponseListDto> findReviews(ReviewRequestDto reviewRequestDto) {
         HttpResponseBody<ReviewResponseListDto> response = new ReviewResponse();
         Company comp = findCompanyByCode(reviewRequestDto.getCompanyCode());
         if (comp == null) {
@@ -345,13 +341,13 @@ public class ReviewService implements IReviewService {
                         reviewsTrans.saveAll(reviews);
                     } catch (Exception e) {
                         response.setError("Error while saving reviews");
-
                         Thread.currentThread().interrupt();
                     }
                     reviews = reviewDao.findAllByCompanyId(comp.getCoreEntityId());
                     ReviewResponseListDto reviewResponseListDto = new ReviewResponseListDto(
                             reviews.stream().map(reviewMapper::mapReviewToReviewResponseDto).toList());
                     response.setResponseEntity(reviewResponseListDto);
+                    response.setMessage("Responses found");
                 } else {
                     response.setError("Responses has 100+ messages .Checking response in process...");
                 }
@@ -378,8 +374,8 @@ public class ReviewService implements IReviewService {
                 if (getReviewResponseListDto.getReviewList().isEmpty()) {
                     response.setMessage("No reviews found");
                 } else {
+                    response.setMessage("Responses found");
                     response.setResponseEntity(getReviewResponseListDto);
-
                 }
             }
         }

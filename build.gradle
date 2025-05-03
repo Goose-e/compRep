@@ -56,7 +56,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-rest'
     implementation 'org.springframework.boot:spring-boot-starter-graphql'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
+  /*  implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'*/
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -80,7 +80,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     //implementation 'org.springframework.session:spring-session-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
-
+    // https://mvnrepository.com/artifact/org.mockito/mockito-core
+    testImplementation("org.mockito:mockito-core:5.17.0")
 }
 
 dependencyManagement {
@@ -100,6 +101,7 @@ hibernate {
         enableAssociationManagement = true
     }
 }
+
 
 tasks.named('test') {
     useJUnitPlatform()
