@@ -106,11 +106,11 @@ public class ReviewService implements IReviewService {
         int seconds = 10;
         Duration duration = Duration.ofSeconds(seconds);
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--blink-settings=imagesEnabled=false");
-        options.addArguments("--disable-extensions");
-        options.addArguments("--disable-popup-blocking");
-        options.addArguments("--disable-default-apps");
-        options.addArguments("--headless", "--disable-gpu", "--window-size=1920x1080");
+//        options.addArguments("--blink-settings=imagesEnabled=false");
+//        options.addArguments("--disable-extensions");
+//        options.addArguments("--disable-popup-blocking");
+//        options.addArguments("--disable-default-apps");
+//        options.addArguments("--headless", "--disable-gpu", "--window-size=1920x1080");
         ChromeDriver driver = new ChromeDriver(options);
         try {
             while (hasMore) {

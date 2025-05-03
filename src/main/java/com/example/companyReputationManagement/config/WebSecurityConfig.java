@@ -53,7 +53,7 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint entryPoint) throws Exception {
-        try {
+
             http.exceptionHandling(exceptionHandling ->
                             exceptionHandling
                                     .authenticationEntryPoint(entryPoint)
@@ -77,9 +77,6 @@ public class WebSecurityConfig {
                             ).authenticationEntryPoint(entryPoint)
                     )
                     .logout(LogoutConfigurer::permitAll).csrf(AbstractHttpConfigurer::disable);
-        } catch (JwtException e) {
-            System.out.println(e.getMessage());
-        }
         return http.build();
     }
 
@@ -113,8 +110,8 @@ public class WebSecurityConfig {
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
         RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
-                .clientId("client") // Уникальный ID клиента
-                .clientSecret("{noop}secret") // Простой секрет клиента. Использование {noop} указывает на отсутствие кодирования пароля
+                .clientId("client")
+                .clientSecret("{noop}secret")
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)

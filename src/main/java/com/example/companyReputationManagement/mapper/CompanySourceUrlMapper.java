@@ -15,12 +15,12 @@ public class CompanySourceUrlMapper {
         CompanySourceUrl companySourceUrl = new CompanySourceUrl();
         companySourceUrl.setCompanyId(compId);
         companySourceUrl.setCompanySourceUrlCode(generateCode.generateCode(companySourceUrl));
-        companySourceUrl.setSourceUrl(url == null ? "" : url);
+        companySourceUrl.setSourceUrl(url == null ? "не найдено" : url);
         companySourceUrl.setSourceType(SourcesEnum.OTZOVIK);
         return companySourceUrl;
     }
     public CompanySourceUrl edit(String url, CompanySourceUrl companySourceUrl) {
-        companySourceUrl.setSourceUrl(url == null ? "" : url);
+        companySourceUrl.setSourceUrl(url == null ? "не найдено" : url);
         return companySourceUrl;
     }
 }

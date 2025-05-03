@@ -51,7 +51,7 @@ public class TokenService {
                 .issuer("http://localhost:9000")
                 .issuedAt(now)
                 .expiresAt(accessTokenExpiresAt)
-                .subject(userCode)
+                .subject(username)
                 .claim("userCode", userCode)            // Добавляем имя пользователя в claims
                 .claim("role", role.name())
                 .claim("tokenType", "access")
@@ -63,7 +63,7 @@ public class TokenService {
                 .issuer("http://localhost:9000")
                 .issuedAt(now)
                 .expiresAt(refreshTokenExpiresAt)
-                .subject(userCode)
+                .subject(username)
                 .claim("userCode", userCode)
                 .claim("tokenType", "refresh")
                 .build();
@@ -84,8 +84,8 @@ public class TokenService {
                 .issuer("http://localhost:9000")
                 .issuedAt(now)
                 .expiresAt(accessTokenExpiresAt)
-                .subject(userCode)
-                .claim("userCode", userCode)
+                .subject(username)
+                .claim("userCode", userCode+username)
                 .claim("role", role.name())
                 .claim("tokenType", "access")
                 .build();
@@ -96,7 +96,7 @@ public class TokenService {
                 .issuer("http://localhost:9000")
                 .issuedAt(now)
                 .expiresAt(refreshTokenExpiresAt)
-                .subject(userCode)
+                .subject(username)
                 .claim("userCode", userCode)
                 .claim("tokenType", "refresh")
                 .build();
