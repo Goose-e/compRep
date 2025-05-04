@@ -26,7 +26,6 @@ public class UserMapper {
 
     public CompanyUser mapUserDtoToUser(UserCreateRequestDTO userCreateRequestDTO) {
         CompanyUser companyUser = new CompanyUser();
-
         companyUser.setUsername(userCreateRequestDTO.getUsername());
         companyUser.setEmail(userCreateRequestDTO.getEmail());
         companyUser.setPasswordHash(passwordEncoder.encode(userCreateRequestDTO.getPassword()));

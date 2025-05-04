@@ -81,13 +81,14 @@ public class ReviewService implements IReviewService {
     private final CompanySourceUrlDao companySourceUrlDao;
     private final IJwtService jwtService;
 
-    //Парсинг
+
     private Timestamp dateFormat(String date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
         return Timestamp.valueOf(localDateTime);
     }
 
+    //Парсинг
     private void findReviewsOtzovik(Company company, List<Review> reviews, HttpResponseBody<ReviewResponseListDto> response) {
         String url = findUrl(company.getCoreEntityId());
         if (url == null) {
@@ -205,10 +206,6 @@ public class ReviewService implements IReviewService {
         }
     }
 
-    private Company findCompanyByCode(String companyCode) {
-        return companyDao.findByCompanyCode(companyCode);
-    }
-
     private String findUrl(Long companyId) {
         CompanySourceUrl url = companySourceUrlDao.findByCompanyId(companyId);
         return url == null ? null : url.getSourceUrl();
@@ -224,7 +221,6 @@ public class ReviewService implements IReviewService {
                 getReviewsList(url, company.getCoreEntityId(), reviews);
             } catch (Exception e) {
                 log.error("Error while processing reviews");
-
             }
             try {
                 reviewsTrans.saveAll(reviews);
@@ -321,6 +317,9 @@ public class ReviewService implements IReviewService {
         return !userCompanyRolesDao.userExistInCompanyByUserCoe(userCode, compId);
     }
 
+    private Company findCompanyByCode(String companyCode) {
+        return companyDao.findByCompanyCode(companyCode);
+    }
 
     @Override
     public HttpResponseBody<ReviewResponseListDto> findReviews(ReviewRequestDto reviewRequestDto) {
@@ -349,7 +348,7 @@ public class ReviewService implements IReviewService {
                     response.setResponseEntity(reviewResponseListDto);
                     response.setMessage("Responses found");
                 } else {
-                    response.setError("Responses has 100+ messages .Checking response in process...");
+                    response.setMessage("Responses has 100+ messages .Checking response in process...");
                 }
             }
         }
