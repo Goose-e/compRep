@@ -42,8 +42,8 @@ public class UserService implements IUserService {
         CompanyUser user = userDao.findUserByLoginOrEmail(userCreateRequestDTO.getUsername(), userCreateRequestDTO.getEmail());
         if (user == null) {
             user = userMapper.mapUserDtoToUser(userCreateRequestDTO);
-            user = userDao.save(user);
             if (user != null) {
+                user = userDao.save(user);
                 response.setMessage("User registered successfully");
                 response.setResponseEntity(userMapper.mapUserToUserDtoResponse(user));
             } else {
@@ -57,7 +57,6 @@ public class UserService implements IUserService {
                 response.setMessage("Username is already taken");
             } else {
                 response.setMessage("Email is already taken");
-
             }
             response.addErrorInfo(CREATE_USER_ERROR, String.valueOf(I_AM_A_TEAPOT), "User exists");
         }
@@ -77,7 +76,6 @@ public class UserService implements IUserService {
             if (passwordEncoder.matches(userLoginRequestDTO.getPassword(), user.getPasswordHash())) {
                 response.setMessage("User logged in successfully");
                 List<OAuth2AccessToken> tokens = tokenService.createTokens(user.getUserCode(), user.getUsername(), user.getRoleRefId());
-                System.out.println(tokens.get(1).getTokenType());
                 response.setResponseEntity(userMapper.mapTokensToUserLoginResponseDTO(tokens));
             } else {
                 response.setMessage("Incorrect password");
@@ -97,11 +95,17 @@ public class UserService implements IUserService {
     public HttpResponseBody<EditUserResponseDTO> edit(EditUserRequestDTO editUserRequestDTO) {
         HttpResponseBody<EditUserResponseDTO> response = new EditUserResponse();
         StringBuilder errorMessage = new StringBuilder();
-        if (editUserRequestDTO.getNewUsername() != null && userDao.findUserByUserName(editUserRequestDTO.getNewUsername()) != null) {
-            errorMessage.append("Username is already taken. ");
-        }
-        if (editUserRequestDTO.getNewEmail() != null && userDao.findIdByUsernameOrEmail(editUserRequestDTO.getNewEmail()) != null) {
-            errorMessage.append("Email is already taken. ");
+        CompanyUser companyUser = userDao.findUserByLoginOrEmail(editUserRequestDTO.getNewUsername(), editUserRequestDTO.getNewEmail());
+        if (companyUser != null) {
+            if (editUserRequestDTO.getNewUsername() != null &&
+                    editUserRequestDTO.getNewUsername().equals(companyUser.getUsername())) {
+                errorMessage.append("Username is already taken. ");
+            }
+
+            if (editUserRequestDTO.getNewEmail() != null &&
+                    editUserRequestDTO.getNewEmail().equals(companyUser.getEmail())) {
+                errorMessage.append("Email is already taken. ");
+            }
         }
 
         if (!errorMessage.isEmpty()) {
@@ -131,6 +135,7 @@ public class UserService implements IUserService {
         String userCode = tokenService.extractUserCodeFromJwt();
         if (userCode == null) {
             response.setMessage("User unauthorized");
+            response.setError("User unauthorized");
         } else {
             CompanyUser user = userDao.findUserByUserCode(userCode);
             if (user == null) {

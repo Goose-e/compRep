@@ -63,7 +63,7 @@ public class CompanyTest {
     }
 
     @Test
-    void testGetAllCompanies_success() {
+    void testGetAllCompanies_AllCompaniesFound() {
         GetAllCompaniesResponseDTO company1 = new GetAllCompaniesResponseDTO
                 ("comp", "dasg", null, null, null);
         GetAllCompaniesResponseDTO company2 = new GetAllCompaniesResponseDTO

@@ -12,4 +12,5 @@ public class EditUserResponseDTO implements ResponseDto {
         this.newUsername = newUsername;
         this.newEmail = newEmail;
     }
+
 }

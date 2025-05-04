@@ -1,17 +1,16 @@
 package com.example.companyReputationManagement.httpResponse;
 
 import com.example.companyReputationManagement.constants.SysConst;
-import com.example.companyReputationManagement.constants.SysConst;
-import com.example.companyReputationManagement.httpResponse.ResponseDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.http.MediaType;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class HttpResponseBody<T extends ResponseDto> implements Serializable {
 
-    private final String  requestId;
+    private final String requestId;
     private String responseCode;
     private String message;
     private String error = SysConst.STRING_NULL;
@@ -87,7 +86,6 @@ public abstract class HttpResponseBody<T extends ResponseDto> implements Seriali
                 ", " + this.getClass().getSimpleName() + "(" + responseEntity + ")";
     }
 
-    // Getter and setter methods for the fields if necessary
 
     public String getResponseCode() {
         return responseCode;
@@ -110,6 +108,7 @@ public abstract class HttpResponseBody<T extends ResponseDto> implements Seriali
     }
 
     public void setError(String error) {
+        errors.add(new ErrorInfo("Error", error));
         this.error = error;
     }
 
