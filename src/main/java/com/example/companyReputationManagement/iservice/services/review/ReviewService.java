@@ -294,17 +294,17 @@ public class ReviewService implements IReviewService {
         }
         for (Map.Entry<SentimentTypeEnum, Integer> entry : countByType.entrySet()) {
             String label = switch (entry.getKey()) {
-                case POSITIVE -> "Положительный";
-                case NEUTRAL -> "Нейтральный";
-                case NEGATIVE -> "Отрицательный";
-                case UNRATED -> "Неоценённый";
+                case POSITIVE -> "POSITIVE";
+                case NEUTRAL -> "NEUTRAL";
+                case NEGATIVE -> "NEGATIVE";
+                case UNRATED -> "UNRATED";
             };
-            dataset.addValue(entry.getValue(), "Количество отзывов", label);
+            dataset.addValue(entry.getValue(), "Number of reviews", label);
         }
         JFreeChart chart = ChartFactory.createBarChart(
-                compName + " – Количество отзывов по типу", // Заголовок
-                "Тип отзыва",                               // Ось X
-                "Количество",                               // Ось Y
+                compName + " – Number of reviews by type", // Заголовок
+                "Review type",                               // Ось X
+                "Quantity",                               // Ось Y
                 dataset,
                 PlotOrientation.VERTICAL,
                 true, true, false
@@ -326,6 +326,7 @@ public class ReviewService implements IReviewService {
         com.itextpdf.text.Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
         com.itextpdf.text.Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
         LocalDate currentDate = LocalDate.now();
+
         String monthName = currentDate.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault());
         int day = currentDate.getDayOfMonth();
         int year = currentDate.getYear();
@@ -356,7 +357,7 @@ public class ReviewService implements IReviewService {
         com.itextpdf.text.Image chart1 = com.itextpdf.text.Image.getInstance(chart1Bytes);
         chart1.scaleToFit(PageSize.A4.getHeight() - 125, PageSize.A4.getWidth() - 125);
         chart1.setAlignment(com.itextpdf.text.Image.ALIGN_CENTER);
-        document.add(new Paragraph("Chart 1. Average rating by reviews for all time", bodyFont));
+        document.add(new Paragraph("Chart 1. Average rating by reviews for all time\n\n", bodyFont));
         document.add(chart1);
         document.setPageSize(PageSize.A4.rotate());
         document.newPage();
@@ -365,7 +366,7 @@ public class ReviewService implements IReviewService {
         com.itextpdf.text.Image chart2 = com.itextpdf.text.Image.getInstance(chart2Bytes);
         chart2.scaleToFit(PageSize.A4.getHeight() - 125, PageSize.A4.getWidth() - 125);
         chart2.setAlignment(com.itextpdf.text.Image.ALIGN_CENTER);
-        document.add(new Paragraph("Graph 2. Distribution of reviews by tonality for all time\n", bodyFont));
+        document.add(new Paragraph("Graph 2. Distribution of reviews by tonality for all time\n\n", bodyFont));
         document.add(chart2);
         document.setPageSize(PageSize.A4.rotate());
         document.newPage();
@@ -376,7 +377,7 @@ public class ReviewService implements IReviewService {
             com.itextpdf.text.Image chart3 = com.itextpdf.text.Image.getInstance(chart1Bytes);
             chart3.scaleToFit(PageSize.A4.getHeight() - 125, PageSize.A4.getWidth() - 125);
             chart3.setAlignment(com.itextpdf.text.Image.ALIGN_CENTER);
-            document.add(new Paragraph("Graph 3. Distribution of reviews by tonality for month\n", bodyFont));
+            document.add(new Paragraph("Graph 3. Distribution of reviews by tonality for month\n\n", bodyFont));
             document.add(chart3);
             document.setPageSize(PageSize.A4.rotate());
         }
