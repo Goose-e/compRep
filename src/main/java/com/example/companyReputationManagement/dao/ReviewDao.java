@@ -27,6 +27,9 @@ public class ReviewDao {
     public List<Review> findAllByCompanyIdSorted(Long companyId) {
         return reviewRepo.findAllByCompanyIdOrderByPublishedDateAsc(companyId);
     }
+    public List<Review> findAllByCompanyIdForMonth(Long companyId,Timestamp startTimestamp,Timestamp endTimestamp) {
+        return reviewRepo.findAllByCompanyIdForMonth(companyId, startTimestamp, endTimestamp);
+    }
 
     public void save(Review review) {
         reviewRepo.save(review);

@@ -20,6 +20,9 @@ public interface ReviewRepo extends JpaRepository<Review, Long> {
 
     List<Review> findAllByCompanyIdOrderByPublishedDateAsc(Long companyId);
 
+    @Query("SELECT r FROM Review r  WHERE r.companyId =:companyId AND r.publishedDate BETWEEN :start AND :endM ")
+    List<Review> findAllByCompanyIdForMonth(@Param("companyId") Long companyId, @Param("start") Timestamp start, @Param("endM") Timestamp endM);
+
     @Query("SELECT new com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseDTO(r.reviewerName,r.content,r.rating,r.publishedDate) " +
             "FROM Review r WHERE r.companyId =:companyId AND r.sentimentTypeId =:sentimentTypeId")
     List<GetAllBySentResponseDTO> findAllByCompanyIdAndSentimentTypeId(@Param("companyId") Long companyId, @Param("sentimentTypeId") SentimentTypeEnum sentimentTypeId);
