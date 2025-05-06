@@ -97,8 +97,8 @@ public class TokenService implements IJwtService {
                 response.setMessage("Invalid refresh token");
 
             } else {
-                String username = jwt.getClaim("username");
-                CompanyUser user = userDao.findUserByUserName(username);
+                String username = jwt.getClaim("userCode");
+                CompanyUser user = userDao.findUserByUserCode(username);
                 List<OAuth2AccessToken> newAccessToken = generateNewAccessToken(user.getUserCode(), user.getUsername(), user.getRoleRefId());
                 response.setMessage("Successfully refreshed token");
 

@@ -11,7 +11,8 @@ import org.springframework.stereotype.Repository;
 @EntityScan("com.example.companyReputationManagement.models")
 @Repository
 public interface UserRepo extends JpaRepository<CompanyUser, Long> {
-    CompanyUser findUserByUsernameOrEmail(String username, String email);
+
+    CompanyUser findFirstByUsernameOrEmail(String username, String email);
 
     CompanyUser findUserByUsername(String username);
     @Query("SELECT c.coreEntityId FROM CompanyUser c WHERE c.username = :username OR c.email = :email")

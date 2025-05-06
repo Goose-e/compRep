@@ -16,10 +16,10 @@ public class UserDao {
         return userRepo.findUserByUsername(username);
     }
     public CompanyUser findUserByLoginOrEmail(String UserLogin, String UserEmail) {
-        return userRepo.findUserByUsernameOrEmail(UserLogin, UserEmail);
+        return userRepo.findFirstByUsernameOrEmail(UserLogin, UserEmail);
     }
     public CompanyUser findUserByLoginOrEmail(String userLoginOrEmail) {
-        return userRepo.findUserByUsernameOrEmail(userLoginOrEmail,userLoginOrEmail);
+        return userRepo.findFirstByUsernameOrEmail(userLoginOrEmail,userLoginOrEmail);
     }
     public Long findIdByUsernameOrEmail(String usernameOrEmail) {
         return userRepo.findCoreEntityIdByUsernameOrEmail(usernameOrEmail,usernameOrEmail);
