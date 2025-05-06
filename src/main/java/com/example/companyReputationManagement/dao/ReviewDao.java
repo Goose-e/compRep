@@ -7,6 +7,8 @@ import com.example.companyReputationManagement.repo.ReviewRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class ReviewDao {
     public List<Review> findAllByCompanyId(Long companyId) {
         return reviewRepo.findAllByCompanyId(companyId);
     }
+
     public List<Review> findAllByCompanyIdSorted(Long companyId) {
         return reviewRepo.findAllByCompanyIdOrderByPublishedDateAsc(companyId);
     }
@@ -33,7 +36,11 @@ public class ReviewDao {
         return reviewRepo.existsByContentAndCompanyId(text, id);
     }
 
-    public List<GetAllBySentResponseDTO> findAllBySentType(Long compId, SentimentTypeEnum sentId){
-        return reviewRepo.findAllByCompanyIdAndSentimentTypeId(compId,sentId);
+    public List<GetAllBySentResponseDTO> findAllBySentType(Long compId, SentimentTypeEnum sentId) {
+        return reviewRepo.findAllByCompanyIdAndSentimentTypeId(compId, sentId);
+    }
+
+    public Double getAverageRating(Long compId, Timestamp start, Timestamp end) {
+        return reviewRepo.getAverageRating(compId,start,end);
     }
 }

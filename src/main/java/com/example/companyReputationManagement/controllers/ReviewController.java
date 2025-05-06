@@ -9,8 +9,11 @@ import com.example.companyReputationManagement.dto.review.get_all.GetReviewReque
 import com.example.companyReputationManagement.dto.review.get_all.GetReviewResponseListDto;
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentRequestDTO;
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseListDTO;
+import com.example.companyReputationManagement.dto.review.report.GenerateReportRequestDTO;
+import com.example.companyReputationManagement.dto.review.report.GenerateReportResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.IReviewService;
+import com.itextpdf.text.DocumentException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -49,5 +52,10 @@ public class ReviewController {
     @PostMapping(value = "/get_reviews_by_sent")
     public HttpResponseBody<GetAllBySentResponseListDTO> getReviewsBySent(@Valid @RequestBody GetAllBySentRequestDTO getAllBySentRequestDTO) throws IOException {
         return reviewService.getAllReviewsBySentType(getAllBySentRequestDTO);
+    }
+
+    @PostMapping(value = "/report")
+    public HttpResponseBody<GenerateReportResponseDTO> generateReport(@Valid @RequestBody GenerateReportRequestDTO generateReportRequestDTO) throws DocumentException, IOException {
+        return reviewService.generateReport(generateReportRequestDTO);
     }
 }

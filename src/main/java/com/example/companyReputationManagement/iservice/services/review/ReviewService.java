@@ -17,6 +17,9 @@ import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAll
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponse;
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseDTO;
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseListDTO;
+import com.example.companyReputationManagement.dto.review.report.GenerateReportRequestDTO;
+import com.example.companyReputationManagement.dto.review.report.GenerateReportResponse;
+import com.example.companyReputationManagement.dto.review.report.GenerateReportResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.IJwtService;
 import com.example.companyReputationManagement.iservice.IReviewService;
@@ -27,6 +30,8 @@ import com.example.companyReputationManagement.models.CompanySourceUrl;
 import com.example.companyReputationManagement.models.Review;
 import com.example.companyReputationManagement.models.enums.RoleEnum;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jfree.chart.ChartFactory;
@@ -54,14 +59,19 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
+import java.awt.Font;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -231,7 +241,7 @@ public class ReviewService implements IReviewService {
         }
     }
 
-    //Создание картинок графиков
+    //Создание картинок графиков и отчёта
     private byte[] createChartPng(JFreeChart chart) throws IOException {
         CategoryPlot plot = (CategoryPlot) chart.getPlot();
         CategoryAxis xAxis = plot.getDomainAxis();
@@ -301,6 +311,85 @@ public class ReviewService implements IReviewService {
         );
 
         return createChartPng(chart);
+    }
+
+    private byte[] generateReport(List<Review> reviews, String compName, Long compId) throws DocumentException, IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        com.itextpdf.text.Document document = new com.itextpdf.text.Document(PageSize.A4);
+        PdfWriter.getInstance(document, out);
+        document.open();
+
+        LocalDate start = LocalDate.now().withDayOfMonth(1);
+        LocalDate end = start.plusMonths(1).minusDays(1);
+        Timestamp startTimestamp = Timestamp.valueOf(start.atStartOfDay());
+        Timestamp endTimestamp = Timestamp.valueOf(end.atTime(LocalTime.MAX));
+
+        com.itextpdf.text.Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
+        com.itextpdf.text.Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
+
+        LocalDate currentDate = LocalDate.now();
+        String monthName = currentDate.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault());
+        int day = currentDate.getDayOfMonth();
+        int year = currentDate.getYear();
+
+        Paragraph title = new Paragraph("REPORT\n\n", titleFont);
+        title.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);
+        document.add(title);
+
+        document.add(new Paragraph("Company name: " + compName, bodyFont));
+        document.add(new Paragraph("Date of report generation: " + day + " " + monthName + " " + year, bodyFont));
+        document.add(new Paragraph("\n"));
+        String str;
+        Double averageReview = reviewDao.getAverageRating(compId, startTimestamp, endTimestamp);
+        if (averageReview == null) {
+            averageReview = 0.0;
+            str = "No reviews at this month";
+        } else {
+            str = "Average rating for month: ";
+        }
+        document.add(new Paragraph("The purpose of the report is to provide a summary analysis of user reviews over a period.\n", bodyFont));
+        String avgStr = averageReview == 0.0 ? " " : String.format(Locale.US, "%.2f", averageReview);
+
+        document.add(new Paragraph(str + avgStr, bodyFont));
+        document.add(new Paragraph("\nBelow are graphs with data visualization.\n\n", bodyFont));
+
+        document.setPageSize(PageSize.A4.rotate());
+        document.newPage();
+
+        byte[] chart1Bytes = generateAverageChart(reviews, compName);
+        com.itextpdf.text.Image chart1 = com.itextpdf.text.Image.getInstance(chart1Bytes);
+        chart1.scaleToFit(PageSize.A4.getHeight() - 50, PageSize.A4.getWidth() - 50);
+        chart1.setAlignment(com.itextpdf.text.Image.ALIGN_CENTER);
+        document.add(new Paragraph("Chart 1. Average rating by reviews\n\n", bodyFont));
+        document.add(chart1);
+
+        document.setPageSize(PageSize.A4.rotate());
+        document.newPage();
+
+        byte[] chart2Bytes = generateSentChart(reviews, compName);
+        com.itextpdf.text.Image chart2 = com.itextpdf.text.Image.getInstance(chart2Bytes);
+        chart2.scaleToFit(PageSize.A4.getHeight() - 50, PageSize.A4.getWidth() - 50);
+        chart2.setAlignment(com.itextpdf.text.Image.ALIGN_CENTER);
+        document.add(new Paragraph("Graph 2. Distribution of reviews by tonality\n\n", bodyFont));
+        document.add(chart2);
+
+        document.setPageSize(PageSize.A4.rotate());
+        document.newPage();
+        Paragraph footer = new Paragraph(
+                "The report is generated automatically based on data received from the feedback system..\n" +
+                        "For more information, please contact the analytical department..",
+                bodyFont);
+        footer.setSpacingBefore(50);
+        document.add(footer);
+
+        document.close();
+
+        // Сохранить локально
+        try (FileOutputStream fos = new FileOutputStream("generated_report.pdf")) {
+            fos.write(out.toByteArray());
+        }
+
+        return out.toByteArray();
     }
 
     //Проверки
@@ -433,6 +522,33 @@ public class ReviewService implements IReviewService {
                 }
             }
         }
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+        return response;
+    }
+
+    @Override
+    public HttpResponseBody<GenerateReportResponseDTO> generateReport(GenerateReportRequestDTO generateReportRequestDTo) throws DocumentException, IOException {
+        HttpResponseBody<GenerateReportResponseDTO> response = new GenerateReportResponse();
+        Company comp = findCompanyByCode(generateReportRequestDTo.companyCode());
+        if (comp == null) {
+            response.setMessage("Company not found");
+        } else {
+            if (checkEmployment(comp.getCoreEntityId())) {
+                response.setMessage("User not in company");
+            } else {
+                Long compId = comp.getCoreEntityId();
+                List<Review> reviews = reviewDao.findAllByCompanyIdSorted(compId);
+                if (reviews.isEmpty()) {
+                    response.setMessage("No reviews found");
+                } else {
+                    byte[] report = generateReport(reviews, comp.getName(), compId);
+                    response.setResponseEntity(new GenerateReportResponseDTO(report));
+                    response.setMessage("Report generated successfully");
+
+                }
+            }
+        }
+
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
         return response;
     }
