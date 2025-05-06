@@ -354,52 +354,38 @@ public class ReviewService implements IReviewService {
 
         byte[] chart1Bytes = generateAverageChart(reviews, compName);
         com.itextpdf.text.Image chart1 = com.itextpdf.text.Image.getInstance(chart1Bytes);
-        chart1.scaleToFit(PageSize.A4.getHeight() - 50, PageSize.A4.getWidth() - 50);
+        chart1.scaleToFit(PageSize.A4.getHeight() - 125, PageSize.A4.getWidth() - 125);
         chart1.setAlignment(com.itextpdf.text.Image.ALIGN_CENTER);
-        document.add(new Paragraph("Chart 1. Average rating by reviews for all time\n\n", bodyFont));
-        document.add(new Paragraph(
-                "The chart illustrates the average rating provided by customers over the selected time period.\n" +
-                        "This metric reflects the general perception of service or product quality as experienced by users.\n" +
-                        "Consistently high average ratings indicate strong performance and customer satisfaction,\n" +
-                        "while any downward trends may signal issues that require further analysis and improvement efforts.\n" +
-                        "Monitoring this indicator over time supports data-driven decision-making and quality assurance.",
-                bodyFont
-        ));
+        document.add(new Paragraph("Chart 1. Average rating by reviews for all time", bodyFont));
         document.add(chart1);
         document.setPageSize(PageSize.A4.rotate());
         document.newPage();
 
         byte[] chart2Bytes = generateSentChart(reviews, compName);
         com.itextpdf.text.Image chart2 = com.itextpdf.text.Image.getInstance(chart2Bytes);
-        chart2.scaleToFit(PageSize.A4.getHeight() - 50, PageSize.A4.getWidth() - 50);
+        chart2.scaleToFit(PageSize.A4.getHeight() - 125, PageSize.A4.getWidth() - 125);
         chart2.setAlignment(com.itextpdf.text.Image.ALIGN_CENTER);
-        document.add(new Paragraph("Graph 2. Distribution of reviews by tonality for all time\n\n", bodyFont));
-        document.add(new Paragraph(
-                "The chart above presents the distribution of customer reviews based on their sentiment polarity — positive, neutral, or negative.\n" +
-                        "This analysis helps identify overall customer satisfaction and highlights areas requiring attention.\n" +
-                        "A higher proportion of positive reviews generally reflects good service quality and customer engagement,\n" +
-                        "while a noticeable share of negative feedback may indicate underlying issues that need resolution.\n" +
-                        "Neutral reviews, on the other hand, suggest opportunities for deeper understanding or service improvements.",
-                bodyFont
-        ));
+        document.add(new Paragraph("Graph 2. Distribution of reviews by tonality for all time\n", bodyFont));
         document.add(chart2);
-
         document.setPageSize(PageSize.A4.rotate());
-
         document.newPage();
+
         List<Review> reviewsForMonth = reviewDao.findAllByCompanyIdForMonth(compId, startTimestamp, endTimestamp);
-        chart1Bytes = generateSentChart(reviewsForMonth, compName);
-        com.itextpdf.text.Image chart3 = com.itextpdf.text.Image.getInstance(chart1Bytes);
-        chart3.scaleToFit(PageSize.A4.getHeight() - 50, PageSize.A4.getWidth() - 50);
-        chart3.setAlignment(com.itextpdf.text.Image.ALIGN_CENTER);
-        document.add(new Paragraph("Graph 3. Distribution of reviews by tonality for month\n\n", bodyFont));
-        document.add(chart3);
-        document.setPageSize(PageSize.A4.rotate());
+        if (!reviewsForMonth.isEmpty()) {
+            chart1Bytes = generateSentChart(reviewsForMonth, compName);
+            com.itextpdf.text.Image chart3 = com.itextpdf.text.Image.getInstance(chart1Bytes);
+            chart3.scaleToFit(PageSize.A4.getHeight() - 125, PageSize.A4.getWidth() - 125);
+            chart3.setAlignment(com.itextpdf.text.Image.ALIGN_CENTER);
+            document.add(new Paragraph("Graph 3. Distribution of reviews by tonality for month\n", bodyFont));
+            document.add(chart3);
+            document.setPageSize(PageSize.A4.rotate());
+        }
         Paragraph footer = new Paragraph(
                 "The report is generated automatically based on data received from the feedback system..\n" +
                         "For more information, please contact the analytical department..",
                 bodyFont);
         footer.setSpacingBefore(50);
+
         document.add(footer);
 
         document.close();
