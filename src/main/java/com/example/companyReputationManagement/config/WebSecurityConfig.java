@@ -51,32 +51,34 @@ public class WebSecurityConfig {
     @Value("${app.secretKey}")
     private String secretKey;
 
+
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint entryPoint) throws Exception {
 
-            http.exceptionHandling(exceptionHandling ->
-                            exceptionHandling
-                                    .authenticationEntryPoint(entryPoint)
-                    )
-                    .authorizeHttpRequests
-                            ((requests) -> requests
-                                    .requestMatchers("/", "/home").permitAll()
-                                    .requestMatchers("/auth/*").permitAll()
-                                    .requestMatchers("/auth/login").permitAll()
-                                    .requestMatchers("/user/*").authenticated()
-                                    .requestMatchers("/company/get_all").permitAll()
-                                    .requestMatchers("/company/get_by_code").permitAll()
-                                    .requestMatchers("/company/*").authenticated()
-                                    .requestMatchers("/review/*").authenticated()
-                                    .requestMatchers("/.well-known/**", "/oauth2/**").permitAll()
-                                    .anyRequest().authenticated()
+        http.exceptionHandling(exceptionHandling ->
+                        exceptionHandling
+                                .authenticationEntryPoint(entryPoint)
+                )
+                .authorizeHttpRequests
+                        ((requests) -> requests
+                                .requestMatchers("/", "/home").permitAll()
+                                .requestMatchers("/auth/*").permitAll()
+                                .requestMatchers("/auth/login").permitAll()
+                                .requestMatchers("/user/*").authenticated()
+                                .requestMatchers("/company/get_all").permitAll()
+                                .requestMatchers("/company/get_by_code").permitAll()
+                                .requestMatchers("/company/*").authenticated()
+                                .requestMatchers("/review/*").authenticated()
+                                .requestMatchers("/.well-known/**", "/oauth2/**").permitAll()
+                                .anyRequest().authenticated()
 
-                            ).oauth2ResourceServer(oauth2 -> oauth2
-                            .jwt(jwt -> jwt
-                                    .jwtAuthenticationConverter(new CustomJwtAuthenticationConverter())
-                            ).authenticationEntryPoint(entryPoint)
-                    )
-                    .logout(LogoutConfigurer::permitAll).csrf(AbstractHttpConfigurer::disable);
+                        ).oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .jwtAuthenticationConverter(new CustomJwtAuthenticationConverter())
+                        ).authenticationEntryPoint(entryPoint)
+                )
+                .logout(LogoutConfigurer::permitAll).csrf(AbstractHttpConfigurer::disable);
         return http.build();
     }
 
