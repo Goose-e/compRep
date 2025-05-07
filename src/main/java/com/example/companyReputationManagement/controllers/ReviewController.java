@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(maxAge = 3600)
 @RestController
 @RequestMapping("/review")
 public class ReviewController {

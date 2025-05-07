@@ -33,7 +33,7 @@ public interface CompanyRepo extends JpaRepository<Company, Long> {
             "WHERE c.status = 0 AND cu.userCode =:userCode AND cu.status = 0 AND csu.status = 0")
     List<GetAllUserCompaniesResponseDTO> findAllActiveUserCompanies(@Param("userCode") String userCode);
 
-    @Query(value = "SELECT new com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponseDTO(" +
+    @Query("SELECT new com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponseDTO(" +
             "c.name, c.companyCode, c.industry, c.website, csu.sourceUrl, " +
             "(SELECT ucr.role FROM UserCompanyRoles ucr JOIN CompanyUser cu ON cu.coreEntityId = ucr.userId " +
             "WHERE ucr.companyId = c.coreEntityId AND cu.userCode = :userCode)) " +
