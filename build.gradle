@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'com.example'
-version = '0.0.1-SNAPSHOT'
+version = 'docker'
 
 java {
     toolchain {
@@ -94,11 +94,11 @@ dependencyManagement {
     }
 }
 
-generateJava {
-    schemaPaths = ["${projectDir}/src/main/resources/graphql-client"]
-    packageName = 'com.example.companyreputationmanagment.codegen'
-    generateClient = true
-}
+//generateJava {
+//    schemaPaths = ["${projectDir}/src/main/resources/graphql-client"]
+//    packageName = 'com.example.companyreputationmanagment.codegen'
+//    generateClient = true
+//}
 
 hibernate {
     enhancement {

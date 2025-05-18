@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres
+    container_name: company_rep_db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: company_rep_adm
+      POSTGRES_PASSWORD: comprep
+      POSTGRES_DB: company_rep
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build:
+      dockerfile: Dockerfile
+    container_name: company_rep_app
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/company_rep
+      SPRING_DATASOURCE_USERNAME: company_rep_adm
+      SPRING_DATASOURCE_PASSWORD: comprep
+volumes:
+ pgdata:

@@ -20,6 +20,7 @@ public class EnumInit {
     private final RoleRefRepo roleRefRepository;
     private final SentimentTypeRepo sentimentTypeRepo;
     private final SourceRepo sourceRepo;
+
     @PostConstruct
     public void initAllRefs() {
         initStatusRef();
@@ -53,6 +54,7 @@ public class EnumInit {
             }
         }
     }
+
     private void initSourceRef() {
         for (SourcesEnum sourceEnum : SourcesEnum.values()) {
             if (!sourceRepo.existsById(sourceEnum.getSourceCode())) {

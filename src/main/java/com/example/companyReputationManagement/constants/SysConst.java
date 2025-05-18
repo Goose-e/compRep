@@ -43,7 +43,6 @@ public final class SysConst {
     public static final int ONE_ATTEMPT = 1;
     public static final int TWO_ATTEMPTS = 2;
     public static final int FIVE_ATTEMPTS = 5;
-    public static final String RESOURCE_FLD = "src/main/resources";
     public static final String DOCKER_FOLDER = "/opt/";
     public static final String KOTLIN_VERSION = "KotlinVersion = " + "N/A" + ", JavaVersion = " + Runtime.version();
 
