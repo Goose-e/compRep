@@ -369,7 +369,7 @@ public class CompanyService implements ICompanyService {
     public HttpResponseBody<AddUserResponseDTO> addUser(AddUserRequestDTO addUserRequestDTO) {
         HttpResponseBody<AddUserResponseDTO> response = new AddUserResponse();
         try {
-            Company company = companyDao.findByCompanyCode(jwtService.extractUserCodeFromJwt());
+            Company company = companyDao.findByCompanyCode(addUserRequestDTO.getCompanyCode());
             if (company == null) {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
