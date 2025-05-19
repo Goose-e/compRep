@@ -198,7 +198,7 @@ public class CompanyService implements ICompanyService {
                             userCompanyRoles = userCompanyRolesMapper.changeUserStatus(userCompanyRoles, changeCompanyStatusRequestDTO.getNewStatusId());
                             company = companyMapper.changeCompanyStatus(company, changeCompanyStatusRequestDTO.getNewStatusId());
                             companyTrans.saveCompanyAndRole(company, userCompanyRoles);
-                            response.setMessage("Company deleted successfully");
+                            response.setMessage("Company " + company.getStatus());
                             StatusEnum newStatus = StatusEnum.fromId(changeCompanyStatusRequestDTO.getNewStatusId().intValue());
                             response.setResponseEntity(new ChangeCompanyStatusResponseDTO(company.getName(), newStatus.getStatus()));
                         } catch (DataIntegrityViolationException e) {
