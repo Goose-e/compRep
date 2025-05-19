@@ -12,6 +12,7 @@ import com.example.companyReputationManagement.iservice.IJwtService;
 import com.example.companyReputationManagement.iservice.services.company.CompanyService;
 import com.example.companyReputationManagement.iservice.services.transactions.CompanyTrans;
 import com.example.companyReputationManagement.mapper.UserCompanyRolesMapper;
+import com.example.companyReputationManagement.models.enums.StatusEnum;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -65,9 +66,9 @@ public class CompanyTest {
     @Test
     void testGetAllCompanies_AllCompaniesFound() {
         GetAllCompaniesResponseDTO company1 = new GetAllCompaniesResponseDTO
-                ("comp", "dasg", null, null, null,"ACTUAL");
+                ("comp", "dasg", null, null, null, StatusEnum.ACTUAL);
         GetAllCompaniesResponseDTO company2 = new GetAllCompaniesResponseDTO
-                ("comp2", "code", null, null, null,"ACTUAL");
+                ("comp2", "code", null, null, null, StatusEnum.CLOSED);
 
         when(companyDao.findAllWithUrls()).thenReturn(List.of(company1, company2));
         HttpResponseBody<AllCompaniesResponseListDTO> resultSuccess = companyService.getAllCompanies();
