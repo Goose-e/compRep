@@ -20,7 +20,7 @@ public interface CompanyRepo extends JpaRepository<Company, Long> {
 
     Company findByCompanyCode(String companyCode);
 
-    @Query("SELECT new com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponseDTO(c.name,c.companyCode,c.industry,c.website,csu.sourceUrl) " +
+    @Query("SELECT new com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponseDTO(c.name,c.companyCode,c.industry,c.website,csu.sourceUrl,c.status) " +
             " FROM Company c JOIN CompanySourceUrl csu ON csu.companyId = c.coreEntityId WHERE c.status = 0")
     List<GetAllCompaniesResponseDTO> findAllActiveCompanyWithUrls();
 

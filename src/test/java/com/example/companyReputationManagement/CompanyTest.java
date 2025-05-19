@@ -65,9 +65,9 @@ public class CompanyTest {
     @Test
     void testGetAllCompanies_AllCompaniesFound() {
         GetAllCompaniesResponseDTO company1 = new GetAllCompaniesResponseDTO
-                ("comp", "dasg", null, null, null);
+                ("comp", "dasg", null, null, null,"ACTUAL");
         GetAllCompaniesResponseDTO company2 = new GetAllCompaniesResponseDTO
-                ("comp2", "code", null, null, null);
+                ("comp2", "code", null, null, null,"ACTUAL");
 
         when(companyDao.findAllWithUrls()).thenReturn(List.of(company1, company2));
         HttpResponseBody<AllCompaniesResponseListDTO> resultSuccess = companyService.getAllCompanies();
