@@ -20,7 +20,7 @@ public class UserDao {
     }
 
     public List<CompanyUser> findUsersByUserName(String username){
-        return userRepo.findCompanyUsersByUsername(username);
+        return userRepo.findCompanyUsersByUsernameContainingIgnoreCase(username);
     }
 
     public CompanyUser findUserByLoginOrEmail(String UserLogin, String UserEmail) {
