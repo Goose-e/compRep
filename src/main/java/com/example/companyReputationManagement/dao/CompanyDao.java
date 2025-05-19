@@ -1,5 +1,6 @@
 package com.example.companyReputationManagement.dao;
 
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponseDTO;
 import com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponseDTO;
 import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponseDTO;
 import com.example.companyReputationManagement.dto.company.get_all_user_companies.GetAllUserCompaniesResponseDTO;
@@ -15,6 +16,7 @@ import java.util.List;
 @Component
 public class CompanyDao {
     private final CompanyRepo companyRepo;
+
     public boolean existByCompanyName(String companyName) {
         return companyRepo.existsByName(companyName);
     }
@@ -31,9 +33,11 @@ public class CompanyDao {
     public Company findByCompanyName(String companyName) {
         return companyRepo.findByName(companyName);
     }
+
     public List<GetAllCompaniesResponseDTO> findAllWithUrls() {
         return companyRepo.findAllActiveCompanyWithUrls();
     }
+
     public List<Company> findAll() {
         return companyRepo.findAllActiveCompany();
     }
@@ -42,8 +46,12 @@ public class CompanyDao {
         return companyRepo.findAllActiveUserCompanies(userCode);
     }
 
-    public GetCompanyByCodeResponseDTO findCompanyByCodeWithUrls(String companyCode,String userCode) {
-        return companyRepo.findActiveCompanyByCodeWithUrls(companyCode,userCode);
+    public GetCompanyByCodeResponseDTO findCompanyByCodeWithUrls(String companyCode, String userCode) {
+        return companyRepo.findActiveCompanyByCodeWithUrls(companyCode, userCode);
+    }
+
+    public List<FindCompanyByNameResponseDTO> findCompaniesByName(String companyName) {
+        return companyRepo.findCompanyByNameContainingIgnoreCase(companyName);
     }
 
     public List<GetAllCompanyUsersResponseDTO> findAllCompanyUsers(String userCode) {

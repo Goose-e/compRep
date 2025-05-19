@@ -5,6 +5,8 @@ import com.example.companyReputationManagement.dto.company.create.CompanyCreateR
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponseDTO;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponseListDTO;
 import com.example.companyReputationManagement.iservice.generate.GenerateCode;
 import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.models.CompanySourceUrl;
@@ -13,6 +15,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @AllArgsConstructor
@@ -28,6 +31,12 @@ public class CompanyMapper {
         company.setCompanyCode(generateCode.generateCode(company));
 
         return company;
+    }
+
+    public FindCompanyByNameResponseListDTO mapCompaniesToFindCompanyByNameResponseListDTO(List<Company> companies, String url) {
+        return new FindCompanyByNameResponseListDTO(companies.stream().map(
+                company -> new FindCompanyByNameResponseDTO(company.getName(), company.getCompanyCode(), company.getIndustry(), company.getWebsite(), url, company.getStatus())
+        ).toList());
     }
 
     public CompanyCreateResponseDTO mapCompanyCreateRequestDTOToCompanyCreateResponse(Company companyCreateRequestDTO, String url) {

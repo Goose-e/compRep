@@ -3,7 +3,8 @@ WORKDIR /app
 VOLUME /tmp
 ARG JAR_FILE=build/libs/CompanyReputationManagment-docker.jar
 COPY ${JAR_FILE}  /app/company-reputation-management.jar
-COPY src/main/resources/rsa/private.pem /app/resources/rsa/private.pem
-COPY src/main/resources/rsa/public.pem /app/resources/rsa/public.pem
+COPY src/main/resources/rsa /app/resources/rsa
+
+ENV PRIVATE_KEY_PATH=/app/resources/rsa/private.pem
 
 ENTRYPOINT ["java", "-jar", "/app/company-reputation-management.jar"]

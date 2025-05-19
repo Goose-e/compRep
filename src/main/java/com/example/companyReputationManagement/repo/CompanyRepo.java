@@ -1,5 +1,6 @@
 package com.example.companyReputationManagement.repo;
 
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponseDTO;
 import com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponseDTO;
 import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponseDTO;
 import com.example.companyReputationManagement.dto.company.get_all_user_companies.GetAllUserCompaniesResponseDTO;
@@ -17,6 +18,9 @@ public interface CompanyRepo extends JpaRepository<Company, Long> {
     boolean existsByName(String name);
 
     Company findByName(String name);
+
+    @Query("SELECT new com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponseDTO(c.name, c.companyCode, c.industry, c.website, csu.sourceUrl, c.status) FROM Company c JOIN CompanySourceUrl csu ON csu.companyId = c.coreEntityId   WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :namePart, '%'))")
+    List<FindCompanyByNameResponseDTO> findCompanyByNameContainingIgnoreCase(@Param("namePart")String name);
 
     Company findByCompanyCode(String companyCode);
 

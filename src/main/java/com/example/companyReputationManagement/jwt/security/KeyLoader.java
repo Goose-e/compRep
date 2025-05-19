@@ -28,7 +28,7 @@ public class KeyLoader {
             return (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
         } catch (Exception e) {
             System.err.println("Ошибка при загрузке приватного ключа: " + e.getMessage());
-            throw e;  // Пробрасываем исключение дальше
+            throw e;
         }
     }
 

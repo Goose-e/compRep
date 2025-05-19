@@ -13,6 +13,8 @@ import com.example.companyReputationManagement.dto.company.create.CompanyCreateR
 import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameRequestDTO;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponseListDTO;
 import com.example.companyReputationManagement.dto.company.get_all.AllCompaniesResponseListDTO;
 import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersRequestDTO;
 import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponseListDTO;
@@ -35,6 +37,11 @@ public class CompanyController {
     @PostMapping(value = "/create")
     public HttpResponseBody<CompanyCreateResponseDTO> createCompany(@Valid @RequestBody CompanyCreateRequestDTO companyCreateRequestDTO) {
         return companyService.createCompany(companyCreateRequestDTO);
+    }
+
+    @PostMapping(value = "/find_by_name")
+    public HttpResponseBody<FindCompanyByNameResponseListDTO> findCompanyByName(@Valid @RequestBody FindCompanyByNameRequestDTO findCompanyByNameRequestDTO) {
+        return companyService.findCompaniesByName(findCompanyByNameRequestDTO);
     }
 
     @PostMapping(value = "/get_by_code")

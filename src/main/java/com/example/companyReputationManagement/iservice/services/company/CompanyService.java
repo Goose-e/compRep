@@ -22,6 +22,10 @@ import com.example.companyReputationManagement.dto.company.create.CompanyCreateR
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponse;
 import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameRequestDTO;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponse;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponseDTO;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponseListDTO;
 import com.example.companyReputationManagement.dto.company.get_all.AllCompaniesResponseListDTO;
 import com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponse;
 import com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponseDTO;
@@ -545,6 +549,25 @@ public class CompanyService implements ICompanyService {
             response.setResponseEntity(new GetAllCompanyUsersResponseListDTO(companyUsersList));
         }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+        return response;
+    }
+
+    @Override
+    public HttpResponseBody<FindCompanyByNameResponseListDTO> findCompaniesByName(FindCompanyByNameRequestDTO findCompanyByNameRequestDTO) {
+        HttpResponseBody<FindCompanyByNameResponseListDTO> response = new FindCompanyByNameResponse();
+
+        List<FindCompanyByNameResponseDTO> companies = companyDao.findCompaniesByName(findCompanyByNameRequestDTO.companyName());
+        if (companies.isEmpty()) {
+
+            response.setMessage("Companies not found");
+            response.setResponseEntity(null);
+        } else {
+            FindCompanyByNameResponseListDTO companiesDTO = new FindCompanyByNameResponseListDTO(companies);
+            response.setMessage("Companies found");
+            response.setResponseEntity(companiesDTO);
+        }
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+
         return response;
     }
 
