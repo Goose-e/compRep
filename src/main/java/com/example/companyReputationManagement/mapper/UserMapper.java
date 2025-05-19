@@ -4,6 +4,8 @@ import com.example.companyReputationManagement.dto.user.create.UserCreateRequest
 import com.example.companyReputationManagement.dto.user.create.UserCreateResponseDTO;
 import com.example.companyReputationManagement.dto.user.edit.EditUserRequestDTO;
 import com.example.companyReputationManagement.dto.user.edit.EditUserResponseDTO;
+import com.example.companyReputationManagement.dto.user.find.FindByNameResponseDTO;
+import com.example.companyReputationManagement.dto.user.find.FindByNameResponseListDTO;
 import com.example.companyReputationManagement.dto.user.get_by_code.GetUserByCodeResponseDTO;
 import com.example.companyReputationManagement.dto.user.login.UserLoginResponseDTO;
 import com.example.companyReputationManagement.iservice.generate.GenerateCode;
@@ -34,6 +36,10 @@ public class UserMapper {
         return companyUser;
     }
 
+    public FindByNameResponseListDTO mapFindByNameResponseListDTO(List<CompanyUser> userList) {
+        return new FindByNameResponseListDTO(userList.stream().map(it -> new FindByNameResponseDTO(it.getUsername(), it.getUserCode(), it.getEmail())).toList());
+    }
+
     public CompanyUser mapUserDtoToUser(EditUserRequestDTO editUserRequestDTO, CompanyUser companyUser) {
         companyUser.setUsername(editUserRequestDTO.getNewUsername() == null ? companyUser.getUsername() : editUserRequestDTO.getNewUsername());
         companyUser.setEmail(editUserRequestDTO.getNewEmail() == null ? companyUser.getEmail() : editUserRequestDTO.getNewEmail());
@@ -41,7 +47,7 @@ public class UserMapper {
     }
 
     public GetUserByCodeResponseDTO mapUserToUserDto(CompanyUser companyUser) {
-       return new GetUserByCodeResponseDTO(companyUser.getUsername(),companyUser.getEmail(), companyUser.getUserCode());
+        return new GetUserByCodeResponseDTO(companyUser.getUsername(), companyUser.getEmail(), companyUser.getUserCode());
     }
 
     public EditUserResponseDTO mapUserToUserResponse(CompanyUser companyUser) {

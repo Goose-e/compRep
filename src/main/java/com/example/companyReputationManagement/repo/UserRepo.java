@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @EnableJpaRepositories("com.example.companyReputationManagement.repo")
 @EntityScan("com.example.companyReputationManagement.models")
 @Repository
@@ -15,6 +17,9 @@ public interface UserRepo extends JpaRepository<CompanyUser, Long> {
     CompanyUser findFirstByUsernameOrEmail(String username, String email);
 
     CompanyUser findUserByUsername(String username);
+
+    List<CompanyUser> findCompanyUsersByUsername(String username);
+
     @Query("SELECT c.coreEntityId FROM CompanyUser c WHERE c.username = :username OR c.email = :email")
     Long findCoreEntityIdByUsernameOrEmail(String username, String email);
 

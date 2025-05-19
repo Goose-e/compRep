@@ -1,9 +1,12 @@
 package com.example.companyReputationManagement.dao;
 
+import com.example.companyReputationManagement.dto.user.find.FindByNameResponseListDTO;
 import com.example.companyReputationManagement.models.CompanyUser;
 import com.example.companyReputationManagement.repo.UserRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @Component
@@ -15,6 +18,11 @@ public class UserDao {
     public CompanyUser findUserByUserName(String username){
         return userRepo.findUserByUsername(username);
     }
+
+    public List<CompanyUser> findUsersByUserName(String username){
+        return userRepo.findCompanyUsersByUsername(username);
+    }
+
     public CompanyUser findUserByLoginOrEmail(String UserLogin, String UserEmail) {
         return userRepo.findFirstByUsernameOrEmail(UserLogin, UserEmail);
     }

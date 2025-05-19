@@ -3,6 +3,8 @@ package com.example.companyReputationManagement.controllers;
 
 import com.example.companyReputationManagement.dto.user.edit.EditUserRequestDTO;
 import com.example.companyReputationManagement.dto.user.edit.EditUserResponseDTO;
+import com.example.companyReputationManagement.dto.user.find.FindByNameRequestDTO;
+import com.example.companyReputationManagement.dto.user.find.FindByNameResponseListDTO;
 import com.example.companyReputationManagement.dto.user.get_by_code.GetUserByCodeResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.IUserService;
@@ -27,4 +29,8 @@ public class UserController {
         return iUserService.getUserByCode();
     }
 
+    @PostMapping(value = "/find_by_username")
+    public HttpResponseBody<FindByNameResponseListDTO> findByName(@Valid @RequestBody FindByNameRequestDTO findByNameRequestDTO) {
+        return iUserService.findByName(findByNameRequestDTO);
+    }
 }

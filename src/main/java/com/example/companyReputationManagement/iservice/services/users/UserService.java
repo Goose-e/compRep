@@ -7,6 +7,10 @@ import com.example.companyReputationManagement.dto.user.create.UserCreateRespons
 import com.example.companyReputationManagement.dto.user.edit.EditUserRequestDTO;
 import com.example.companyReputationManagement.dto.user.edit.EditUserResponse;
 import com.example.companyReputationManagement.dto.user.edit.EditUserResponseDTO;
+import com.example.companyReputationManagement.dto.user.find.FindByNameRequestDTO;
+import com.example.companyReputationManagement.dto.user.find.FindByNameResponse;
+import com.example.companyReputationManagement.dto.user.find.FindByNameResponseDTO;
+import com.example.companyReputationManagement.dto.user.find.FindByNameResponseListDTO;
 import com.example.companyReputationManagement.dto.user.get_by_code.GetUserByCodeResponse;
 import com.example.companyReputationManagement.dto.user.get_by_code.GetUserByCodeResponseDTO;
 import com.example.companyReputationManagement.dto.user.login.UserLoginRequestDTO;
@@ -145,6 +149,28 @@ public class UserService implements IUserService {
                 GetUserByCodeResponseDTO getUserByCodeResponseDTO = userMapper.mapUserToUserDto(user);
                 response.setMessage("User found successfully");
                 response.setResponseEntity(getUserByCodeResponseDTO);
+            }
+        }
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+        return response;
+    }
+
+    @Override
+    public HttpResponseBody<FindByNameResponseListDTO> findByName(FindByNameRequestDTO findByNameRequestDTO) {
+        HttpResponseBody<FindByNameResponseListDTO> response = new FindByNameResponse();
+        String userCode = tokenService.extractUserCodeFromJwt();
+        if (userCode == null) {
+            response.setMessage("User unauthorized");
+            response.setError("User unauthorized");
+        } else {
+            List<CompanyUser> users = userDao.findUsersByUserName(findByNameRequestDTO.username());
+            if (users.isEmpty()) {
+                response.setMessage("Users not found");
+                response.setError("Users not found");
+            } else {
+              FindByNameResponseListDTO usersDtoList = userMapper.mapFindByNameResponseListDTO(users);
+                response.setMessage("User found successfully");
+                response.setResponseEntity(usersDtoList);
             }
         }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
