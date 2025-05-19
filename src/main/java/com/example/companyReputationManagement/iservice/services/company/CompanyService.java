@@ -298,7 +298,7 @@ public class CompanyService implements ICompanyService {
         HttpResponseBody<ChangeUserRoleResponseDTO> response = new ChangeUserRoleResponse();
         boolean isOwner = false;
         try {
-            Company company = companyDao.findByCompanyCode(jwtService.extractUserCodeFromJwt());
+            Company company = companyDao.findByCompanyCode(changeUserCompanyRoleRequestDTO.getCompanyCode());
             if (company == null) {
                 response.setError("Company not found");
                 response.setMessage("Company not found");
@@ -327,11 +327,14 @@ public class CompanyService implements ICompanyService {
                                         userCompanyRolesAdmin.setRole(RoleEnum.ADMIN);
                                         userCompanyRolesCandidate.setStatus(StatusEnum.ACTUAL);
                                         isOwner = true;
+                                        userCompanyRolesCandidate.setRole(RoleEnum.fromId(newRole.intValue()));
                                     } else {
                                         response.setMessage("User doesnt have enough rights");
                                     }
+                                } else {
+                                    userCompanyRolesCandidate.setRole(RoleEnum.fromId(newRole.intValue()));
                                 }
-                                userCompanyRolesCandidate.setRole(RoleEnum.fromId(newRole.intValue()));
+
                                 try {
                                     if (isOwner) {
                                         companyTrans.changeUserRoleOwner(userCompanyRolesAdmin, userCompanyRolesCandidate);
