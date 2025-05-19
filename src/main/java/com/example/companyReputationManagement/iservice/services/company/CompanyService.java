@@ -334,7 +334,6 @@ public class CompanyService implements ICompanyService {
                                 } else {
                                     userCompanyRolesCandidate.setRole(RoleEnum.fromId(newRole.intValue()));
                                 }
-
                                 try {
                                     if (isOwner) {
                                         companyTrans.changeUserRoleOwner(userCompanyRolesAdmin, userCompanyRolesCandidate);
