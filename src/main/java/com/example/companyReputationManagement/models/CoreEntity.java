@@ -42,6 +42,6 @@ public class CoreEntity {
         int randomPart = new Random().nextInt(1000);
         this.coreEntityId = timePart * 1000 + randomPart;
     }
-
+//изменения
 
 }
