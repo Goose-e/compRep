@@ -20,7 +20,7 @@ public interface CompanyRepo extends JpaRepository<Company, Long> {
     Company findByName(String name);
 
     @Query("SELECT new com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponseDTO(c.name, c.companyCode, c.industry, c.website, csu.sourceUrl, c.status) FROM Company c JOIN CompanySourceUrl csu ON csu.companyId = c.coreEntityId   WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :namePart, '%'))")
-    List<FindCompanyByNameResponseDTO> findCompanyByNameContainingIgnoreCase(@Param("namePart")String name);
+    List<FindCompanyByNameResponseDTO> findCompanyByNameContainingIgnoreCase(@Param("namePart") String name);
 
     Company findByCompanyCode(String companyCode);
 
