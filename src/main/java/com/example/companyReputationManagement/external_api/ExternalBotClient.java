@@ -3,15 +3,15 @@ package com.example.companyReputationManagement.external_api;
 import com.example.companyReputationManagement.dto.review.keyWord.bot.BotRequestDTO;
 import com.example.companyReputationManagement.dto.review.keyWord.bot.BotResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.cloud.vertexai.VertexAI;
-import com.google.cloud.vertexai.api.*;
-import com.google.cloud.vertexai.generativeai.GenerativeModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,17 +21,13 @@ public class ExternalBotClient {
 
     private final ObjectMapper objectMapper;
 
-    @Value("${vertex.project-id}")
-    private String projectId;
+    @Value("${ollama.base-url:http://localhost:11434}")
+    private String baseUrl;
 
-    @Value("${vertex.location:us-central1}")
-    private String location;
-
-    @Value("${vertex.model:gemini-2.5-flash}")
+    @Value("${ollama.model:llama3.2}")
     private String modelName;
 
-    public BotResponseDTO analyze(BotRequestDTO request) throws IOException {
-        // 1) Готовим текст отзывов (важно: request.reviews())
+    public BotResponseDTO analyze(BotRequestDTO request) {
         String reviewsContext = request.reviews().stream()
                 .map(r -> "AUTHOR: " + safe(r.author()) + " | TEXT: " + safe(r.text()))
                 .reduce("", (a, b) -> a + "\n" + b)
@@ -46,33 +42,38 @@ public class ExternalBotClient {
         String userPrompt =
                 "Проанализируй отзывы и верни JSON:\n\n" + reviewsContext;
 
-        Schema botResponseSchema = buildBotResponseSchema();
+        Map<String, Object> payload = Map.of(
+                "model", modelName,
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", userPrompt)
+                ),
+                "stream", false,
+                "format", "json"
+        );
 
-        try (VertexAI vertexAi = new VertexAI(projectId, location)) {
-            GenerativeModel model = new GenerativeModel(modelName, vertexAi)
-                    .withSystemInstruction(Content.newBuilder()
-                            .addParts(Part.newBuilder().setText(systemPrompt).build())
-                            .build());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-            GenerationConfig config = GenerationConfig.newBuilder()
-                    .setResponseMimeType("application/json")
-                    .setResponseSchema(botResponseSchema)
-                    .build();
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                baseUrl + "/api/chat",
+                new HttpEntity<>(payload, headers),
+                String.class
+        );
 
-            GenerateContentResponse response = model.generateContent(
-                    Content.newBuilder()
-                            .addParts(Part.newBuilder().setText(userPrompt).build())
-                            .build()
-            );
+        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+            throw new RuntimeException("Ollama analysis failed with status " + response.getStatusCode());
+        }
 
-            String jsonOutput = response.getCandidates(0)
-                    .getContent()
-                    .getParts(0)
-                    .getText();
-
-            return objectMapper.readValue(jsonOutput, BotResponseDTO.class);
+        try {
+            OllamaChatResponse chatResponse = objectMapper.readValue(response.getBody(), OllamaChatResponse.class);
+            if (chatResponse.message() == null || chatResponse.message().content() == null) {
+                throw new RuntimeException("Empty response from Ollama");
+            }
+            return objectMapper.readValue(chatResponse.message().content(), BotResponseDTO.class);
         } catch (Exception e) {
-            throw new RuntimeException("Gemini/VertexAI analysis failed: " + e.getMessage(), e);
+            throw new RuntimeException("Ollama analysis failed: " + e.getMessage(), e);
         }
     }
 
@@ -80,63 +81,9 @@ public class ExternalBotClient {
         return s == null ? "" : s;
     }
 
-    /**
-     * JSON Schema под BotResponseDTO:
-     * BotResponseDTO(topLikes[], topDislikes[], topRequests[])
-     * InsightDTO(aspect, statement, sentiment, count, evidence[])
-     * EvidenceDTO(reviewId, quote)
-     */
-    private static Schema buildBotResponseSchema() {
-        Schema evidenceSchema = Schema.newBuilder()
-                .setType(Type.OBJECT)
-                .putAllProperties(mapOf(
-                        "reviewId", Schema.newBuilder().setType(Type.STRING).build(),
-                        "quote", Schema.newBuilder().setType(Type.STRING).build()
-                ))
-                .addAllRequired(List.of("reviewId", "quote"))
-                .build();
-
-        Schema sentimentSchema = Schema.newBuilder()
-                .setType(Type.STRING)
-                .addAllEnum(List.of("POSITIVE", "NEGATIVE", "REQUEST"))
-                .build();
-
-        Schema insightSchema = Schema.newBuilder()
-                .setType(Type.OBJECT)
-                .putAllProperties(mapOf(
-                        "aspect", Schema.newBuilder().setType(Type.STRING).build(),
-                        "statement", Schema.newBuilder().setType(Type.STRING).build(),
-                        "sentiment", sentimentSchema,
-                        "count", Schema.newBuilder().setType(Type.INTEGER).build(),
-                        "evidence", Schema.newBuilder()
-                                .setType(Type.ARRAY)
-                                .setItems(evidenceSchema)
-                                .build()
-                ))
-                .addAllRequired(List.of("aspect", "statement", "sentiment", "count", "evidence"))
-                .build();
-
-        Schema insightArraySchema = Schema.newBuilder()
-                .setType(Type.ARRAY)
-                .setItems(insightSchema)
-                .build();
-
-        return Schema.newBuilder()
-                .setType(Type.OBJECT)
-                .putAllProperties(mapOf(
-                        "topLikes", insightArraySchema,
-                        "topDislikes", insightArraySchema,
-                        "topRequests", insightArraySchema
-                ))
-                .addAllRequired(List.of("topLikes", "topDislikes", "topRequests"))
-                .build();
+    private record OllamaChatResponse(OllamaMessage message) {
     }
 
-    private static Map<String, Schema> mapOf(Object... kv) {
-        Map<String, Schema> m = new LinkedHashMap<>();
-        for (int i = 0; i < kv.length; i += 2) {
-            m.put((String) kv[i], (Schema) kv[i + 1]);
-        }
-        return m;
+    private record OllamaMessage(String role, String content) {
     }
 }
