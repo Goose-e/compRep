@@ -597,15 +597,9 @@ public class ReviewService implements IReviewService {
                         if (reviewList.isEmpty()) {
                             response.setMessage("No reviews found");
                         } else {
-                            BotRequestDTO botRequest = new BotRequestDTO(
-                                    "ru",
-                                    reviewList,
-                                    10
-                            );
                             try {
-                                BotResponseDTO botResponse = externalBotClient.analyze(botRequest);
-                                reviewInsightDao.save(new ReviewInsight(companyId, type, botResponse));
-                                response.setResponseEntity(new KeyWordResponseDTO(botResponse));
+                                BotResponseDTO mergedResponse = analyzeInBatches(companyId, type, reviewList);
+                                response.setResponseEntity(new KeyWordResponseDTO(mergedResponse));
                                 response.setMessage("Analysis");
                             } catch (Exception e) {
                                 log.error(e.getMessage());
@@ -621,6 +615,48 @@ public class ReviewService implements IReviewService {
         }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
         return response;
+    }
+
+    private BotResponseDTO analyzeInBatches(Long companyId, SentimentTypeEnum type, List<BotReviewDTO> reviewList) {
+        final int batchSize = 10;
+        List<BotResponseDTO> responses = new ArrayList<>();
+
+        for (int start = 0; start < reviewList.size(); start += batchSize) {
+            int end = Math.min(start + batchSize, reviewList.size());
+            List<BotReviewDTO> batch = reviewList.subList(start, end);
+
+            BotRequestDTO botRequest = new BotRequestDTO(
+                    "ru",
+                    batch,
+                    Math.min(batchSize, batch.size())
+            );
+
+            BotResponseDTO botResponse = externalBotClient.analyze(botRequest);
+            reviewInsightDao.save(new ReviewInsight(companyId, type, botResponse));
+            responses.add(botResponse);
+        }
+
+        return mergeResponses(responses);
+    }
+
+    private BotResponseDTO mergeResponses(List<BotResponseDTO> responses) {
+        List<InsightDTO> likes = new ArrayList<>();
+        List<InsightDTO> dislikes = new ArrayList<>();
+        List<InsightDTO> requests = new ArrayList<>();
+
+        for (BotResponseDTO response : responses) {
+            if (response.topLikes() != null) {
+                likes.addAll(response.topLikes());
+            }
+            if (response.topDislikes() != null) {
+                dislikes.addAll(response.topDislikes());
+            }
+            if (response.topRequests() != null) {
+                requests.addAll(response.topRequests());
+            }
+        }
+
+        return new BotResponseDTO(likes, dislikes, requests);
     }
 
 
