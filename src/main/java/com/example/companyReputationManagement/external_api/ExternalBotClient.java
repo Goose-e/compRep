@@ -73,7 +73,7 @@ public class ExternalBotClient {
                 ),
                 "options", Map.of(
                         "num_ctx", 1024,
-                        "num_predict", 400,
+                        "num_predict", 2000,
                         "temperature", 0.1,
                         "top_p", 0.9,
                         "repeat_penalty", 1.1,
@@ -81,7 +81,7 @@ public class ExternalBotClient {
                 ),
                 "stream", false
         );
-
+        log.debug("payload: {}", payload);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
