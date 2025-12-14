@@ -69,6 +69,7 @@ public final class SysConst {
 
     public static final String OC_OK = "OC_OK";
     public static final String OC_BUGS = "OC_BUGS";
+    public static final String USER_BANNED = "OC_BUGS";
     public static final String INVALID_ENTITY_ATTR = "INVALID ENTITY ATTR";
     public static final String SAVE_USER_ERROR = "SAVE USER ERROR";
     public static final String CREATE_USER_ERROR = "CREATE USER ERROR";

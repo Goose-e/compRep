@@ -11,6 +11,7 @@ import com.example.companyReputationManagement.dto.user.login.UserLoginResponseD
 import com.example.companyReputationManagement.iservice.generate.GenerateCode;
 import com.example.companyReputationManagement.models.CompanyUser;
 import com.example.companyReputationManagement.models.enums.RoleEnum;
+import com.example.companyReputationManagement.models.enums.StatusEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
@@ -25,6 +26,8 @@ public class UserMapper {
 
     private final PasswordEncoder passwordEncoder;
     private final GenerateCode generateCode;
+
+
 
     public CompanyUser mapUserDtoToUser(UserCreateRequestDTO userCreateRequestDTO) {
         CompanyUser companyUser = new CompanyUser();
@@ -65,5 +68,10 @@ public class UserMapper {
         long timeRefresh = tokens.getLast().getExpiresAt().getEpochSecond() - tokens.getLast().getIssuedAt().getEpochSecond();
 
         return new UserLoginResponseDTO(tokens.getFirst().getTokenValue(), timeAccess, tokens.get(1).getTokenValue(), timeRefresh);
+    }
+
+    public CompanyUser chageUserStatus(CompanyUser user) {
+        user.setStatus(StatusEnum.CLOSED);
+        return user;
     }
 }

@@ -1,5 +1,7 @@
 package com.example.companyReputationManagement.iservice;
 
+import com.example.companyReputationManagement.dto.user.ban.BanUserRequestDTO;
+import com.example.companyReputationManagement.dto.user.ban.BanUserResponseDTO;
 import com.example.companyReputationManagement.dto.user.create.UserCreateRequestDTO;
 import com.example.companyReputationManagement.dto.user.create.UserCreateResponseDTO;
 import com.example.companyReputationManagement.dto.user.edit.EditUserRequestDTO;
@@ -10,6 +12,7 @@ import com.example.companyReputationManagement.dto.user.get_by_code.GetUserByCod
 import com.example.companyReputationManagement.dto.user.login.UserLoginRequestDTO;
 import com.example.companyReputationManagement.dto.user.login.UserLoginResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
+import jakarta.validation.Valid;
 
 public interface IUserService {
     HttpResponseBody<UserCreateResponseDTO> register(UserCreateRequestDTO userCreateRequestDTO);
@@ -21,4 +24,6 @@ public interface IUserService {
     HttpResponseBody<GetUserByCodeResponseDTO> getUserByCode();
 
     HttpResponseBody<FindByNameResponseListDTO> findByName(FindByNameRequestDTO findByNameRequestDTO);
+
+    HttpResponseBody<BanUserResponseDTO> banUser();
 }

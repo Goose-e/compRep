@@ -1,6 +1,8 @@
 package com.example.companyReputationManagement.dao;
 
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordResponseDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.BotReviewDTO;
 import com.example.companyReputationManagement.models.Review;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
 import com.example.companyReputationManagement.repo.ReviewRepo;
@@ -41,6 +43,9 @@ public class ReviewDao {
 
     public List<GetAllBySentResponseDTO> findAllBySentType(Long compId, SentimentTypeEnum sentId) {
         return reviewRepo.findAllByCompanyIdAndSentimentTypeId(compId, sentId);
+    }
+    public List<BotReviewDTO> findForAnalysis(Long compId, SentimentTypeEnum sentId) {
+        return reviewRepo.findForAnalysis(compId, sentId);
     }
 
     public Double getAverageRating(Long compId, Timestamp start, Timestamp end) {

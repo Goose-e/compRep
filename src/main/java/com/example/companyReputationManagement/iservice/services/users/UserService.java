@@ -1,6 +1,8 @@
 package com.example.companyReputationManagement.iservice.services.users;
 
 import com.example.companyReputationManagement.dao.UserDao;
+import com.example.companyReputationManagement.dto.user.ban.BanUserResponse;
+import com.example.companyReputationManagement.dto.user.ban.BanUserResponseDTO;
 import com.example.companyReputationManagement.dto.user.create.UserCreateRequestDTO;
 import com.example.companyReputationManagement.dto.user.create.UserCreateResponse;
 import com.example.companyReputationManagement.dto.user.create.UserCreateResponseDTO;
@@ -9,7 +11,6 @@ import com.example.companyReputationManagement.dto.user.edit.EditUserResponse;
 import com.example.companyReputationManagement.dto.user.edit.EditUserResponseDTO;
 import com.example.companyReputationManagement.dto.user.find.FindByNameRequestDTO;
 import com.example.companyReputationManagement.dto.user.find.FindByNameResponse;
-import com.example.companyReputationManagement.dto.user.find.FindByNameResponseDTO;
 import com.example.companyReputationManagement.dto.user.find.FindByNameResponseListDTO;
 import com.example.companyReputationManagement.dto.user.get_by_code.GetUserByCodeResponse;
 import com.example.companyReputationManagement.dto.user.get_by_code.GetUserByCodeResponseDTO;
@@ -21,6 +22,7 @@ import com.example.companyReputationManagement.iservice.IJwtService;
 import com.example.companyReputationManagement.iservice.IUserService;
 import com.example.companyReputationManagement.mapper.UserMapper;
 import com.example.companyReputationManagement.models.CompanyUser;
+import com.example.companyReputationManagement.models.enums.StatusEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
@@ -76,6 +78,11 @@ public class UserService implements IUserService {
     public HttpResponseBody<UserLoginResponseDTO> login(UserLoginRequestDTO userLoginRequestDTO) {
         HttpResponseBody<UserLoginResponseDTO> response = new UserLoginResponse();
         CompanyUser user = userDao.findUserByLoginOrEmail(userLoginRequestDTO.getUsernameOrEmail());
+        if (user.getStatus() == StatusEnum.CLOSED) {
+            response.setMessage("User banned");
+            response.setResponseCode(USER_BANNED);
+            return response;
+        }
         if (user != null) {
             if (passwordEncoder.matches(userLoginRequestDTO.getPassword(), user.getPasswordHash())) {
                 response.setMessage("User logged in successfully");
@@ -92,6 +99,7 @@ public class UserService implements IUserService {
         } else {
             response.setResponseCode(OC_BUGS);
         }
+
         return response;
     }
 
@@ -168,9 +176,34 @@ public class UserService implements IUserService {
                 response.setMessage("Users not found");
                 response.setError("Users not found");
             } else {
-              FindByNameResponseListDTO usersDtoList = userMapper.mapFindByNameResponseListDTO(users);
+                FindByNameResponseListDTO usersDtoList = userMapper.mapFindByNameResponseListDTO(users);
                 response.setMessage("User found successfully");
                 response.setResponseEntity(usersDtoList);
+            }
+        }
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+        return response;
+    }
+
+    @Override
+    public HttpResponseBody<BanUserResponseDTO> banUser() {
+        HttpResponseBody<BanUserResponseDTO> response = new BanUserResponse();
+        String userCode = tokenService.extractUserCodeFromJwt();
+        if (userCode == null) {
+            response.setMessage("User unauthorized");
+            response.setError("User unauthorized");
+        } else {
+            CompanyUser user = userDao.findUserByUserCode(userCode);
+            if (user == null) {
+                response.setMessage("User not found");
+                response.setError("User not found");
+            } else {
+                user = userMapper.chageUserStatus(user);
+                System.out.println(user.getStatus());
+                userDao.save(user);
+                BanUserResponseDTO banUserResponseDTO = new BanUserResponseDTO(user.getUsername());
+                response.setMessage(user.getUsername() + " User found successfully");
+                response.setResponseEntity(banUserResponseDTO);
             }
         }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);

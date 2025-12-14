@@ -17,9 +17,16 @@ import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAll
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponse;
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseDTO;
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseListDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordRequestDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordResponse;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordResponseDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.BotRequestDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.BotResponseDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.BotReviewDTO;
 import com.example.companyReputationManagement.dto.review.report.GenerateReportRequestDTO;
 import com.example.companyReputationManagement.dto.review.report.GenerateReportResponse;
 import com.example.companyReputationManagement.dto.review.report.GenerateReportResponseDTO;
+import com.example.companyReputationManagement.external_api.ExternalBotClient;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.IJwtService;
 import com.example.companyReputationManagement.iservice.IReviewService;
@@ -59,8 +66,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
-import java.awt.Font;
 import java.awt.*;
+import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
@@ -72,8 +79,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static com.example.companyReputationManagement.constants.SysConst.OC_BUGS;
@@ -90,7 +97,7 @@ public class ReviewService implements IReviewService {
     private final UserCompanyRolesDao userCompanyRolesDao;
     private final CompanySourceUrlDao companySourceUrlDao;
     private final IJwtService jwtService;
-
+    private final ExternalBotClient externalBotClient;
 
     private Timestamp dateFormat(String date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
@@ -98,7 +105,7 @@ public class ReviewService implements IReviewService {
         return Timestamp.valueOf(localDateTime);
     }
 
-    //Парсинг
+
     private void findReviewsOtzovik(Company company, List<Review> reviews, HttpResponseBody<ReviewResponseListDto> response) {
         String url = findUrl(company.getCoreEntityId());
         if (url == null) {
@@ -431,6 +438,7 @@ public class ReviewService implements IReviewService {
 
                 List<Review> reviews = new ArrayList<>();
                 findReviewsOtzovik(comp, reviews, response);
+                log.debug("findReviewsOtzovik for {}", comp.getName());
                 if (!reviews.isEmpty()) {
                     try {
                         reviewsTrans.saveAll(reviews);
@@ -556,6 +564,47 @@ public class ReviewService implements IReviewService {
             }
         }
 
+        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
+        return response;
+    }
+
+    @Override
+    public HttpResponseBody<KeyWordResponseDTO> keyWordAnalysis(KeyWordRequestDTO keyWordRequestDTO) {
+        HttpResponseBody<KeyWordResponseDTO> response = new KeyWordResponse();
+        Company comp = findCompanyByCode(keyWordRequestDTO.companyCode());
+        if (comp == null) {
+            response.setMessage("Company not found");
+            response.setResponseCode(OC_BUGS);
+        } else {
+            if (checkEmployment(comp.getCoreEntityId())) {
+                response.setMessage("User not in company");
+            } else {
+                SentimentTypeEnum type = SentimentTypeEnum.fromId(Math.toIntExact(keyWordRequestDTO.sentId()));
+                List<BotReviewDTO> reviewList = reviewDao.findForAnalysis(comp.getCoreEntityId(), type);
+                if (reviewList.isEmpty()) {
+                    response.setMessage("No reviews found");
+                } else {
+                    BotRequestDTO botRequest = new BotRequestDTO(
+                            "ru",
+                            reviewList,
+                            10
+                    );
+                    try {
+
+
+                        BotResponseDTO botResponse = externalBotClient.analyze(botRequest);
+                        response.setResponseEntity(new KeyWordResponseDTO(botResponse));
+                        response.setMessage("Analysis");
+                    } catch (Exception e) {
+                        log.error(e.getMessage());
+                        response.setResponseCode(OC_BUGS);
+                        response.setMessage("Something went wrong while analyzing your reviews");
+                        return response;
+                    }
+
+                }
+            }
+        }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
         return response;
     }

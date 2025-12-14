@@ -552,6 +552,7 @@ public class CompanyService implements ICompanyService {
         return response;
     }
 
+
     @Override
     public HttpResponseBody<FindCompanyByNameResponseListDTO> findCompaniesByName(FindCompanyByNameRequestDTO findCompanyByNameRequestDTO) {
         HttpResponseBody<FindCompanyByNameResponseListDTO> response = new FindCompanyByNameResponse();

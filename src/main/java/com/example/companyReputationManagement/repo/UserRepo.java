@@ -20,7 +20,7 @@ public interface UserRepo extends JpaRepository<CompanyUser, Long> {
 
     List<CompanyUser> findCompanyUsersByUsernameContainingIgnoreCase(String username);
 
-    @Query("SELECT c.coreEntityId FROM CompanyUser c WHERE c.username = :username OR c.email = :email")
+    @Query("SELECT c.coreEntityId FROM CompanyUser c WHERE c.username = :username OR c.email = :email AND c.status != 1")
     Long findCoreEntityIdByUsernameOrEmail(String username, String email);
 
     CompanyUser findCompanyUserByUserCode(String userCode);
@@ -28,4 +28,7 @@ public interface UserRepo extends JpaRepository<CompanyUser, Long> {
 
     @Query("SELECT c.coreEntityId FROM CompanyUser c WHERE c.userCode = :userCode")
     Long findCompanyUserIdByUserCode(String userCode);
+
+
+
 }

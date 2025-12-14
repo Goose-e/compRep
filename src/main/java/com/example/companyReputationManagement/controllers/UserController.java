@@ -1,6 +1,8 @@
 package com.example.companyReputationManagement.controllers;
 
 
+import com.example.companyReputationManagement.dto.user.ban.BanUserRequestDTO;
+import com.example.companyReputationManagement.dto.user.ban.BanUserResponseDTO;
 import com.example.companyReputationManagement.dto.user.edit.EditUserRequestDTO;
 import com.example.companyReputationManagement.dto.user.edit.EditUserResponseDTO;
 import com.example.companyReputationManagement.dto.user.find.FindByNameRequestDTO;
@@ -32,5 +34,10 @@ public class UserController {
     @PostMapping(value = "/find_by_username")
     public HttpResponseBody<FindByNameResponseListDTO> findByName(@Valid @RequestBody FindByNameRequestDTO findByNameRequestDTO) {
         return iUserService.findByName(findByNameRequestDTO);
+    }
+
+    @PostMapping(value = "/ban")
+    public HttpResponseBody<BanUserResponseDTO> banUser() {
+        return iUserService.banUser();
     }
 }

@@ -20,7 +20,7 @@ public class CompanySourceUrlMapper {
         return companySourceUrl;
     }
     public CompanySourceUrl edit(String url, CompanySourceUrl companySourceUrl) {
-        companySourceUrl.setSourceUrl(url == null ? "не найдено" : url);
+        companySourceUrl.setSourceUrl(url == null ? companySourceUrl.getSourceUrl() : url);
         return companySourceUrl;
     }
 }

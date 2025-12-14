@@ -4,6 +4,7 @@ import com.example.companyReputationManagement.dto.user.find.FindByNameResponseL
 import com.example.companyReputationManagement.models.CompanyUser;
 import com.example.companyReputationManagement.repo.UserRepo;
 import lombok.RequiredArgsConstructor;
+import org.h2.engine.User;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

@@ -11,6 +11,7 @@ import com.example.companyReputationManagement.dto.user.login.UserLoginResponseD
 import com.example.companyReputationManagement.factories.UserFactory;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.IJwtService;
+import com.example.companyReputationManagement.iservice.generate.GenerateCode;
 import com.example.companyReputationManagement.iservice.services.users.UserService;
 import com.example.companyReputationManagement.mapper.UserMapper;
 import com.example.companyReputationManagement.models.CompanyUser;
@@ -44,6 +45,8 @@ public class UserTest {
     private UserMapper userMapper;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private GenerateCode generateCode;
     @Mock
     private IJwtService tokenService;
 
@@ -117,7 +120,7 @@ public class UserTest {
         UserCreateRequestDTO request = UserFactory.validCreateRequest();
 
         when(userDao.findUserByLoginOrEmail(request.getUsername(), request.getEmail())).thenReturn(null);
-        when(userMapper.mapUserDtoToUser(request)).thenReturn(null); // Симулируем сбой при маппинге
+        when(userMapper.mapUserDtoToUser(request)).thenReturn(null);
 
         HttpResponseBody<UserCreateResponseDTO> response = userService.register(request);
 
@@ -283,13 +286,19 @@ public class UserTest {
         when(userDao.findUserByUserCode(userCode)).thenReturn(mockUser);
         when(userMapper.mapUserToUserDto(mockUser)).thenReturn(responseDTO);
 
-
         HttpResponseBody<GetUserByCodeResponseDTO> response = userService.getUserByCode();
-
-
         assertEquals("User found successfully", response.getMessage());
         assertEquals(OC_OK, response.getResponseCode());
         assertNotNull(response.getResponseEntity());
+    }
+
+
+    @Test
+    void testUserMapper() {
+        CompanyUser user = UserFactory.defaultUser();
+        UserMapper userMapper1 = new UserMapper(passwordEncoder, generateCode);
+        UserCreateResponseDTO userDto = userMapper1.mapUserToUserDtoResponse(user);
+        assertEquals(user.getUsername(), userDto.getUsername());
     }
 
 }

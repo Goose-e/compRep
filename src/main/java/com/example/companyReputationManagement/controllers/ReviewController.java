@@ -9,6 +9,8 @@ import com.example.companyReputationManagement.dto.review.get_all.GetReviewReque
 import com.example.companyReputationManagement.dto.review.get_all.GetReviewResponseListDto;
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentRequestDTO;
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseListDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordRequestDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordResponseDTO;
 import com.example.companyReputationManagement.dto.review.report.GenerateReportRequestDTO;
 import com.example.companyReputationManagement.dto.review.report.GenerateReportResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
@@ -57,5 +59,11 @@ public class ReviewController {
     @PostMapping(value = "/report")
     public HttpResponseBody<GenerateReportResponseDTO> generateReport(@Valid @RequestBody GenerateReportRequestDTO generateReportRequestDTO) throws DocumentException, IOException {
         return reviewService.generateReport(generateReportRequestDTO);
+    }
+
+    @PostMapping(value = "/key_words_analysis")
+    public HttpResponseBody<KeyWordResponseDTO> keyWordAnalysis(@Valid @RequestBody KeyWordRequestDTO keyWordRequestDTO) throws IOException
+    {
+        return reviewService.keyWordAnalysis(keyWordRequestDTO);
     }
 }

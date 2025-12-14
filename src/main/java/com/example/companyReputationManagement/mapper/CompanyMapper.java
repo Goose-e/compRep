@@ -63,6 +63,7 @@ public class CompanyMapper {
         Optional.ofNullable(editCompanyRequestDTO.getNewCompanyName()).ifPresent(company::setName);
         Optional.ofNullable(editCompanyRequestDTO.getNewCompanyIndustry()).ifPresent(company::setIndustry);
         Optional.ofNullable(editCompanyRequestDTO.getNewCompanyWebsite()).ifPresent(company::setWebsite);
+        Optional.ofNullable(editCompanyRequestDTO.getNewOtzovikUrl()).ifPresent(company::setWebsite);
         return company;
     }
 }
