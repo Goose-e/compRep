@@ -1,7 +1,6 @@
 package com.example.companyReputationManagement.dao;
 
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseDTO;
-import com.example.companyReputationManagement.dto.review.keyWord.KeyWordResponseDTO;
 import com.example.companyReputationManagement.dto.review.keyWord.bot.BotReviewDTO;
 import com.example.companyReputationManagement.models.Review;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
@@ -10,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -46,6 +44,10 @@ public class ReviewDao {
     }
     public List<BotReviewDTO> findForAnalysis(Long compId, SentimentTypeEnum sentId) {
         return reviewRepo.findForAnalysis(compId, sentId);
+    }
+
+    public Timestamp findLatestReviewDate(Long compId, SentimentTypeEnum sentId) {
+        return reviewRepo.findLatestReviewDate(compId, sentId);
     }
 
     public Double getAverageRating(Long compId, Timestamp start, Timestamp end) {

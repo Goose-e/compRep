@@ -2,6 +2,7 @@ package com.example.companyReputationManagement.iservice.services.review;
 
 import com.example.companyReputationManagement.dao.CompanyDao;
 import com.example.companyReputationManagement.dao.CompanySourceUrlDao;
+import com.example.companyReputationManagement.dao.ReviewInsightDao;
 import com.example.companyReputationManagement.dao.ReviewDao;
 import com.example.companyReputationManagement.dao.UserCompanyRolesDao;
 import com.example.companyReputationManagement.dto.review.find.ReviewRequestDto;
@@ -34,6 +35,7 @@ import com.example.companyReputationManagement.iservice.services.transactions.Re
 import com.example.companyReputationManagement.mapper.ReviewMapper;
 import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.models.CompanySourceUrl;
+import com.example.companyReputationManagement.models.ReviewInsight;
 import com.example.companyReputationManagement.models.Review;
 import com.example.companyReputationManagement.models.enums.RoleEnum;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
@@ -98,6 +100,7 @@ public class ReviewService implements IReviewService {
     private final CompanySourceUrlDao companySourceUrlDao;
     private final IJwtService jwtService;
     private final ExternalBotClient externalBotClient;
+    private final ReviewInsightDao reviewInsightDao;
 
     private Timestamp dateFormat(String date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
@@ -579,29 +582,40 @@ public class ReviewService implements IReviewService {
             if (checkEmployment(comp.getCoreEntityId())) {
                 response.setMessage("User not in company");
             } else {
+                Long companyId = comp.getCoreEntityId();
                 SentimentTypeEnum type = SentimentTypeEnum.fromId(Math.toIntExact(keyWordRequestDTO.sentId()));
-                List<BotReviewDTO> reviewList = reviewDao.findForAnalysis(comp.getCoreEntityId(), type);
-                if (reviewList.isEmpty()) {
+                Timestamp latestReviewDate = reviewDao.findLatestReviewDate(companyId, type);
+                if (latestReviewDate == null) {
                     response.setMessage("No reviews found");
                 } else {
-                    BotRequestDTO botRequest = new BotRequestDTO(
-                            "ru",
-                            reviewList,
-                            10
-                    );
-                    try {
+                    Optional<ReviewInsight> latestInsight = reviewInsightDao.findLatest(companyId, type);
+                    if (latestInsight.isPresent() && !latestReviewDate.after(latestInsight.get().getCreatedAt())) {
+                        response.setResponseEntity(new KeyWordResponseDTO(latestInsight.get().getResultJson()));
+                        response.setMessage("Analysis from cache");
+                    } else {
+                        List<BotReviewDTO> reviewList = reviewDao.findForAnalysis(companyId, type);
+                        if (reviewList.isEmpty()) {
+                            response.setMessage("No reviews found");
+                        } else {
+                            BotRequestDTO botRequest = new BotRequestDTO(
+                                    "ru",
+                                    reviewList,
+                                    10
+                            );
+                            try {
+                                BotResponseDTO botResponse = externalBotClient.analyze(botRequest);
+                                reviewInsightDao.save(new ReviewInsight(companyId, type, botResponse));
+                                response.setResponseEntity(new KeyWordResponseDTO(botResponse));
+                                response.setMessage("Analysis");
+                            } catch (Exception e) {
+                                log.error(e.getMessage());
+                                response.setResponseCode(OC_BUGS);
+                                response.setMessage("Something went wrong while analyzing your reviews");
+                                return response;
+                            }
 
-
-                        BotResponseDTO botResponse = externalBotClient.analyze(botRequest);
-                        response.setResponseEntity(new KeyWordResponseDTO(botResponse));
-                        response.setMessage("Analysis");
-                    } catch (Exception e) {
-                        log.error(e.getMessage());
-                        response.setResponseCode(OC_BUGS);
-                        response.setMessage("Something went wrong while analyzing your reviews");
-                        return response;
+                        }
                     }
-
                 }
             }
         }
