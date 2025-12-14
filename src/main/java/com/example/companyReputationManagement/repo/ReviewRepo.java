@@ -1,7 +1,6 @@
 package com.example.companyReputationManagement.repo;
 
 import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseDTO;
-import com.example.companyReputationManagement.dto.review.keyWord.KeyWordResponseDTO;
 import com.example.companyReputationManagement.dto.review.keyWord.bot.BotReviewDTO;
 import com.example.companyReputationManagement.models.Review;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
@@ -32,6 +31,10 @@ public interface ReviewRepo extends JpaRepository<Review, Long> {
     @Query("SELECT new com.example.companyReputationManagement.dto.review.keyWord.bot.BotReviewDTO(r.reviewerName,r.content) " +
             "FROM Review r WHERE r.companyId =:companyId AND r.sentimentTypeId =:sentimentTypeId")
     List<BotReviewDTO> findForAnalysis(@Param("companyId") Long companyId, @Param("sentimentTypeId") SentimentTypeEnum sentimentTypeId);
+
+
+    @Query("SELECT MAX(r.publishedDate) FROM Review r WHERE r.companyId =:companyId AND r.sentimentTypeId =:sentimentTypeId")
+    Timestamp findLatestReviewDate(@Param("companyId") Long companyId, @Param("sentimentTypeId") SentimentTypeEnum sentimentTypeId);
 
 
     @Query("SELECT AVG(r.rating) FROM Review r  WHERE r.companyId =:companyId AND r.publishedDate BETWEEN :start AND :endM ")
