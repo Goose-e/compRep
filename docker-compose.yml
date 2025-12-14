@@ -1,9 +1,8 @@
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
-    image: postgres
-
+    image: postgres:latest
     container_name: company_rep_db
     ports:
       - "5433:5432"
@@ -14,12 +13,26 @@ services:
     volumes:
       - ./init:/docker-entrypoint-initdb.d
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - llmnet
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    networks:
+      - llmnet
 
   app:
     image: sha256:cb467ac94fa586d8550d55cd929c162ddac7eb430c9eef373e387a86d772cb8c
     container_name: company_rep_app
     depends_on:
       - postgres
+      - ollama
     ports:
       - "8080:8080"
     environment:
@@ -28,5 +41,17 @@ services:
       SPRING_DATASOURCE_PASSWORD: comprep
       APP_SECRETKEY: 703ab371-f2f2-4747-ba40-4cdb004f8514
       PRIVATE_KEY_PATH: /app/resources/rsa/private.pem
+
+      # ВАЖНО: адрес Ollama из контейнера
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: gpt-oss:latest
+    networks:
+      - llmnet
+
 volumes:
   pgdata:
+  ollama:
+
+networks:
+  llmnet:
+    driver: bridge

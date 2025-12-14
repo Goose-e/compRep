@@ -4,6 +4,7 @@ import com.example.companyReputationManagement.dto.review.keyWord.bot.BotRequest
 import com.example.companyReputationManagement.dto.review.keyWord.bot.BotResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ExternalBotClient {
@@ -34,10 +36,27 @@ public class ExternalBotClient {
                 .trim();
 
         String systemPrompt =
-                "Ты — эксперт-аналитик отзывов на русском. " +
-                        "Верни СТРОГО JSON по заданной схеме. " +
-                        "Сгруппируй ключевые моменты в topLikes, topDislikes, topRequests. " +
-                        "В evidence добавляй короткие цитаты и идентификатор (если нет id — используй author).";
+                """
+                Ты — эксперт-аналитик отзывов на русском.
+        
+                Верни ТОЛЬКО валидный JSON (без markdown, без пояснений, без текста вокруг).
+        
+                СТРОГОЕ ТРЕБОВАНИЕ К ФОРМАТУ:
+                - topLikes, topDislikes, topRequests — это МАССИВЫ ОБЪЕКТОВ (НЕ массивы строк).
+                - Каждый элемент массива — объект InsightDTO со СТРОГО следующими полями:
+                  {
+                    "aspect": string,
+                    "statement": string,
+                    "sentiment": "POSITIVE" | "NEGATIVE" | "REQUEST",
+                    "count": integer >= 1,
+                    "evidence": [ { "reviewId": string, "quote": string } ]
+                  }
+                - Никаких дополнительных полей.
+                - В evidence добавляй 1–2 короткие цитаты. reviewId: если нет id — используй author.
+                - Если данных мало — верни пустые массивы, но поля topLikes/topDislikes/topRequests должны присутствовать всегда.
+        
+                Верни результат в виде одного JSON-объекта.
+                """;
 
         String userPrompt =
                 "Проанализируй отзывы и верни JSON:\n\n" + reviewsContext;
@@ -61,7 +80,10 @@ public class ExternalBotClient {
                 new HttpEntity<>(payload, headers),
                 String.class
         );
-
+        log.debug(response.getBody());
+        System.out.println(response.getBody());
+        System.out.println(response);
+        System.out.println(response.toString());
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
             throw new RuntimeException("Ollama analysis failed with status " + response.getStatusCode());
         }
