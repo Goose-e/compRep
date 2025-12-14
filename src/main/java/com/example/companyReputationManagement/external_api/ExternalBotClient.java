@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +36,12 @@ public class ExternalBotClient {
 
     @Value("${ollama.model:gpt-oss:latest}")
     private String modelName;
+
+    @Value("${ollama.client.max-retries:3}")
+    private int maxRetries;
+
+    @Value("${ollama.client.retry-delay:2s}")
+    private Duration retryDelay;
 
     public BotResponseDTO analyze(BotRequestDTO request) {
         String reviewsContext = buildReviewsContext(request);
@@ -131,11 +138,20 @@ public class ExternalBotClient {
 
                 return response;
             } catch (RestClientException ex) {
-                if (attempts >= 2) {
+                if (attempts >= maxRetries) {
                     throw new RuntimeException("Failed to reach Ollama after retry: " + ex.getMessage(), ex);
                 }
-                log.warn("Retrying Ollama request after failure: {}", ex.getMessage());
+                log.warn("Retrying Ollama request after failure (attempt {}/{}): {}", attempts, maxRetries, ex.getMessage());
+                sleepBeforeRetry();
             }
+        }
+    }
+
+    private void sleepBeforeRetry() {
+        try {
+            Thread.sleep(retryDelay.toMillis());
+        } catch (InterruptedException interruptedException) {
+            Thread.currentThread().interrupt();
         }
     }
 
