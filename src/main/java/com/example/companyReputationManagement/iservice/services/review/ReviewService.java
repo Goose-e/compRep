@@ -24,6 +24,7 @@ import com.example.companyReputationManagement.dto.review.keyWord.KeyWordRespons
 import com.example.companyReputationManagement.dto.review.keyWord.bot.BotRequestDTO;
 import com.example.companyReputationManagement.dto.review.keyWord.bot.BotResponseDTO;
 import com.example.companyReputationManagement.dto.review.keyWord.bot.BotReviewDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.InsightDTO;
 import com.example.companyReputationManagement.dto.review.report.GenerateReportRequestDTO;
 import com.example.companyReputationManagement.dto.review.report.GenerateReportResponse;
 import com.example.companyReputationManagement.dto.review.report.GenerateReportResponseDTO;

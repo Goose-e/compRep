@@ -67,8 +67,8 @@ public class ExternalBotClient {
                         Map.of("role", "system", "content", systemPrompt),
                         Map.of("role", "user", "content", userPrompt)
                 ),
-                "stream", false,
-                "format", "json"
+                "stream", false
+//                "format", "json"
         );
 
         HttpHeaders headers = new HttpHeaders();
