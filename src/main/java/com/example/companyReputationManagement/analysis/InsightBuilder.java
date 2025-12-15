@@ -29,9 +29,15 @@ public class InsightBuilder {
             if (result.size() >= maxPerCategory) break;
 
             List<Integer> idxs = cl.indices;
+            if (idxs.size() < 2) {
+                continue;
+            }
             int count = idxs.size();
 
             String aspect = buildAspect(texts, idxs);
+            if (!isValidAspect(aspect)) {
+                continue;
+            }
             String statement = buildStatement(aspect, sentiment);
 
             int pick = idxs.get(0);
@@ -47,7 +53,21 @@ public class InsightBuilder {
             ));
         }
 
-        return result;
+        return result.stream()
+                .sorted(Comparator.comparingInt(InsightDTO::count).reversed())
+                .limit(5)
+                .toList();
+    }
+
+    private static boolean isValidAspect(String s) {
+        if (s == null) return false;
+        s = s.trim().toLowerCase();
+
+        if (s.length() < 3) return false;
+        if (s.matches("[\\p{Punct}\\d\\s]+")) return false;
+        if (Set.of("censored", "unknown", "null").contains(s)) return false;
+
+        return true;
     }
 
     private static String buildAspect(List<String> texts, List<Integer> idxs) {

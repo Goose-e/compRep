@@ -441,6 +441,8 @@ public class ReviewService implements IReviewService {
         com.itextpdf.text.List list = new com.itextpdf.text.List(false, 10);
 
         for (InsightDTO insight : insights) {
+            if (!isValidAspect(insight.aspect())) continue;
+            if (insight.count() < 2) continue;
             String aspect = insight.aspect() != null ? insight.aspect() + ": " : "";
             String statement = insight.statement() != null ? insight.statement() : "";
             String itemText = String.format("%s%s (mentions: %d)", aspect, statement, insight.count());
@@ -458,6 +460,17 @@ public class ReviewService implements IReviewService {
         String userCode = jwtService.extractUserCodeFromJwt();
         RoleEnum currentRole = userCompanyRolesDao.findRoleByUserCode(userCode, compId);
         return currentRole.equals(RoleEnum.OWNER) || currentRole.equals(RoleEnum.ADMIN);
+    }
+
+    private static boolean isValidAspect(String s) {
+        if (s == null) return false;
+        s = s.trim().toLowerCase();
+
+        if (s.length() < 3) return false;
+        if (s.matches("[\\p{Punct}\\d\\s]+")) return false;
+        if (Set.of("censored", "unknown", "null").contains(s)) return false;
+
+        return true;
     }
 
     private boolean checkEmployment(Long compId) {
