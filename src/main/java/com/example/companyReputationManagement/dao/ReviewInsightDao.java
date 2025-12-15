@@ -21,4 +21,30 @@ public class ReviewInsightDao {
     public List<Optional<ReviewInsight>> findLatest(Long companyId, SentimentTypeEnum sentimentType) {
         return reviewInsightRepo.findTopByCompanyIdAndSentimentTypeOrderByCreatedAtDesc(companyId, sentimentType);
     }
+
+    public List<ReviewInsight> findLatestByCompany(Long companyId) {
+        List<ReviewInsight> insights = reviewInsightRepo.findAllByCompanyIdOrderByCreatedAtDesc(companyId);
+        LinkedHashMap<SentimentTypeEnum, ReviewInsight> latestPerType = new LinkedHashMap<>();
+
+        for (ReviewInsight insight : insights) {
+            SentimentTypeEnum sentimentType = insight.getSentimentType();
+
+            if (isSupported(sentimentType) && !latestPerType.containsKey(sentimentType)) {
+                latestPerType.put(sentimentType, insight);
+            }
+        }
+
+        return latestPerType.entrySet().stream()
+                .sorted(Comparator.comparingInt(entry -> orderByType(entry.getKey())))
+                .map(java.util.Map.Entry::getValue)
+                .toList();
+    }
+
+    private boolean isSupported(SentimentTypeEnum sentimentType) {
+        return sentimentType == SentimentTypeEnum.POSITIVE || sentimentType == SentimentTypeEnum.NEGATIVE;
+    }
+
+    private int orderByType(SentimentTypeEnum sentimentType) {
+        return sentimentType == SentimentTypeEnum.POSITIVE ? 0 : 1;
+    }
 }
