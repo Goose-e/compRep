@@ -410,7 +410,10 @@ public class ReviewService implements IReviewService {
     }
 
     private void appendReviewInsightsSection(com.itextpdf.text.Document document, Long compId, com.itextpdf.text.Font bodyFont) throws DocumentException {
-        List<ReviewInsight> latestInsights = reviewInsightDao.findLatestByCompany(compId).stream()
+        List<ReviewInsight> latestInsights = Arrays.stream(SentimentTypeEnum.values())
+                .map(type -> reviewInsightDao.findLatest(compId, type))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .filter(this::hasInsightContent)
                 .toList();
 
@@ -431,20 +434,10 @@ public class ReviewService implements IReviewService {
             BotResponseDTO response = insight.getResultJson();
             String title = SentimentTypeEnum.toString(insight.getSentimentType()) + " insights";
             document.add(new Paragraph(title, subHeaderFont));
-            addInsightsList(document, "Top likes", sortInsights(response.topLikes()), bodyFont);
-            addInsightsList(document, "Top dislikes", sortInsights(response.topDislikes()), bodyFont);
-            addInsightsList(document, "Top requests", sortInsights(response.topRequests()), bodyFont);
+            addInsightsList(document, "Top likes", response.topLikes(), bodyFont);
+            addInsightsList(document, "Top dislikes", response.topDislikes(), bodyFont);
+            addInsightsList(document, "Top requests", response.topRequests(), bodyFont);
         }
-    }
-
-    private List<InsightDTO> sortInsights(List<InsightDTO> insights) {
-        if (insights == null) {
-            return Collections.emptyList();
-        }
-
-        return insights.stream()
-                .sorted(Comparator.comparingInt(InsightDTO::count).reversed())
-                .toList();
     }
 
     private void addInsightsList(com.itextpdf.text.Document document, String title, List<InsightDTO> insights, com.itextpdf.text.Font bodyFont) throws DocumentException {
