@@ -3,11 +3,15 @@ package com.example.companyReputationManagement.repo;
 import com.example.companyReputationManagement.models.ReviewInsight;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface ReviewInsightRepo extends JpaRepository<ReviewInsight, Long> {
-    Optional<ReviewInsight> findTopByCompanyIdAndSentimentTypeOrderByCreatedAtDesc(Long companyId, SentimentTypeEnum sentimentType);
+
+    @Query("SELECT r FROM Review r JOIN Company c ON c.coreEntityId = r.companyId ")
+    List<Optional<ReviewInsight>> findTopByCompanyIdAndSentimentTypeOrderByCreatedAtDesc(Long companyId, SentimentTypeEnum sentimentType);
 }

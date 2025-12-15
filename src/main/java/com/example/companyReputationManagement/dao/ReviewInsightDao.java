@@ -6,6 +6,7 @@ import com.example.companyReputationManagement.repo.ReviewInsightRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -17,7 +18,7 @@ public class ReviewInsightDao {
         return reviewInsightRepo.save(insight);
     }
 
-    public Optional<ReviewInsight> findLatest(Long companyId, SentimentTypeEnum sentimentType) {
+    public List<Optional<ReviewInsight>> findLatest(Long companyId, SentimentTypeEnum sentimentType) {
         return reviewInsightRepo.findTopByCompanyIdAndSentimentTypeOrderByCreatedAtDesc(companyId, sentimentType);
     }
 }
