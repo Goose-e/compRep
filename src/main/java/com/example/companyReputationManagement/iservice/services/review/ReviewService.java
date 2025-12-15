@@ -39,6 +39,7 @@ import com.example.companyReputationManagement.models.CompanySourceUrl;
 import com.example.companyReputationManagement.models.ReviewInsight;
 import com.example.companyReputationManagement.models.Review;
 import com.example.companyReputationManagement.models.enums.RoleEnum;
+import com.example.companyReputationManagement.models.enums.Sentiment;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfWriter;
@@ -632,7 +633,7 @@ public class ReviewService implements IReviewService {
                     Math.min(batchSize, batch.size())
             );
 
-            BotResponseDTO botResponse = externalBotClient.analyze(botRequest);
+            BotResponseDTO botResponse = externalBotClient.analyzeFor(botRequest, mapToSentiment(type));
             reviewInsightDao.save(new ReviewInsight(companyId, type, botResponse));
             responses.add(botResponse);
         }
@@ -658,6 +659,14 @@ public class ReviewService implements IReviewService {
         }
 
         return new BotResponseDTO(likes, dislikes, requests);
+    }
+
+    private Sentiment mapToSentiment(SentimentTypeEnum type) {
+        return switch (type) {
+            case POSITIVE -> Sentiment.POSITIVE;
+            case NEGATIVE -> Sentiment.NEGATIVE;
+            default -> Sentiment.REQUEST;
+        };
     }
 
 
