@@ -401,22 +401,12 @@ public class ReviewService implements IReviewService {
 
         document.close();
 
-        // Сохранить локально
-        try (FileOutputStream fos = new FileOutputStream("generated_report.pdf")) {
-            fos.write(out.toByteArray());
-        }
-
         return out.toByteArray();
     }
 
     private void appendReviewInsightsSection(com.itextpdf.text.Document document, Long compId, com.itextpdf.text.Font bodyFont) throws DocumentException {
-        List<ReviewInsight> latestInsights = Arrays.stream(SentimentTypeEnum.values())
-                .map(type -> reviewInsightDao.findLatest(compId, type))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(this::hasInsightContent)
-                .toList();
-
+        List<ReviewInsight> latestInsights = reviewInsightDao.findLatestByCompany(compId);
+        latestInsights.forEach(l -> l.getId());
         if (latestInsights.isEmpty()) {
             return;
         }
@@ -431,6 +421,8 @@ public class ReviewService implements IReviewService {
         document.add(new Paragraph("Summary of highlighted aspects extracted from user feedback.\n", bodyFont));
 
         for (ReviewInsight insight : latestInsights) {
+            log.debug(insight.toString());
+            log.debug(insight.getResultJson().toString());
             BotResponseDTO response = insight.getResultJson();
             String title = SentimentTypeEnum.toString(insight.getSentimentType()) + " insights";
             document.add(new Paragraph(title, subHeaderFont));
@@ -459,13 +451,7 @@ public class ReviewService implements IReviewService {
         document.add(new Paragraph("\n", bodyFont));
     }
 
-    private boolean hasInsightContent(ReviewInsight insight) {
-        BotResponseDTO response = insight.getResultJson();
 
-        return response != null && ((response.topLikes() != null && !response.topLikes().isEmpty())
-                || (response.topDislikes() != null && !response.topDislikes().isEmpty())
-                || (response.topRequests() != null && !response.topRequests().isEmpty()));
-    }
 
     //Проверки
     private boolean hasPermission(Long compId) {

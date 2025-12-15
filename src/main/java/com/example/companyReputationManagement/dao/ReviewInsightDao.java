@@ -1,14 +1,13 @@
 package com.example.companyReputationManagement.dao;
 
+import com.example.companyReputationManagement.dto.review.keyWord.bot.BotResponseDTO;
 import com.example.companyReputationManagement.models.ReviewInsight;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
 import com.example.companyReputationManagement.repo.ReviewInsightRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Component
@@ -19,28 +18,27 @@ public class ReviewInsightDao {
         return reviewInsightRepo.save(insight);
     }
 
-    public List<Optional<ReviewInsight>> findLatest(Long companyId, SentimentTypeEnum sentimentType) {
+    public Optional<ReviewInsight> findLatest(Long companyId, SentimentTypeEnum sentimentType) {
         return reviewInsightRepo.findTopByCompanyIdAndSentimentTypeOrderByCreatedAtDesc(companyId, sentimentType);
     }
 
     public List<ReviewInsight> findLatestByCompany(Long companyId) {
-        List<ReviewInsight> insights = reviewInsightRepo.findAllByCompanyIdOrderByCreatedAtDesc(companyId);
-        LinkedHashMap<SentimentTypeEnum, ReviewInsight> latestPerType = new LinkedHashMap<>();
-
-        for (ReviewInsight insight : insights) {
-            SentimentTypeEnum sentimentType = insight.getSentimentType();
-
-            if (isSupported(sentimentType) && !latestPerType.containsKey(sentimentType)) {
-                latestPerType.put(sentimentType, insight);
-            }
-        }
-
-        return latestPerType.entrySet().stream()
-                .sorted(Comparator.comparingInt(entry -> orderByType(entry.getKey())))
-                .map(java.util.Map.Entry::getValue)
+        return Arrays.stream(SentimentTypeEnum.values())
+                .filter(this::isSupported)
+                .map(type -> reviewInsightRepo
+                        .findTopByCompanyIdAndSentimentTypeOrderByCreatedAtDesc(companyId, type))
+                .flatMap(Optional::stream)
+                .filter(this::hasInsightContent)
+                .sorted(Comparator.comparingInt(i -> orderByType(i.getSentimentType())))
                 .toList();
     }
+    private boolean hasInsightContent(ReviewInsight insight) {
+        BotResponseDTO response = insight.getResultJson();
 
+        return response != null && ((response.topLikes() != null && !response.topLikes().isEmpty())
+                || (response.topDislikes() != null && !response.topDislikes().isEmpty())
+                || (response.topRequests() != null && !response.topRequests().isEmpty()));
+    }
     private boolean isSupported(SentimentTypeEnum sentimentType) {
         return sentimentType == SentimentTypeEnum.POSITIVE || sentimentType == SentimentTypeEnum.NEGATIVE;
     }

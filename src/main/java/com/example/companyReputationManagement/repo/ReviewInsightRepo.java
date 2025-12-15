@@ -12,6 +12,12 @@ import java.util.Optional;
 @Repository
 public interface ReviewInsightRepo extends JpaRepository<ReviewInsight, Long> {
 
-    @Query("SELECT r FROM Review r JOIN Company c ON c.coreEntityId = r.companyId ")
-    List<Optional<ReviewInsight>> findTopByCompanyIdAndSentimentTypeOrderByCreatedAtDesc(Long companyId, SentimentTypeEnum sentimentType);
+
+    Optional<ReviewInsight> findTopByCompanyIdAndSentimentTypeOrderByCreatedAtDesc(
+            Long companyId,
+            SentimentTypeEnum sentimentType
+    );
+
+
+    List<ReviewInsight> findAllByCompanyIdOrderByCreatedAtDesc(Long companyId);
 }
