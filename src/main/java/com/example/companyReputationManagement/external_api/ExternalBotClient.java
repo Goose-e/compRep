@@ -14,6 +14,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 
@@ -105,10 +107,7 @@ public class ExternalBotClient {
             }
 
             String json = extractJson(chat.message().content());
-            if (!isCompleteJson(json)) {
-                throw new RuntimeException("Incomplete JSON in Ollama response");
-            }
-            JsonNode normalized = normalizeBotJson(objectMapper.readTree(json));
+            JsonNode normalized = normalizeBotJson(ensureCompleteJson(json));
 
             return objectMapper.treeToValue(normalized, BotResponseDTO.class);
 
@@ -187,6 +186,71 @@ public class ExternalBotClient {
         int s = text.indexOf('{');
         int e = text.lastIndexOf('}');
         return (s >= 0 && e > s) ? text.substring(s, e + 1) : text;
+    }
+
+    private JsonNode ensureCompleteJson(String json) throws JsonProcessingException {
+        if (isCompleteJson(json)) {
+            return objectMapper.readTree(json);
+        }
+
+        String fixedJson = attemptJsonRepair(json);
+        if (fixedJson != null && isCompleteJson(fixedJson)) {
+            log.warn("Incomplete JSON detected; auto-repaired Ollama response");
+            return objectMapper.readTree(fixedJson);
+        }
+
+        throw new RuntimeException("Incomplete JSON in Ollama response: unable to auto-repair");
+    }
+
+    private String attemptJsonRepair(String json) {
+        if (json == null) return null;
+
+        String trimmed = json.trim();
+        if (trimmed.isEmpty()) return null;
+
+        StringBuilder sb = new StringBuilder(trimmed);
+        Deque<Character> stack = new ArrayDeque<>();
+        boolean inString = false;
+        boolean escaped = false;
+
+        for (char ch : trimmed.toCharArray()) {
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+
+            if (ch == '\\') {
+                escaped = inString;
+                continue;
+            }
+
+            if (ch == '"') {
+                inString = !inString;
+                continue;
+            }
+
+            if (inString) continue;
+
+            if (ch == '{' || ch == '[') {
+                stack.push(ch == '{' ? '}' : ']');
+            } else if (ch == '}' || ch == ']') {
+                if (stack.isEmpty()) {
+                    return null;
+                }
+                char expected = stack.pop();
+                if ((ch == '}' && expected != '}') || (ch == ']' && expected != ']')) {
+                    return null;
+                }
+            }
+        }
+
+        if (inString) return null;
+
+        while (!stack.isEmpty()) {
+            sb.append(stack.pop());
+        }
+
+        return sb.toString();
     }
 
     private static boolean isCompleteJson(String json) {
