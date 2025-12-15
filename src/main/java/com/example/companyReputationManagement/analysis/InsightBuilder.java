@@ -29,9 +29,6 @@ public class InsightBuilder {
             if (result.size() >= maxPerCategory) break;
 
             List<Integer> idxs = cl.indices;
-            if (idxs.size() < 2) {
-                continue;
-            }
             int count = idxs.size();
 
             String aspect = buildAspect(texts, idxs);
