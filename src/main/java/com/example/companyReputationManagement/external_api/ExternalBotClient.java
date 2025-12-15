@@ -105,6 +105,9 @@ public class ExternalBotClient {
             }
 
             String json = extractJson(chat.message().content());
+            if (!isCompleteJson(json)) {
+                throw new RuntimeException("Incomplete JSON in Ollama response");
+            }
             JsonNode normalized = normalizeBotJson(objectMapper.readTree(json));
 
             return objectMapper.treeToValue(normalized, BotResponseDTO.class);
@@ -184,6 +187,38 @@ public class ExternalBotClient {
         int s = text.indexOf('{');
         int e = text.lastIndexOf('}');
         return (s >= 0 && e > s) ? text.substring(s, e + 1) : text;
+    }
+
+    private static boolean isCompleteJson(String json) {
+        if (json == null) return false;
+
+        boolean inString = false;
+        boolean escaped = false;
+        int depth = 0;
+
+        for (char ch : json.toCharArray()) {
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+
+            if (ch == '\\') {
+                escaped = inString;
+                continue;
+            }
+
+            if (ch == '"') {
+                inString = !inString;
+                continue;
+            }
+
+            if (inString) continue;
+
+            if (ch == '{' || ch == '[') depth++;
+            else if (ch == '}' || ch == ']') depth--;
+        }
+
+        return depth == 0 && !inString && json.trim().startsWith("{") && json.trim().endsWith("}");
     }
 
     private String buildReviewsContext(BotRequestDTO request) {
