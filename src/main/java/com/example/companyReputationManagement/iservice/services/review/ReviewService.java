@@ -1,10 +1,6 @@
 package com.example.companyReputationManagement.iservice.services.review;
 
-import com.example.companyReputationManagement.dao.CompanyDao;
-import com.example.companyReputationManagement.dao.CompanySourceUrlDao;
-import com.example.companyReputationManagement.dao.ReviewInsightDao;
-import com.example.companyReputationManagement.dao.ReviewDao;
-import com.example.companyReputationManagement.dao.UserCompanyRolesDao;
+import com.example.companyReputationManagement.dao.*;
 import com.example.companyReputationManagement.dto.review.find.ReviewRequestDto;
 import com.example.companyReputationManagement.dto.review.find.ReviewResponse;
 import com.example.companyReputationManagement.dto.review.find.ReviewResponseListDto;
@@ -36,8 +32,8 @@ import com.example.companyReputationManagement.iservice.services.transactions.Re
 import com.example.companyReputationManagement.mapper.ReviewMapper;
 import com.example.companyReputationManagement.models.Company;
 import com.example.companyReputationManagement.models.CompanySourceUrl;
-import com.example.companyReputationManagement.models.ReviewInsight;
 import com.example.companyReputationManagement.models.Review;
+import com.example.companyReputationManagement.models.ReviewInsight;
 import com.example.companyReputationManagement.models.enums.RoleEnum;
 import com.example.companyReputationManagement.models.enums.Sentiment;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
@@ -634,11 +630,13 @@ public class ReviewService implements IReviewService {
             );
 
             BotResponseDTO botResponse = externalBotClient.analyzeFor(botRequest, mapToSentiment(type));
-            reviewInsightDao.save(new ReviewInsight(companyId, type, botResponse));
             responses.add(botResponse);
         }
 
-        return mergeResponses(responses);
+        BotResponseDTO mergedResponse = mergeResponses(responses);
+        reviewInsightDao.save(new ReviewInsight(companyId, type, mergedResponse));
+
+        return mergedResponse;
     }
 
     private BotResponseDTO mergeResponses(List<BotResponseDTO> responses) {
