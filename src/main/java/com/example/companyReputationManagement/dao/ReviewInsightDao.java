@@ -19,7 +19,7 @@ public class ReviewInsightDao {
         return reviewInsightRepo.save(insight);
     }
 
-    public Optional<ReviewInsight> findLatest(Long companyId, SentimentTypeEnum sentimentType) {
+    public List<Optional<ReviewInsight>> findLatest(Long companyId, SentimentTypeEnum sentimentType) {
         return reviewInsightRepo.findTopByCompanyIdAndSentimentTypeOrderByCreatedAtDesc(companyId, sentimentType);
     }
 
@@ -28,19 +28,24 @@ public class ReviewInsightDao {
         LinkedHashMap<SentimentTypeEnum, ReviewInsight> latestPerType = new LinkedHashMap<>();
 
         for (ReviewInsight insight : insights) {
-            latestPerType.putIfAbsent(insight.getSentimentType(), insight);
+            SentimentTypeEnum sentimentType = insight.getSentimentType();
+
+            if (isSupported(sentimentType) && !latestPerType.containsKey(sentimentType)) {
+                latestPerType.put(sentimentType, insight);
+            }
         }
 
-        return latestPerType.values().stream()
-                .sorted((a, b) -> Integer.compare(orderByType(a.getSentimentType()), orderByType(b.getSentimentType())))
+        return latestPerType.entrySet().stream()
+                .sorted(Comparator.comparingInt(entry -> orderByType(entry.getKey())))
+                .map(java.util.Map.Entry::getValue)
                 .toList();
     }
 
+    private boolean isSupported(SentimentTypeEnum sentimentType) {
+        return sentimentType == SentimentTypeEnum.POSITIVE || sentimentType == SentimentTypeEnum.NEGATIVE;
+    }
+
     private int orderByType(SentimentTypeEnum sentimentType) {
-        return switch (sentimentType) {
-            case POSITIVE -> 0;
-            case NEGATIVE -> 1;
-            default -> 2;
-        };
+        return sentimentType == SentimentTypeEnum.POSITIVE ? 0 : 1;
     }
 }
