@@ -1,7 +1,7 @@
 package com.example.companyReputationManagement.iservice.services.review;
 
 import com.example.companyReputationManagement.dao.CompanyDao;
-import com.example.companyReputationManagement.dao.ReviewDao;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordRequestDTO;
 import com.example.companyReputationManagement.models.Company;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
@@ -30,6 +30,13 @@ public class ReviewScheduler {
                 .map(company -> CompletableFuture.runAsync(() -> {
                     try {
                         reviewService.parseReviews(company);
+                        {
+                            for (long i = 1; i < 5; i++) {
+                                KeyWordRequestDTO keyWordRequestDTO = new KeyWordRequestDTO(company.getCompanyCode(), i);
+                                reviewService.keyWordAnalysis(keyWordRequestDTO);
+                            }
+                        }
+
                     } catch (Exception e) {
                         System.err.println("Error parsing trends for company: " + company.getName() + ", error: " + e.getMessage());
                     }
