@@ -1,20 +1,14 @@
 package com.example.companyReputationManagement.external_api;
 
-import com.example.companyReputationManagement.dto.review.keyWord.bot.BotRequestDTO;
-import com.example.companyReputationManagement.dto.review.keyWord.bot.BotResponseDTO;
-import com.example.companyReputationManagement.dto.review.keyWord.bot.BotReviewDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.*;
+import com.example.companyReputationManagement.models.enums.Sentiment;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.node.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -43,34 +37,39 @@ public class ExternalBotClient {
     @Value("${ollama.client.retry-delay:2s}")
     private Duration retryDelay;
 
+
     public BotResponseDTO analyze(BotRequestDTO request) {
         String reviewsContext = buildReviewsContext(request);
 
-        String systemPrompt =
-                """
-                Ты — эксперт-аналитик отзывов на русском.
+        String systemPrompt = """
+            Ты — эксперт-аналитик отзывов на русском.
 
-                Верни ТОЛЬКО валидный JSON (без markdown, без пояснений, без текста вокруг).
+            Верни ТОЛЬКО валидный JSON. Никакого markdown, текста или комментариев.
 
-                СТРОГОЕ ТРЕБОВАНИЕ К ФОРМАТУ:
-                - topLikes, topDislikes, topRequests — это МАССИВЫ ОБЪЕКТОВ (НЕ массивы строк).
-                - Каждый элемент массива — объект InsightDTO со СТРОГО следующими полями:
-                  {
-                    "aspect": string,
-                    "statement": string,
-                    "sentiment": "POSITIVE" | "NEGATIVE" | "REQUEST",
-                    "count": integer >= 1,
-                    "evidence": [ { "reviewId": string, "quote": string } ]
-                  }
-                - Никаких дополнительных полей.
-                - В evidence добавляй 1–2 короткие цитаты. reviewId используй вида "review-<номер отзыва>".
-                - Если данных мало — верни пустые массивы, но поля topLikes/topDislikes/topRequests должны присутствовать всегда.
+            Формат СТРОГО:
+            {
+              "topLikes": InsightDTO[],
+              "topDislikes": InsightDTO[],
+              "topRequests": InsightDTO[]
+            }
 
-                Верни результат в виде одного JSON-объекта.
-                """;
+            InsightDTO:
+            {
+              "aspect": string,
+              "statement": string,
+              "sentiment": "POSITIVE" | "NEGATIVE" | "REQUEST",
+              "count": number,
+              "evidence": [ { "reviewId": string, "quote": string } ]
+            }
 
-        String userPrompt =
-                "Проанализируй отзывы и верни JSON:\n\n" + reviewsContext;
+            Ограничения:
+            - максимум 5 элементов в каждом массиве
+            - evidence: 1 цитата
+            - reviewId вида review-1, review-2
+            - если данных нет — верни пустые массивы
+            """;
+
+        String userPrompt = "Отзывы:\n\n" + reviewsContext;
 
         Map<String, Object> payload = Map.of(
                 "model", modelName,
@@ -78,142 +77,131 @@ public class ExternalBotClient {
                         Map.of("role", "system", "content", systemPrompt),
                         Map.of("role", "user", "content", userPrompt)
                 ),
+                "stream", false,
                 "options", Map.of(
                         "num_ctx", 1024,
-                        "num_predict", 2000,
+                        "num_predict", 800,
                         "temperature", 0.1,
-                        "top_p", 0.9,
-                        "repeat_penalty", 1.1,
                         "seed", 42
-                ),
-                "stream", false
+                )
         );
-        log.debug("payload: {}", payload);
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         ResponseEntity<String> response = postWithRetry(new HttpEntity<>(payload, headers));
         String body = response.getBody();
-        String debugBody = body == null ? "" : body.substring(0, Math.min(body.length(), 2000));
-        log.debug("Ollama status={}, bodySize={}, bodySample={}", response.getStatusCode(),
-                body == null ? 0 : body.length(), debugBody);
 
         if (body == null || !response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("Ollama analysis failed with status " + response.getStatusCode());
+            throw new RuntimeException("Ollama failed: " + response.getStatusCode());
         }
 
         try {
-            JsonNode rootNode = objectMapper.readTree(body);
-            if (rootNode.hasNonNull("error")) {
-                throw new RuntimeException("Ollama error: " + rootNode.get("error").asText());
+            JsonNode root = objectMapper.readTree(body);
+            OllamaChatResponse chat = objectMapper.treeToValue(root, OllamaChatResponse.class);
+
+            if (chat.message() == null || chat.message().content() == null) {
+                throw new RuntimeException("Empty Ollama message");
             }
 
-            OllamaChatResponse chatResponse = objectMapper.treeToValue(rootNode, OllamaChatResponse.class);
-            if (chatResponse.message() == null || chatResponse.message().content() == null) {
-                throw new RuntimeException("Empty response from Ollama");
-            }
+            String json = extractJson(chat.message().content());
+            JsonNode normalized = normalizeBotJson(objectMapper.readTree(json));
 
-            String extractedJson = extractJsonObject(chatResponse.message().content());
-            JsonNode normalized = normalizeBotResponseJson(objectMapper.readTree(extractedJson));
             return objectMapper.treeToValue(normalized, BotResponseDTO.class);
+
         } catch (Exception e) {
             throw new RuntimeException("Ollama analysis failed: " + e.getMessage(), e);
         }
     }
 
-    private ResponseEntity<String> postWithRetry(HttpEntity<Map<String, Object>> entity) {
-        int attempts = 0;
-        while (true) {
-            attempts++;
-            try {
-                ResponseEntity<String> response = restTemplate.postForEntity(
-                        baseUrl + "/api/chat",
-                        entity,
-                        String.class
+
+
+    private JsonNode normalizeBotJson(JsonNode root) throws JsonProcessingException {
+        if (!(root instanceof ObjectNode obj)) return root;
+
+        normalizeInsightArray(obj, "topLikes", Sentiment.POSITIVE);
+        normalizeInsightArray(obj, "topDislikes", Sentiment.NEGATIVE);
+        normalizeInsightArray(obj, "topRequests", Sentiment.REQUEST);
+
+        return obj;
+    }
+
+    private void normalizeInsightArray(ObjectNode obj, String field, Sentiment fallback) throws JsonProcessingException {
+        ArrayNode out = objectMapper.createArrayNode();
+        JsonNode raw = obj.get(field);
+
+        if (raw != null && raw.isArray()) {
+            for (JsonNode el : raw) {
+                JsonNode node = el.isTextual()
+                        ? objectMapper.readTree(el.asText())
+                        : el;
+
+                ObjectNode insight = (ObjectNode) node;
+
+                insight.putIfAbsent(
+                        "sentiment",
+                        JsonNodeFactory.instance.textNode(fallback.name())
                 );
+                insight.putIfAbsent("count", JsonNodeFactory.instance.numberNode(1));
 
-                if (response.getStatusCode().is5xxServerError()) {
-                    throw new RestClientException("Server error: " + response.getStatusCode());
+                if (!insight.has("evidence") || !insight.get("evidence").isArray()) {
+                    insight.set("evidence", objectMapper.createArrayNode());
                 }
 
-                return response;
+                out.add(insight);
+            }
+        }
+        obj.set(field, out);
+    }
+
+
+
+    private ResponseEntity<String> postWithRetry(HttpEntity<?> entity) {
+        int attempt = 0;
+        while (true) {
+            try {
+                return restTemplate.postForEntity(baseUrl + "/api/chat", entity, String.class);
             } catch (RestClientException ex) {
-                if (attempts >= maxRetries) {
-                    throw new RuntimeException("Failed to reach Ollama after retry: " + ex.getMessage(), ex);
+                attempt++;
+                if (attempt >= maxRetries) {
+                    throw new RuntimeException("Failed after retries", ex);
                 }
-                log.warn("Retrying Ollama request after failure (attempt {}/{}): {}", attempts, maxRetries, ex.getMessage());
-                sleepBeforeRetry();
+                log.warn("Retry {}/{}: {}", attempt, maxRetries, ex.getMessage());
+                sleep();
             }
         }
     }
 
-    private void sleepBeforeRetry() {
+    private void sleep() {
         try {
             Thread.sleep(retryDelay.toMillis());
-        } catch (InterruptedException interruptedException) {
+        } catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
         }
     }
 
-    private String extractJsonObject(String raw) {
-        int start = raw.indexOf('{');
-        int end = raw.lastIndexOf('}');
-        if (start != -1 && end != -1 && end > start) {
-            return raw.substring(start, end + 1);
-        }
-        return raw;
-    }
-
-    private JsonNode normalizeBotResponseJson(JsonNode node) throws JsonProcessingException {
-        if (node.isTextual()) {
-            return normalizeBotResponseJson(objectMapper.readTree(node.asText()));
-        }
-
-        if (!(node instanceof ObjectNode objectNode)) {
-            return node;
-        }
-
-        List<String> fields = List.of("topLikes", "topDislikes", "topRequests");
-        for (String field : fields) {
-            JsonNode arrayNode = objectNode.get(field);
-            if (arrayNode == null || arrayNode.isNull()) {
-                objectNode.set(field, objectMapper.createArrayNode());
-                continue;
-            }
-
-            if (arrayNode.isArray()) {
-                ArrayNode normalizedArray = objectMapper.createArrayNode();
-                for (JsonNode element : arrayNode) {
-                    JsonNode normalizedElement = element.isTextual()
-                            ? normalizeBotResponseJson(objectMapper.readTree(element.asText()))
-                            : normalizeBotResponseJson(element);
-                    normalizedArray.add(normalizedElement);
-                }
-                objectNode.set(field, normalizedArray);
-            }
-        }
-
-        return objectNode;
+    private static String extractJson(String text) {
+        int s = text.indexOf('{');
+        int e = text.lastIndexOf('}');
+        return (s >= 0 && e > s) ? text.substring(s, e + 1) : text;
     }
 
     private String buildReviewsContext(BotRequestDTO request) {
-        StringBuilder builder = new StringBuilder();
-        List<BotReviewDTO> reviews = request.reviews();
-        for (int i = 0; i < reviews.size(); i++) {
-            builder.append("review-").append(i + 1).append(": ")
-                    .append(safe(reviews.get(i).text()))
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < request.reviews().size(); i++) {
+            sb.append("review-").append(i + 1).append(": ")
+                    .append(safe(request.reviews().get(i).text()))
                     .append("\n");
         }
-        return builder.toString().trim();
+        return sb.toString().trim();
     }
 
     private static String safe(String s) {
         return s == null ? "" : s;
     }
 
-    private record OllamaChatResponse(OllamaMessage message) {
-    }
+    /* ===================== OLLAMA DTO ===================== */
 
-    private record OllamaMessage(String role, String content) {
-    }
+    private record OllamaChatResponse(OllamaMessage message) {}
+    private record OllamaMessage(String role, String content) {}
 }

@@ -14,8 +14,8 @@ public class RestTemplateConfig {
     @Bean
     public RestTemplate restTemplate(
             RestTemplateBuilder builder,
-            @Value("${ollama.client.connect-timeout:5s}") Duration connectTimeout,
-            @Value("${ollama.client.read-timeout:5m}") Duration readTimeout
+            @Value("${ollama.client.connect-timeout:15s}") Duration connectTimeout,
+            @Value("${ollama.client.read-timeout:10m}") Duration readTimeout
     ) {
         return builder
                 .setConnectTimeout(connectTimeout)
