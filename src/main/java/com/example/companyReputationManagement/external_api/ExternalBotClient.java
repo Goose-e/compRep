@@ -1,14 +1,21 @@
 package com.example.companyReputationManagement.external_api;
 
-import com.example.companyReputationManagement.dto.review.keyWord.bot.*;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.BotRequestDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.BotResponseDTO;
 import com.example.companyReputationManagement.models.enums.Sentiment;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.node.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -44,34 +51,43 @@ public class ExternalBotClient {
         String reviewsContext = buildReviewsContext(request);
 
         String systemPrompt = """
-            Ты — эксперт-аналитик отзывов на русском.
+                Ты — эксперт-аналитик отзывов на русском.
+                
+                Верни ТОЛЬКО валидный JSON.
+                Ответ ДОЛЖЕН начинаться с символа { и заканчиваться символом }.
+                Никакого markdown, текста или комментариев.
+                НЕ рассуждай. НЕ используй thinking. Сразу верни JSON.
+                
+                
+                Формат СТРОГО:
+                {
+                  "topLikes": InsightDTO[],
+                  "topDislikes": InsightDTO[],
+                  "topRequests": InsightDTO[]
+                }
+                
+                InsightDTO:
+                {
+                  "aspect": string,
+                  "statement": string,
+                  "sentiment": "POSITIVE" | "NEGATIVE" | "REQUEST",
+                  "count": number,
+                  "evidence": [ { "reviewId": string, "quote": string } ]
+                }
+                
+                Ограничения:
+                - максимум 3 элемента в каждом массиве
+                - evidence: РОВНО 1 цитата
+                - quote не длиннее 120 символов
+                - reviewId вида review-1, review-2
+                - если есть хотя бы 1 отзыв, попытайся вернуть хотя бы 1 Insight
+                - если данных действительно нет — верни пустые массивы
+                """;
 
-            Верни ТОЛЬКО валидный JSON. Никакого markdown, текста или комментариев.
-
-            Формат СТРОГО:
-            {
-              "topLikes": InsightDTO[],
-              "topDislikes": InsightDTO[],
-              "topRequests": InsightDTO[]
-            }
-
-            InsightDTO:
-            {
-              "aspect": string,
-              "statement": string,
-              "sentiment": "POSITIVE" | "NEGATIVE" | "REQUEST",
-              "count": number,
-              "evidence": [ { "reviewId": string, "quote": string } ]
-            }
-
-            Ограничения:
-            - максимум 5 элементов в каждом массиве
-            - evidence: 1 цитата
-            - reviewId вида review-1, review-2
-            - если данных нет — верни пустые массивы
-            """;
 
         String userPrompt = "Отзывы:\n\n" + reviewsContext;
+        log.info("model={}, promptLen={}", modelName, userPrompt.length());
+        log.info("userPromptHead={}", userPrompt.substring(0, Math.min(200, userPrompt.length())));
 
         Map<String, Object> payload = Map.of(
                 "model", modelName,
@@ -112,10 +128,9 @@ public class ExternalBotClient {
             return objectMapper.treeToValue(normalized, BotResponseDTO.class);
 
         } catch (Exception e) {
-            throw new RuntimeException("Ollama analysis failed: " + e.getMessage(), e);
+            throw new RuntimeException("Ollama analysis failed: " + e.getMessage() + " " + response, e);
         }
     }
-
 
 
     private JsonNode normalizeBotJson(JsonNode root) throws JsonProcessingException {
@@ -155,7 +170,6 @@ public class ExternalBotClient {
         }
         obj.set(field, out);
     }
-
 
 
     private ResponseEntity<String> postWithRetry(HttpEntity<?> entity) {
@@ -301,6 +315,9 @@ public class ExternalBotClient {
 
     /* ===================== OLLAMA DTO ===================== */
 
-    private record OllamaChatResponse(OllamaMessage message) {}
-    private record OllamaMessage(String role, String content) {}
+    private record OllamaChatResponse(OllamaMessage message) {
+    }
+
+    private record OllamaMessage(String role, String content) {
+    }
 }
