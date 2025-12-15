@@ -389,6 +389,8 @@ public class ReviewService implements IReviewService {
             document.add(chart3);
             document.setPageSize(PageSize.A4.rotate());
         }
+
+        appendReviewInsightsSection(document, compId, bodyFont);
         Paragraph footer = new Paragraph(
                 "The report is generated automatically based on data received from the feedback system..\n" +
                         "For more information, please contact the analytical department..",
@@ -405,6 +407,71 @@ public class ReviewService implements IReviewService {
         }
 
         return out.toByteArray();
+    }
+
+    private void appendReviewInsightsSection(com.itextpdf.text.Document document, Long compId, com.itextpdf.text.Font bodyFont) throws DocumentException {
+        List<ReviewInsight> latestInsights = reviewInsightDao.findLatestByCompany(compId).stream()
+                .filter(this::hasInsightContent)
+                .toList();
+
+        if (latestInsights.isEmpty()) {
+            return;
+        }
+
+        document.setPageSize(PageSize.A4);
+        document.newPage();
+
+        com.itextpdf.text.Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.BLACK);
+        com.itextpdf.text.Font subHeaderFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, BaseColor.BLACK);
+
+        document.add(new Paragraph("Key insights from reviews", headerFont));
+        document.add(new Paragraph("Summary of highlighted aspects extracted from user feedback.\n", bodyFont));
+
+        for (ReviewInsight insight : latestInsights) {
+            BotResponseDTO response = insight.getResultJson();
+            String title = insight.getSentimentType() == SentimentTypeEnum.POSITIVE ? "Likes" : "Dislikes";
+            document.add(new Paragraph(title, subHeaderFont));
+            addInsightsList(document, "Top likes", sortInsights(response.topLikes()), bodyFont);
+            addInsightsList(document, "Top dislikes", sortInsights(response.topDislikes()), bodyFont);
+            addInsightsList(document, "Top requests", sortInsights(response.topRequests()), bodyFont);
+        }
+    }
+
+    private List<InsightDTO> sortInsights(List<InsightDTO> insights) {
+        if (insights == null) {
+            return Collections.emptyList();
+        }
+
+        return insights.stream()
+                .sorted(Comparator.comparingInt(InsightDTO::count).reversed())
+                .toList();
+    }
+
+    private void addInsightsList(com.itextpdf.text.Document document, String title, List<InsightDTO> insights, com.itextpdf.text.Font bodyFont) throws DocumentException {
+        if (insights == null || insights.isEmpty()) {
+            return;
+        }
+
+        document.add(new Paragraph(title, bodyFont));
+        com.itextpdf.text.List list = new com.itextpdf.text.List(false, 10);
+
+        for (InsightDTO insight : insights) {
+            String aspect = insight.aspect() != null ? insight.aspect() + ": " : "";
+            String statement = insight.statement() != null ? insight.statement() : "";
+            String itemText = String.format("%s%s (mentions: %d)", aspect, statement, insight.count());
+            list.add(new ListItem(itemText, bodyFont));
+        }
+
+        document.add(list);
+        document.add(new Paragraph("\n", bodyFont));
+    }
+
+    private boolean hasInsightContent(ReviewInsight insight) {
+        BotResponseDTO response = insight.getResultJson();
+
+        return response != null && ((response.topLikes() != null && !response.topLikes().isEmpty())
+                || (response.topDislikes() != null && !response.topDislikes().isEmpty())
+                || (response.topRequests() != null && !response.topRequests().isEmpty()));
     }
 
     //Проверки
