@@ -115,14 +115,13 @@ public class ExternalBotClient {
         }
 
         try {
-            JsonNode root = objectMapper.readTree(body);
-            OllamaChatResponse chat = objectMapper.treeToValue(root, OllamaChatResponse.class);
+            String content = extractBotContent(body);
 
-            if (chat.message() == null || chat.message().content() == null) {
+            if (content == null || content.isBlank()) {
                 throw new RuntimeException("Empty Ollama message");
             }
 
-            String json = extractJson(chat.message().content());
+            String json = extractJson(content);
             JsonNode normalized = normalizeBotJson(ensureCompleteJson(json));
 
             return objectMapper.treeToValue(normalized, BotResponseDTO.class);
@@ -200,6 +199,36 @@ public class ExternalBotClient {
         int s = text.indexOf('{');
         int e = text.lastIndexOf('}');
         return (s >= 0 && e > s) ? text.substring(s, e + 1) : text;
+    }
+
+    private String extractBotContent(String body) throws JsonProcessingException {
+        if (body == null) return "";
+
+        try {
+            JsonNode root = objectMapper.readTree(body);
+
+            if (root.isTextual()) {
+                return root.asText();
+            }
+
+            JsonNode messageNode = root.get("message");
+            if (messageNode != null) {
+                JsonNode contentNode = messageNode.get("content");
+                if (contentNode != null && contentNode.isTextual()) {
+                    return contentNode.asText();
+                }
+            }
+
+            JsonNode contentNode = root.get("content");
+            if (contentNode != null && contentNode.isTextual()) {
+                return contentNode.asText();
+            }
+
+            return body;
+        } catch (JsonProcessingException e) {
+            log.warn("Bot response is not valid JSON, using raw body: {}", e.getOriginalMessage());
+            return body;
+        }
     }
 
     private JsonNode ensureCompleteJson(String json) throws JsonProcessingException {
@@ -313,11 +342,4 @@ public class ExternalBotClient {
         return s == null ? "" : s;
     }
 
-    /* ===================== OLLAMA DTO ===================== */
-
-    private record OllamaChatResponse(OllamaMessage message) {
-    }
-
-    private record OllamaMessage(String role, String content) {
-    }
 }
