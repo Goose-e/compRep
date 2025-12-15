@@ -38,6 +38,7 @@ import com.example.companyReputationManagement.models.enums.RoleEnum;
 import com.example.companyReputationManagement.models.enums.Sentiment;
 import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
 import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +71,6 @@ import java.awt.*;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -85,6 +85,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.example.companyReputationManagement.constants.SysConst.OC_BUGS;
 import static com.example.companyReputationManagement.constants.SysConst.OC_OK;
+import static org.hibernate.Hibernate.size;
 
 @Slf4j
 @Service
@@ -326,13 +327,16 @@ public class ReviewService implements IReviewService {
         com.itextpdf.text.Document document = new com.itextpdf.text.Document(PageSize.A4);
         PdfWriter.getInstance(document, out);
         document.open();
+        com.itextpdf.text.Font titleFont = ruFont(16, Font.BOLD);
+        com.itextpdf.text.Font bodyFont  = ruFont(12,Font.ROMAN_BASELINE);
+
 
         LocalDate start = LocalDate.now().withDayOfMonth(1);
         LocalDate end = start.plusMonths(1).minusDays(1);
         Timestamp startTimestamp = Timestamp.valueOf(start.atStartOfDay());
         Timestamp endTimestamp = Timestamp.valueOf(end.atTime(LocalTime.MAX));
-        com.itextpdf.text.Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
-        com.itextpdf.text.Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
+//        com.itextpdf.text.Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
+//        com.itextpdf.text.Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
         LocalDate currentDate = LocalDate.now();
 
         String monthName = currentDate.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault());
@@ -403,10 +407,23 @@ public class ReviewService implements IReviewService {
 
         return out.toByteArray();
     }
-
+    private static com.itextpdf.text.Font ruFont(float size, int style) {
+        try {
+            BaseFont bf = BaseFont.createFont(
+                    "fonts/DejaVuSans.ttf",
+                    BaseFont.IDENTITY_H,
+                    BaseFont.EMBEDDED
+            );
+            return new com.itextpdf.text.Font(bf, size, style, BaseColor.BLACK);
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot load Cyrillic font", e);
+        }
+    }
     private void appendReviewInsightsSection(com.itextpdf.text.Document document, Long compId, com.itextpdf.text.Font bodyFont) throws DocumentException {
+
+
         List<ReviewInsight> latestInsights = reviewInsightDao.findLatestByCompany(compId);
-        latestInsights.forEach(l -> l.getId());
+
         if (latestInsights.isEmpty()) {
             return;
         }
@@ -414,15 +431,23 @@ public class ReviewService implements IReviewService {
         document.setPageSize(PageSize.A4);
         document.newPage();
 
-        com.itextpdf.text.Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.BLACK);
-        com.itextpdf.text.Font subHeaderFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, BaseColor.BLACK);
-
+        com.itextpdf.text.Font headerFont = ruFont(14, Font.BOLD);
+        com.itextpdf.text.Font subHeaderFont = ruFont(13, Font.BOLD);
         document.add(new Paragraph("Key insights from reviews", headerFont));
         document.add(new Paragraph("Summary of highlighted aspects extracted from user feedback.\n", bodyFont));
 
         for (ReviewInsight insight : latestInsights) {
-            log.debug(insight.toString());
-            log.debug(insight.getResultJson().toString());
+            log.info("PDF insight: id={}, type={}, createdAt={}",
+                    insight.getId(),
+                    insight.getSentimentType(),
+                    insight.getCreatedAt());
+
+            BotResponseDTO r = insight.getResultJson();
+            log.info("PDF content: likes={}, dislikes={}, requests={}",
+                    size(r.topLikes()),
+                    size(r.topDislikes()),
+                    size(r.topRequests()));
+
             BotResponseDTO response = insight.getResultJson();
             String title = SentimentTypeEnum.toString(insight.getSentimentType()) + " insights";
             document.add(new Paragraph(title, subHeaderFont));
@@ -440,19 +465,21 @@ public class ReviewService implements IReviewService {
         document.add(new Paragraph(title, bodyFont));
         com.itextpdf.text.List list = new com.itextpdf.text.List(false, 10);
 
-        for (InsightDTO insight : insights) {
-            if (!isValidAspect(insight.aspect())) continue;
-            if (insight.count() < 2) continue;
-            String aspect = insight.aspect() != null ? insight.aspect() + ": " : "";
-            String statement = insight.statement() != null ? insight.statement() : "";
-            String itemText = String.format("%s%s (mentions: %d)", aspect, statement, insight.count());
-            list.add(new ListItem(itemText, bodyFont));
-        }
+        insights.stream()
+                .filter(i -> i != null && i.count() >= 2)                 // режем одиночные
+                .filter(i -> i.aspect() != null && i.aspect().trim().length() >= 3)
+                .sorted(Comparator.comparingInt(InsightDTO::count).reversed())
+                .limit(5)                                                 // <= ВОТ ЭТО
+                .forEach(i -> {
+                    String aspect = i.aspect() != null ? i.aspect() + ": " : "";
+                    String statement = i.statement() != null ? i.statement() : "";
+                    String itemText = String.format("%s%s (mentions: %d)", aspect, statement, i.count());
+                    list.add(new ListItem(itemText, bodyFont));
+                });
 
         document.add(list);
         document.add(new Paragraph("\n", bodyFont));
     }
-
 
 
     //Проверки
