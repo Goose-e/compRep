@@ -66,6 +66,7 @@ public class WebSecurityConfig {
                 )
                 .authorizeHttpRequests
                         ((requests) -> requests
+                                .requestMatchers("/review/check").permitAll()
                                 .requestMatchers("/", "/home").permitAll()
                                 .requestMatchers("/auth/*").permitAll()
                                 .requestMatchers("/auth/login").permitAll()
@@ -77,6 +78,7 @@ public class WebSecurityConfig {
                                 .requestMatchers("/company/*").authenticated()
                                 .requestMatchers("/review/*").authenticated()
                                 .requestMatchers("/.well-known/**", "/oauth2/**").permitAll()
+
                                 .anyRequest().authenticated()
 
                         ).oauth2ResourceServer(oauth2 -> oauth2

@@ -151,7 +151,7 @@ public class ReviewService implements IReviewService {
                     Document doc = Jsoup.parse(pageSource);
                     Elements elements = doc.select(".wpd-comment:not(.wpd-reply)");
                     elementsProc(companyId, reviews, rating, elements);
-                    System.out.println(page);
+
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
@@ -328,7 +328,7 @@ public class ReviewService implements IReviewService {
         PdfWriter.getInstance(document, out);
         document.open();
         com.itextpdf.text.Font titleFont = ruFont(16, Font.BOLD);
-        com.itextpdf.text.Font bodyFont  = ruFont(12,Font.ROMAN_BASELINE);
+        com.itextpdf.text.Font bodyFont = ruFont(12, Font.ROMAN_BASELINE);
 
 
         LocalDate start = LocalDate.now().withDayOfMonth(1);
@@ -407,18 +407,23 @@ public class ReviewService implements IReviewService {
 
         return out.toByteArray();
     }
+
     private static com.itextpdf.text.Font ruFont(float size, int style) {
         try {
             BaseFont bf = BaseFont.createFont(
-                    "fonts/DejaVuSans.ttf",
+                    Objects.requireNonNull(
+                            ReviewService.class.getClassLoader().getResource("fonts/DejaVuSans.ttf")
+                    ).toString(),
                     BaseFont.IDENTITY_H,
                     BaseFont.EMBEDDED
             );
+
             return new com.itextpdf.text.Font(bf, size, style, BaseColor.BLACK);
         } catch (Exception e) {
             throw new RuntimeException("Cannot load Cyrillic font", e);
         }
     }
+
     private void appendReviewInsightsSection(com.itextpdf.text.Document document, Long compId, com.itextpdf.text.Font bodyFont) throws DocumentException {
 
 
@@ -446,7 +451,8 @@ public class ReviewService implements IReviewService {
             log.info("PDF content: likes={}, dislikes={}, requests={}",
                     size(r.topLikes()),
                     size(r.topDislikes()),
-                    size(r.topRequests()));
+                    size(r.topDislikes())
+            );
 
             BotResponseDTO response = insight.getResultJson();
             String title = SentimentTypeEnum.toString(insight.getSentimentType()) + " insights";
@@ -458,23 +464,44 @@ public class ReviewService implements IReviewService {
     }
 
     private void addInsightsList(com.itextpdf.text.Document document, String title, List<InsightDTO> insights, com.itextpdf.text.Font bodyFont) throws DocumentException {
-        if (insights == null || insights.isEmpty()) {
-            return;
-        }
+        if (insights == null || insights.isEmpty()) return;
 
         document.add(new Paragraph(title, bodyFont));
+
         com.itextpdf.text.List list = new com.itextpdf.text.List(false, 10);
 
         insights.stream()
-                .filter(i -> i != null && i.count() >= 2)                 // режем одиночные
-                .filter(i -> i.aspect() != null && i.aspect().trim().length() >= 3)
+                .filter(Objects::nonNull)
+                .filter(i -> i.aspect() != null && !i.aspect().isBlank())
                 .sorted(Comparator.comparingInt(InsightDTO::count).reversed())
-                .limit(5)                                                 // <= ВОТ ЭТО
+                .limit(30)
                 .forEach(i -> {
-                    String aspect = i.aspect() != null ? i.aspect() + ": " : "";
-                    String statement = i.statement() != null ? i.statement() : "";
-                    String itemText = String.format("%s%s (mentions: %d)", aspect, statement, i.count());
-                    list.add(new ListItem(itemText, bodyFont));
+                    String aspect = i.aspect() == null ? "" : i.aspect().trim();
+                    String statement = i.statement() == null ? "" : i.statement().trim();
+
+                    String itemText = String.format("%s: %s (mentions: %d)",
+                            aspect,
+                            statement.isBlank() ? "—" : statement,
+                            i.count());
+
+                    ListItem item = new ListItem(itemText, bodyFont);
+
+                    // 👇 добавляем цитату(ы)
+                    if (i.evidence() != null && !i.evidence().isEmpty()) {
+                        com.itextpdf.text.List evList = new com.itextpdf.text.List(false, 8);
+                        i.evidence().stream()
+                                .filter(Objects::nonNull)
+                                .limit(2) // можно 1 или 2
+                                .forEach(ev -> {
+                                    String rid = ev.reviewId() == null ? "" : ev.reviewId().trim();
+                                    String q = ev.quote() == null ? "" : ev.quote().trim();
+                                    if (q.length() > 140) q = q.substring(0, 140) + "…";
+                                    evList.add(new ListItem(String.format("[%s] \"%s\"", rid, q), bodyFont));
+                                });
+                        item.add(evList);
+                    }
+
+                    list.add(item);
                 });
 
         document.add(list);
@@ -663,39 +690,29 @@ public class ReviewService implements IReviewService {
             response.setMessage("Company not found");
             response.setResponseCode(OC_BUGS);
         } else {
-            if (checkEmployment(comp.getCoreEntityId())) {
-                response.setMessage("User not in company");
-            } else {
-                Long companyId = comp.getCoreEntityId();
-                SentimentTypeEnum type = SentimentTypeEnum.fromId(Math.toIntExact(keyWordRequestDTO.sentId()));
-                Timestamp latestReviewDate = reviewDao.findLatestReviewDate(companyId, type);
-                if (latestReviewDate == null) {
-                    response.setMessage("No reviews found");
-                } else {
-                    Optional<ReviewInsight> latestInsight = reviewInsightDao.findLatest(companyId, type);
-                    if (latestInsight.isPresent() && !latestReviewDate.after(latestInsight.get().getCreatedAt())) {
-                        response.setResponseEntity(new KeyWordResponseDTO(latestInsight.get().getResultJson()));
-                        response.setMessage("Analysis from cache");
-                    } else {
-                        List<BotReviewDTO> reviewList = reviewDao.findForAnalysis(companyId, type);
-                        if (reviewList.isEmpty()) {
-                            response.setMessage("No reviews found");
-                        } else {
-                            try {
-                                BotResponseDTO mergedResponse = analyzeInBatches(companyId, type, reviewList);
-                                response.setResponseEntity(new KeyWordResponseDTO(mergedResponse));
-                                response.setMessage("Analysis");
-                            } catch (Exception e) {
-                                log.error(e.getMessage());
-                                response.setResponseCode(OC_BUGS);
-                                response.setMessage("Something went wrong while analyzing your reviews");
-                                return response;
-                            }
 
-                        }
-                    }
+            Long companyId = comp.getCoreEntityId();
+            SentimentTypeEnum type = SentimentTypeEnum.fromId(Math.toIntExact((keyWordRequestDTO.sentId())));
+            List<BotReviewDTO> reviewList = reviewDao.findForAnalysis(companyId, type);
+            log.debug(reviewList.toString());
+            if (reviewList.isEmpty()) {
+                log.debug("No reviews found");
+                response.setMessage("No reviews found");
+            } else {
+                try {
+                    BotResponseDTO mergedResponse = analyzeInBatches(companyId, type, reviewList);
+                    response.setResponseEntity(new KeyWordResponseDTO(mergedResponse));
+                    response.setMessage("Analysis");
+                } catch (Exception e) {
+                    log.error(e.getMessage());
+                    response.setResponseCode(OC_BUGS);
+                    response.setMessage("Something went wrong while analyzing your reviews");
+                    return response;
                 }
+
+
             }
+
         }
         response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);
         return response;
@@ -709,21 +726,35 @@ public class ReviewService implements IReviewService {
             int end = Math.min(start + batchSize, reviewList.size());
             List<BotReviewDTO> batch = reviewList.subList(start, end);
 
-            BotRequestDTO botRequest = new BotRequestDTO(
-                    "ru",
-                    batch,
-                    Math.min(batchSize, batch.size())
-            );
+            BotRequestDTO botRequest = new BotRequestDTO("ru", batch, batch.size());
 
             BotResponseDTO botResponse = externalBotClient.analyzeFor(botRequest, mapToSentiment(type));
-            responses.add(botResponse);
+
+            if (hasInsightContent(botResponse)) {
+                responses.add(botResponse);
+            } else {
+                log.warn("Empty batch insights: companyId={}, type={}, batch={}..{}", companyId, type, start, end);
+            }
         }
 
         BotResponseDTO mergedResponse = mergeResponses(responses);
-        reviewInsightDao.save(new ReviewInsight(companyId, type, mergedResponse));
+
+        if (hasInsightContent(mergedResponse)) {
+            reviewInsightDao.save(new ReviewInsight(companyId, type, mergedResponse));
+        } else {
+            log.warn("Merged insights empty, skip save: companyId={}, type={}", companyId, type);
+        }
 
         return mergedResponse;
     }
+
+    private static boolean hasInsightContent(BotResponseDTO r) {
+        if (r == null) return false;
+        return (r.topLikes() != null && !r.topLikes().isEmpty())
+                || (r.topDislikes() != null && !r.topDislikes().isEmpty())
+                || (r.topRequests() != null && !r.topRequests().isEmpty());
+    }
+
 
     private BotResponseDTO mergeResponses(List<BotResponseDTO> responses) {
         List<InsightDTO> likes = new ArrayList<>();

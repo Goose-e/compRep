@@ -6,7 +6,7 @@ import java.util.List;
 public class OnlineClustering {
 
     public static class Cluster {
-        public final List<Integer> indices = new ArrayList<>();
+        public List<Integer> indices = new ArrayList<>();
         public double[] centroid;
     }
 

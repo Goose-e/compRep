@@ -15,6 +15,7 @@ import com.example.companyReputationManagement.dto.review.report.GenerateReportR
 import com.example.companyReputationManagement.dto.review.report.GenerateReportResponseDTO;
 import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
 import com.example.companyReputationManagement.iservice.IReviewService;
+import com.example.companyReputationManagement.iservice.services.review.ReviewScheduler;
 import com.itextpdf.text.DocumentException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ import java.io.IOException;
 @RequestMapping("/review")
 public class ReviewController {
     private final IReviewService reviewService;
-
+    private final ReviewScheduler reviewScheduler;
     @PostMapping(value = "/find_reviews")
     public HttpResponseBody<ReviewResponseListDto> findReviews(@Valid @RequestBody ReviewRequestDto reviewRequestDto) {
         HttpResponseBody<ReviewResponseListDto> response = new ReviewResponse();
@@ -65,5 +66,10 @@ public class ReviewController {
     public HttpResponseBody<KeyWordResponseDTO> keyWordAnalysis(@Valid @RequestBody KeyWordRequestDTO keyWordRequestDTO) throws IOException
     {
         return reviewService.keyWordAnalysis(keyWordRequestDTO);
+    }
+    @PostMapping(value = "/check")
+    public void check() throws IOException
+    {
+        reviewScheduler.updateAllCompaniesTrends();
     }
 }
