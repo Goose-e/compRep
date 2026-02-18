@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement;
+package com.example.companyReputationManagement.lab;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -20,7 +21,16 @@ public class LabTest {
     void testLab() throws Exception {
         mockMvc.perform(post("/tests/get_volume")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"weight\":250, \"time\":20}"))
-                .andExpect(status().isAccepted());
+                        .content("{\"weight\":5, \"time\":3}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.responseCode").value("OC_OK"))
+                .andExpect(jsonPath("$.message").value("Всё хорошо"))
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.responseEntity.volume").value(175.0))
+                .andExpect(jsonPath("$.errors").isArray())
+                .andExpect(jsonPath("$.errors").isEmpty());
     }
+
+
+
 }

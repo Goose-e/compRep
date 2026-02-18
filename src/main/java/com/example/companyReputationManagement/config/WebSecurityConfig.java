@@ -66,6 +66,7 @@ public class WebSecurityConfig {
                 )
                 .authorizeHttpRequests
                         ((requests) -> requests
+                                .requestMatchers("/tests/**").permitAll()
                                 .requestMatchers("/review/check").permitAll()
                                 .requestMatchers("/", "/home").permitAll()
                                 .requestMatchers("/auth/*").permitAll()

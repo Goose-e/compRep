@@ -1,16 +1,13 @@
 package com.example.companyReputationManagement.dto.lab;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 
 public record RequestTestDTO(
-        @NotEmpty
+        @NotNull
         @Min(5)
         @Max(250)
         Float weight,
-        @NotEmpty
+        @NotNull
         @PositiveOrZero
         Float time
 ) {
