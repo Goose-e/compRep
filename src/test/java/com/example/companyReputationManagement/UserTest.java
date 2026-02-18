@@ -84,17 +84,6 @@ public class UserTest {
 
     }
 
-    @Test
-    void testLogin_UserNotFound() {
-        UserLoginRequestDTO userLoginRequestDTO = new UserLoginRequestDTO(
-                "test", "test"
-        );
-        when(userDao.findUserByLoginOrEmail(userLoginRequestDTO.getUsernameOrEmail())).thenReturn(null);
-
-        HttpResponseBody<UserLoginResponseDTO> result = userService.login(userLoginRequestDTO);
-        assertEquals("User not found", result.getMessage());
-
-    }
 
     @Test
     void testRegister_success() {

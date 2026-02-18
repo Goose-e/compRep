@@ -5,10 +5,27 @@ plugins {
     id 'com.netflix.dgs.codegen' version '7.0.3'
     id 'org.hibernate.orm' version '6.6.8.Final'
     id 'org.graalvm.buildtools.native' version '0.10.5'
+    id 'jacoco'
 }
 
 group = 'com.example'
 version = 'docker'
+test {
+    useJUnitPlatform()
+}
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+}
 
 java {
     toolchain {

@@ -1,4 +1,4 @@
-package com.example.companyReputationManagement.iservice.services;
+package com.example.companyReputationManagement.iservice.services.lab;
 
 import com.example.companyReputationManagement.dto.lab.RequestTestDTO;
 import com.example.companyReputationManagement.dto.lab.ResponseTest;
@@ -20,7 +20,20 @@ public class LabService implements ILabService {
     @Override
     public HttpResponseBody<ResponseTestDTO> getVolume(RequestTestDTO requestTestDTO) {
         HttpResponseBody<ResponseTestDTO> response = new ResponseTest();
-        ResponseTestDTO responseTestDTO = labMapper.createResponse(requestTestDTO.weight(), requestTestDTO.time());
+        Float weight = requestTestDTO.weight();
+        Float time = requestTestDTO.time();
+
+        if (weight == null || time == null || weight < 5f || weight > 250f || time < 0f) {
+            response.setError("Ошибка подсчёта");
+            response.setMessage("Ошибка при подсчёте данных");
+            response.setResponseEntity(null);
+
+            if (response.getErrors().isEmpty()) response.setResponseCode(OC_OK);
+            else response.setResponseCode(OC_BUGS);
+
+            return response;
+        }
+        ResponseTestDTO responseTestDTO = labMapper.createResponse(weight, time);
         if (responseTestDTO.volume() == null) {
             response.setError("Ошибка подсчёта");
             response.setMessage("Ошибка при подсчёте данных");
