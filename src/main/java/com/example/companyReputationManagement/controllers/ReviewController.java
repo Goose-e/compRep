@@ -30,6 +30,7 @@ import java.io.IOException;
 public class ReviewController {
     private final IReviewService reviewService;
     private final ReviewScheduler reviewScheduler;
+
     @PostMapping(value = "/find_reviews")
     public HttpResponseBody<ReviewResponseListDto> findReviews(@Valid @RequestBody ReviewRequestDto reviewRequestDto) {
         HttpResponseBody<ReviewResponseListDto> response = new ReviewResponse();
@@ -63,13 +64,12 @@ public class ReviewController {
     }
 
     @PostMapping(value = "/key_words_analysis")
-    public HttpResponseBody<KeyWordResponseDTO> keyWordAnalysis(@Valid @RequestBody KeyWordRequestDTO keyWordRequestDTO) throws IOException
-    {
+    public HttpResponseBody<KeyWordResponseDTO> keyWordAnalysis(@Valid @RequestBody KeyWordRequestDTO keyWordRequestDTO) throws IOException {
         return reviewService.keyWordAnalysis(keyWordRequestDTO);
     }
+
     @PostMapping(value = "/check")
-    public void check() throws IOException
-    {
+    public void check() throws IOException {
         reviewScheduler.updateAllCompaniesTrends();
     }
 }
