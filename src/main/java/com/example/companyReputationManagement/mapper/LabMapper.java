@@ -18,7 +18,12 @@ public class LabMapper {
         volume = Math.round(volume * 10f) / 10f;
         return new ResponseTestDTO(volume);
     }
-
+    public ResponseTestDTO createResponse(float weight, float time, float temp) {
+        float normal = temp > 30 ? temp / 2 + 30 : 30;
+        float volume = normal * weight + time * 500 / 60;
+        volume = Math.round(volume * 10f) / 10f;
+        return new ResponseTestDTO(volume);
+    }
     public ResponseCityDTO getTemp(String city) {
         return new ResponseCityDTO(weatherService.getTemperatureCity(city));
     }
