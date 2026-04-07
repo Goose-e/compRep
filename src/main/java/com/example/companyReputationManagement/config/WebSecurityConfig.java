@@ -66,18 +66,7 @@ public class WebSecurityConfig {
                 )
                 .authorizeHttpRequests
                         ((requests) -> requests
-                                .requestMatchers("/tests/**").permitAll()
-                                .requestMatchers("/review/check").permitAll()
-                                .requestMatchers("/", "/home").permitAll()
-                                .requestMatchers("/auth/*").permitAll()
-                                .requestMatchers("/auth/login").permitAll()
-                                .requestMatchers("/user/find_by_username").permitAll()
-                                .requestMatchers("/user/*").authenticated()
-                                .requestMatchers("/company/get_all").permitAll()
-                                .requestMatchers("/company/find_by_name").permitAll()
-                                .requestMatchers("/company/get_by_code").permitAll()
-                                .requestMatchers("/company/*").authenticated()
-                                .requestMatchers("/review/*").authenticated()
+
                                 .requestMatchers("/.well-known/**", "/oauth2/**").permitAll()
                                 .anyRequest().authenticated()
 
