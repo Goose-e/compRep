@@ -11,7 +11,6 @@ import com.example.companyReputationManagement.mapper.LabMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
 
 import static com.example.companyReputationManagement.constants.SysConst.OC_BUGS;
 import static com.example.companyReputationManagement.constants.SysConst.OC_OK;
@@ -51,7 +50,10 @@ public class LabService implements ILabService {
 
             return response;
         }
-        ResponseTestDTO responseTestDTO = labMapper.createResponse(weight, time);
+        Float temp = requestTestDTO.temp();
+        ResponseTestDTO responseTestDTO = (temp == null)
+                ? labMapper.createResponse(weight, time)
+                : labMapper.createResponse(weight, time, temp);
         if (responseTestDTO.volume() == null) {
             response.setError("Ошибка подсчёта");
             response.setMessage("Ошибка при подсчёте данных");
