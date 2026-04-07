@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/water")
+@RequestMapping("/api/water")
 public class FuncController {
     private final ILabService labService;
 
@@ -24,7 +24,7 @@ public class FuncController {
 
         HttpResponseBody<ResponseTestDTO> response = labService.getVolume(requestTestDTO);
 
-        if (requestTestDTO.weight() == 2f) {
+        if (response.getResponseEntity() == null) {
             return ResponseEntity.badRequest().body(response);
         }
 

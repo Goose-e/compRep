@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/weather")
+@RequestMapping("/api/weather")
 public class WeatherController {
     private final ILabService labService;
 
