@@ -16,7 +16,9 @@ test {
 jacoco {
     toolVersion = "0.8.12"
 }
-
+tasks.named("processTestAot") {
+    enabled = false
+}
 jacocoTestReport {
     dependsOn test
 
@@ -68,14 +70,14 @@ dependencies {
     implementation("org.jsoup:jsoup:1.19.1")
     //   implementation "org.seleniumhq.selenium:selenium-devtools-v143:${seleniumVersion}"
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
-    implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
+    implementation 'com.nimbusds:nimbus-jose-jwt:10.0.2'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
     testImplementation('org.springframework.boot:spring-boot-starter-test')
     testImplementation('org.springframework.security:spring-security-test')
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
-    implementation("com.h2database:h2:1.4.191")
+    implementation('com.h2database:h2:2.2.220')
     implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-rest'
@@ -101,22 +103,17 @@ dependencies {
     testImplementation 'org.springframework:spring-webflux'
     testImplementation 'org.springframework.graphql:spring-graphql-test'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     //implementation 'org.springframework.session:spring-session-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     // https://mvnrepository.com/artifact/org.mockito/mockito-core
     testImplementation("org.mockito:mockito-core:5.17.0")
 
-    testImplementation("io.cucumber:cucumber-java:7.33.0")
-    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.33.0")
 
-    testImplementation("io.cucumber:cucumber-java:7.33.0")
-    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.33.0")
-    testImplementation("org.junit.platform:junit-platform-suite-api:1.12.0")
-    testImplementation("org.junit.platform:junit-platform-suite-engine:1.12.0")
-    // Source: https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.13.4")
+    testImplementation 'io.cucumber:cucumber-java:7.33.0'
+    testImplementation 'io.cucumber:cucumber-junit:7.33.0'
+    testImplementation 'junit:junit:4.13.2'
 }
 
 dependencyManagement {
