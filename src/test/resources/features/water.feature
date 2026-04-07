@@ -1,18 +1,17 @@
-# language: ru
-Функциональность: Расчет дневной нормы воды
+Feature: Daily water norm calculation
 
-  Сценарий: Получение температуры и расчет нормы воды
-    Допустим сервис погоды доступен
-    Когда я запрашиваю температуру для города "Minsk"
-    И я рассчитываю норму воды с весом 70 и временем 60
-    Тогда статус ответа равен 200
-    И рассчитанный объем воды больше 0
+  Scenario: Get temperature and calculate water norm
+    Given weather service is available
+    When I request temperature for city "Minsk"
+    And I calculate water norm with weight 70 and time 60
+    Then response status should be 200
+    And calculated water volume should be greater than 0
 
-  Структура сценария: Проверка разных значений веса и температуры
-    Когда я рассчитываю норму воды с весом <weight> и временем 60 при температуре <temp>
-    Тогда статус ответа равен <status>
+  Scenario Outline: Check different weight and temperature values
+    When I calculate water norm with weight <weight> and time 60 at temperature <temp>
+    Then response status should be <status>
 
-    Примеры:
+    Examples:
       | weight | temp | status |
       | 70     | 20   | 200    |
       | 70     | 35   | 200    |
