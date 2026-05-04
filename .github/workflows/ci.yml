@@ -42,10 +42,14 @@ jobs:
 
       - name: Run tests
         run: ./gradlew test
+        env:
+          SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
       - name: Generate Jacoco report
         if: always()
         run: ./gradlew jacocoTestReport
+        env:
+          SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
       - name: Upload test reports
         if: always()
