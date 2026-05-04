@@ -68,7 +68,7 @@ public class WebSecurityConfig {
                         ((requests) -> requests
 
                                 .requestMatchers("/.well-known/**", "/oauth2/**").permitAll()
-                                .anyRequest().authenticated()
+                                .anyRequest().permitAll()
 
                         ).oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt

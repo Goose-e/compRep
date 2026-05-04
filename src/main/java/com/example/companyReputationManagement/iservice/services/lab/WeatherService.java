@@ -17,6 +17,7 @@ public class WeatherService {
             case "Minsk" -> 10f;
             case "Brest" -> 15.2f;
             case "Sun" -> 5506f;
+            case "Dubai" -> 40f;
             default -> 0f;
         };
 
