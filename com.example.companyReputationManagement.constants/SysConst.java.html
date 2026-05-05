@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SysConst.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.constants</a> &gt; <span class="el_source">SysConst.java</span></div><h1>SysConst.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.constants;
+
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+public final class SysConst {
+    private SysConst() {}
+
+    public static final String VERSION_1_0_0 = &quot;1.0.0&quot;;
+    public static final String CRLF = &quot;\n&quot;;
+    public static final String NOT_DEFINED = &quot;?&quot;;
+    public static final String UNKNOWN = &quot;UNKNOWN&quot;;
+    public static final String NOT_ASSIGNED = &quot;NOT ASSIGNED&quot;;
+    public static final String NULL = &quot;null&quot;;
+    public static final String ZERO_STRING = &quot;0&quot;;
+    public static final String EMPTY_STRING = &quot;&quot;;
+    public static final String BLANK_SYMBOL = &quot; &quot;;
+    public static final String DATETIME_MS_FORMAT = &quot;dd.MM.yyyy HH:mm:ss.SSS&quot;;
+    public static final String DATETIME_FORMAT = &quot;dd.MM.yyyy HH:mm:ss&quot;;
+    public static final String DATE_FORMAT = &quot;dd.MM.yyyy&quot;;
+    public static final String TIME_FORMAT = &quot;HH:mm:ss&quot;;
+    public static final String TIME_FORMAT_MS = &quot;HH:mm:ss.SSS&quot;;
+    public static final String APP_LOCALE = &quot;ru&quot;;
+    public static final String LOG_PKG_NAME = &quot;root-service&quot;;
+
+<span class="fc" id="L29">    public static final DateTimeFormatter FORMAT_dd_MM_yyyy__HH_mm_ss = DateTimeFormatter.ofPattern(DATETIME_FORMAT);</span>
+<span class="fc" id="L30">    public static final DateTimeFormatter FORMAT_dd_MM_yyyy = DateTimeFormatter.ofPattern(DATE_FORMAT);</span>
+
+    public static final boolean SSL = true;
+    public static final boolean NO_SSL = !SSL;
+    public static final String K9S_MODE = &quot;server.k9sMode&quot;;
+<span class="fc" id="L35">    public static final Duration ONE_SECOND = Duration.ofSeconds(1);</span>
+<span class="fc" id="L36">    public static final Duration TEN_SECONDS = Duration.ofSeconds(10);</span>
+    public static final long MILLIS_1000 = 1000L;
+    public static final int TIMEOUT_10000_MILLIS = 10000;
+    public static final long TIMEOUT_10000_MILLIS_LONG = 10000L;
+<span class="fc" id="L40">    public static final Duration TIMEOUT_30_SEC = Duration.ofSeconds(30);</span>
+<span class="fc" id="L41">    public static final Duration TIMEOUT_60_SEC = Duration.ofSeconds(60);</span>
+<span class="fc" id="L42">    public static final Duration TIMEOUT_120_SEC = Duration.ofSeconds(120);</span>
+    public static final int ONE_ATTEMPT = 1;
+    public static final int TWO_ATTEMPTS = 2;
+    public static final int FIVE_ATTEMPTS = 5;
+    public static final String DOCKER_FOLDER = &quot;/opt/&quot;;
+<span class="fc" id="L47">    public static final String KOTLIN_VERSION = &quot;KotlinVersion = &quot; + &quot;N/A&quot; + &quot;, JavaVersion = &quot; + Runtime.version();</span>
+
+    public static final long LONG_ZERO = 0L;
+    public static final long LONG_ONE = 1L;
+    public static final long SERVICE_USER_ID = LONG_ONE;
+<span class="fc" id="L52">    public static final Integer INT_NULL = null;</span>
+<span class="fc" id="L53">    public static final Long LONG_NULL = null;</span>
+    public static final int INT_10POW9 = 1000000000;
+    public static final int INTEGER_ZERO = 0;
+    public static final int INTEGER_ONE = 1;
+<span class="fc" id="L57">    public static final BigDecimal BIGDECIMAL_ZERO = BigDecimal.ZERO;</span>
+    public static final double DOUBLE_ZERO = 0.0;
+<span class="fc" id="L59">    public static final Integer INTEGER_NULL = null;</span>
+<span class="fc" id="L60">    public static final LocalDate LOCALDATE_NULL = null;</span>
+<span class="fc" id="L61">    public static final LocalDateTime LOCALDATETIME_NULL = null;</span>
+<span class="fc" id="L62">    public static final String STRING_NULL = null;</span>
+    public static final String STRING_ONE = &quot;1&quot;;
+    public static final String STRING_ZERO = &quot;0&quot;;
+    public static final String STRING_TEN = &quot;10&quot;;
+    public static final String STRING_TRUE = &quot;true&quot;;
+    public static final String STRING_FALSE = &quot;false&quot;;
+<span class="fc" id="L68">    public static final byte[] BYTES_NULL = null;</span>
+
+    public static final String OC_OK = &quot;OC_OK&quot;;
+    public static final String OC_BUGS = &quot;OC_BUGS&quot;;
+    public static final String USER_BANNED = &quot;OC_BUGS&quot;;
+    public static final String INVALID_ENTITY_ATTR = &quot;INVALID ENTITY ATTR&quot;;
+    public static final String SAVE_USER_ERROR = &quot;SAVE USER ERROR&quot;;
+    public static final String CREATE_USER_ERROR = &quot;CREATE USER ERROR&quot;;
+    public static final String CREATE_COMPANY_ERROR = &quot;CREATE COMPANY ERROR&quot;;
+
+<span class="fc" id="L78">    public static final Class&lt;Void&gt; VOID_CLASS = Void.class;</span>
+<span class="fc" id="L79">    public static final Class&lt;BigDecimal&gt; BIGDECIMAL_CLASS = BigDecimal.class;</span>
+<span class="fc" id="L80">    public static final Class&lt;LocalDate&gt; LOCALDATE_CLASS = LocalDate.class;</span>
+<span class="fc" id="L81">    public static final Class&lt;LocalDateTime&gt; LOCALDATETIME_CLASS = LocalDateTime.class;</span>
+<span class="fc" id="L82">    public static final Class&lt;String&gt; STRING_CLASS = String.class;</span>
+<span class="fc" id="L83">    public static final Class&lt;Boolean&gt; BOOLEAN_CLASS = Boolean.class;</span>
+<span class="fc" id="L84">    public static final Class&lt;Integer&gt; INTEGER_CLASS = Integer.class;</span>
+<span class="fc" id="L85">    public static final Class&lt;Long&gt; LONG_CLASS = Long.class;</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

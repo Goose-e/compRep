@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.mapper</a> &gt; <span class="el_source">UserMapper.java</span></div><h1>UserMapper.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.mapper;
+
+import com.example.companyReputationManagement.dto.user.create.UserCreateRequestDTO;
+import com.example.companyReputationManagement.dto.user.create.UserCreateResponseDTO;
+import com.example.companyReputationManagement.dto.user.edit.EditUserRequestDTO;
+import com.example.companyReputationManagement.dto.user.edit.EditUserResponseDTO;
+import com.example.companyReputationManagement.dto.user.find.FindByNameResponseDTO;
+import com.example.companyReputationManagement.dto.user.find.FindByNameResponseListDTO;
+import com.example.companyReputationManagement.dto.user.get_by_code.GetUserByCodeResponseDTO;
+import com.example.companyReputationManagement.dto.user.login.UserLoginResponseDTO;
+import com.example.companyReputationManagement.iservice.generate.GenerateCode;
+import com.example.companyReputationManagement.models.CompanyUser;
+import com.example.companyReputationManagement.models.enums.RoleEnum;
+import com.example.companyReputationManagement.models.enums.StatusEnum;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+@RequiredArgsConstructor
+public class UserMapper {
+
+
+    private final PasswordEncoder passwordEncoder;
+    private final GenerateCode generateCode;
+
+
+
+    public CompanyUser mapUserDtoToUser(UserCreateRequestDTO userCreateRequestDTO) {
+<span class="nc" id="L33">        CompanyUser companyUser = new CompanyUser();</span>
+<span class="nc" id="L34">        companyUser.setUsername(userCreateRequestDTO.getUsername());</span>
+<span class="nc" id="L35">        companyUser.setEmail(userCreateRequestDTO.getEmail());</span>
+<span class="nc" id="L36">        companyUser.setPasswordHash(passwordEncoder.encode(userCreateRequestDTO.getPassword()));</span>
+<span class="nc" id="L37">        companyUser.setRoleRefId(RoleEnum.USER);</span>
+<span class="nc" id="L38">        companyUser.setUserCode(generateCode.generateCode(companyUser));</span>
+<span class="nc" id="L39">        return companyUser;</span>
+    }
+
+    public FindByNameResponseListDTO mapFindByNameResponseListDTO(List&lt;CompanyUser&gt; userList) {
+<span class="nc" id="L43">        return new FindByNameResponseListDTO(userList.stream().map(it -&gt; new FindByNameResponseDTO(it.getUsername(), it.getUserCode(), it.getEmail())).toList());</span>
+    }
+
+    public CompanyUser mapUserDtoToUser(EditUserRequestDTO editUserRequestDTO, CompanyUser companyUser) {
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        companyUser.setUsername(editUserRequestDTO.getNewUsername() == null ? companyUser.getUsername() : editUserRequestDTO.getNewUsername());</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        companyUser.setEmail(editUserRequestDTO.getNewEmail() == null ? companyUser.getEmail() : editUserRequestDTO.getNewEmail());</span>
+<span class="nc" id="L49">        return companyUser;</span>
+    }
+
+    public GetUserByCodeResponseDTO mapUserToUserDto(CompanyUser companyUser) {
+<span class="nc" id="L53">        return new GetUserByCodeResponseDTO(companyUser.getUsername(), companyUser.getEmail(), companyUser.getUserCode());</span>
+    }
+
+    public EditUserResponseDTO mapUserToUserResponse(CompanyUser companyUser) {
+<span class="nc" id="L57">        return new EditUserResponseDTO(</span>
+<span class="nc" id="L58">                companyUser.getUsername(), companyUser.getEmail()</span>
+        );
+    }
+
+    public UserCreateResponseDTO mapUserToUserDtoResponse(CompanyUser companyUser) {
+<span class="fc" id="L63">        return new UserCreateResponseDTO(companyUser.getEmail(), companyUser.getUsername());</span>
+    }
+
+    public UserLoginResponseDTO mapTokensToUserLoginResponseDTO(List&lt;OAuth2AccessToken&gt; tokens) {
+<span class="nc" id="L67">        long timeAccess = tokens.getFirst().getExpiresAt().getEpochSecond() - tokens.getFirst().getIssuedAt().getEpochSecond();</span>
+<span class="nc" id="L68">        long timeRefresh = tokens.getLast().getExpiresAt().getEpochSecond() - tokens.getLast().getIssuedAt().getEpochSecond();</span>
+
+<span class="nc" id="L70">        return new UserLoginResponseDTO(tokens.getFirst().getTokenValue(), timeAccess, tokens.get(1).getTokenValue(), timeRefresh);</span>
+    }
+
+    public CompanyUser chageUserStatus(CompanyUser user) {
+<span class="nc" id="L74">        user.setStatus(StatusEnum.CLOSED);</span>
+<span class="nc" id="L75">        return user;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HttpResponseBody.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.httpResponse</a> &gt; <span class="el_source">HttpResponseBody.java</span></div><h1>HttpResponseBody.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.httpResponse;
+
+import com.example.companyReputationManagement.constants.SysConst;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.http.MediaType;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class HttpResponseBody&lt;T extends ResponseDto&gt; implements Serializable {
+
+    private final String requestId;
+    private String responseCode;
+    private String message;
+<span class="fc" id="L16">    private String error = SysConst.STRING_NULL;</span>
+    private T responseEntity;
+<span class="fc" id="L18">    private final List&lt;ErrorInfo&gt; errors = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L20">    @JsonIgnore</span>
+    private final MediaType contentType = MediaType.APPLICATION_JSON;
+
+<span class="fc" id="L23">    protected HttpResponseBody(String requestId) {</span>
+<span class="fc" id="L24">        this.requestId = requestId;</span>
+<span class="fc" id="L25">    }</span>
+
+    //==================================================================================================================
+
+    @JsonIgnore
+    public boolean haveErrors() {
+<span class="nc bnc" id="L31" title="All 4 branches missed.">        return (!responseCode.equalsIgnoreCase(SysConst.OC_OK)) || !errors.isEmpty();</span>
+    }
+
+    @JsonIgnore
+    public boolean haveNoErrors() {
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        return !haveErrors();</span>
+    }
+
+    private int addErrorInfo(ErrorInfo errorInfo) {
+<span class="fc" id="L40">        errors.add(errorInfo);</span>
+
+<span class="pc bpc" id="L42" title="2 of 4 branches missed.">        if (message == null || message.isEmpty()) {</span>
+<span class="nc" id="L43">            message = errorInfo.getErrorMsg();</span>
+        }
+
+<span class="pc bpc" id="L46" title="3 of 4 branches missed.">        if (error == null || error.isEmpty()) {</span>
+<span class="fc" id="L47">            error = errorInfo.getErrorMsg();</span>
+<span class="fc" id="L48">            responseEntity = null;</span>
+        }
+
+<span class="fc" id="L51">        return errors.size();</span>
+    }
+
+    public int addErrorInfo(String errorCode, String error, String errorMsg) {
+<span class="fc" id="L55">        addErrorInfo(ErrorInfo.create(error, errorMsg));</span>
+
+<span class="pc bpc" id="L57" title="3 of 4 branches missed.">        if (responseCode == null || responseCode.isEmpty()) {</span>
+<span class="fc" id="L58">            responseCode = errorCode;</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        } else if (SysConst.OC_OK.equals(responseCode)) {</span>
+<span class="nc" id="L60">            responseCode = errorCode;</span>
+<span class="nc" id="L61">            message = errorMsg;</span>
+        }
+
+<span class="fc" id="L64">        return errors.size();</span>
+    }
+
+    private void setErrorMessage(String errorMsg) {
+<span class="nc bnc" id="L68" title="All 4 branches missed.">        if (error == null || error.isEmpty()) {</span>
+<span class="nc" id="L69">            error = errorMsg;</span>
+        }
+<span class="nc" id="L71">    }</span>
+
+    public void assignErrors(List&lt;ErrorInfo&gt; errors) {
+<span class="nc" id="L74">        this.errors.addAll(errors);</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (!errors.isEmpty()) {</span>
+<span class="nc" id="L76">            responseCode = SysConst.INVALID_ENTITY_ATTR;</span>
+<span class="nc bnc" id="L77" title="All 4 branches missed.">            if (message == null || message.isEmpty()) {</span>
+<span class="nc" id="L78">                message = errors.stream().findFirst().orElseThrow().getErrorMsg().toUpperCase();</span>
+            }
+<span class="nc" id="L80">            setErrorMessage(message);</span>
+        }
+<span class="nc" id="L82">    }</span>
+
+    public String toString2() {
+<span class="nc" id="L85">        return &quot;code='&quot; + responseCode + &quot;', message='&quot; + message + &quot;', error='&quot; + error + &quot;', errors=&quot; + errors +</span>
+<span class="nc" id="L86">                &quot;, &quot; + this.getClass().getSimpleName() + &quot;(&quot; + responseEntity + &quot;)&quot;;</span>
+    }
+
+
+    public String getResponseCode() {
+<span class="fc" id="L91">        return responseCode;</span>
+    }
+
+    public void setResponseCode(String responseCode) {
+<span class="fc" id="L95">        this.responseCode = responseCode;</span>
+<span class="fc" id="L96">    }</span>
+
+    public String getMessage() {
+<span class="fc" id="L99">        return message;</span>
+    }
+
+    public void setMessage(String message) {
+<span class="fc" id="L103">        this.message = message;</span>
+<span class="fc" id="L104">    }</span>
+
+    public String getError() {
+<span class="fc" id="L107">        return error;</span>
+    }
+
+    public void setError(String error) {
+<span class="fc" id="L111">        errors.add(new ErrorInfo(&quot;Error&quot;, error));</span>
+<span class="fc" id="L112">        this.error = error;</span>
+<span class="fc" id="L113">    }</span>
+
+    public T getResponseEntity() {
+<span class="fc" id="L116">        return responseEntity;</span>
+    }
+
+    public void setResponseEntity(T responseEntity) {
+<span class="fc" id="L120">        this.responseEntity = responseEntity;</span>
+<span class="fc" id="L121">    }</span>
+
+    public List&lt;ErrorInfo&gt; getErrors() {
+<span class="fc" id="L124">        return errors;</span>
+    }
+
+    public MediaType getContentType() {
+<span class="nc" id="L128">        return contentType;</span>
+    }
+
+    public static final long serialVersionUID = 1000L;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

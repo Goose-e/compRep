@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EnumInit.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.models.enums</a> &gt; <span class="el_source">EnumInit.java</span></div><h1>EnumInit.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.models.enums;
+
+import com.example.companyReputationManagement.models.RoleRefEntity;
+import com.example.companyReputationManagement.models.SentimentTypeEntity;
+import com.example.companyReputationManagement.models.SourceRef;
+import com.example.companyReputationManagement.models.StatusRefEntity;
+import com.example.companyReputationManagement.repo.RoleRefRepo;
+import com.example.companyReputationManagement.repo.SentimentTypeRepo;
+import com.example.companyReputationManagement.repo.SourceRepo;
+import com.example.companyReputationManagement.repo.StatusRefRepository;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+public class EnumInit {
+
+    private final StatusRefRepository statusRefRepository;
+    private final RoleRefRepo roleRefRepository;
+    private final SentimentTypeRepo sentimentTypeRepo;
+    private final SourceRepo sourceRepo;
+
+    @PostConstruct
+    public void initAllRefs() {
+<span class="fc" id="L26">        initStatusRef();</span>
+<span class="fc" id="L27">        initRoleRef();</span>
+<span class="fc" id="L28">        initSentimentTypeRef();</span>
+<span class="fc" id="L29">        initSourceRef();</span>
+<span class="fc" id="L30">    }</span>
+
+    private void initStatusRef() {
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        for (StatusEnum statusEnum : StatusEnum.values()) {</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">            if (!statusRefRepository.existsById((long) statusEnum.getId())) {</span>
+<span class="fc" id="L35">                StatusRefEntity entity = StatusRefEntity.builder()</span>
+<span class="fc" id="L36">                        .status_id((long) statusEnum.getId())</span>
+<span class="fc" id="L37">                        .status_code(statusEnum.getCode())</span>
+<span class="fc" id="L38">                        .status_name(statusEnum.getStatus())</span>
+<span class="fc" id="L39">                        .build();</span>
+<span class="fc" id="L40">                statusRefRepository.save(entity);</span>
+            }
+        }
+<span class="fc" id="L43">    }</span>
+
+    private void initRoleRef() {
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        for (RoleEnum roleEnum : RoleEnum.values()) {</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">            if (!roleRefRepository.existsById(roleEnum.getId())) {</span>
+<span class="fc" id="L48">                RoleRefEntity entity = RoleRefEntity.builder()</span>
+<span class="fc" id="L49">                        .role_ref_id(roleEnum.getId())</span>
+<span class="fc" id="L50">                        .role_code(roleEnum.getCode())</span>
+<span class="fc" id="L51">                        .role_name(roleEnum.getRole())</span>
+<span class="fc" id="L52">                        .build();</span>
+<span class="fc" id="L53">                roleRefRepository.save(entity);</span>
+            }
+        }
+<span class="fc" id="L56">    }</span>
+
+    private void initSourceRef() {
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        for (SourcesEnum sourceEnum : SourcesEnum.values()) {</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            if (!sourceRepo.existsById(sourceEnum.getSourceCode())) {</span>
+<span class="fc" id="L61">                SourceRef entity = SourceRef.builder()</span>
+<span class="fc" id="L62">                        .sourceId(sourceEnum.getSourceCode())</span>
+<span class="fc" id="L63">                        .name(sourceEnum.getName())</span>
+<span class="fc" id="L64">                        .url(sourceEnum.getUrl())</span>
+<span class="fc" id="L65">                        .build();</span>
+<span class="fc" id="L66">                sourceRepo.save(entity);</span>
+            }
+        }
+<span class="fc" id="L69">    }</span>
+
+
+    private void initSentimentTypeRef() {
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        for (SentimentTypeEnum sentiment : SentimentTypeEnum.values()) {</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">            if (!sentimentTypeRepo.existsById((long) sentiment.getId())) {</span>
+<span class="fc" id="L75">                SentimentTypeEntity entity = SentimentTypeEntity.builder()</span>
+<span class="fc" id="L76">                        .SentimentTypeId((long) sentiment.getId())</span>
+<span class="fc" id="L77">                        .SentimentTypeCode(sentiment.getCode())</span>
+<span class="fc" id="L78">                        .SentimentName(sentiment.getType())</span>
+<span class="fc" id="L79">                        .build();</span>
+<span class="fc" id="L80">                sentimentTypeRepo.save(entity);</span>
+            }
+        }
+<span class="fc" id="L83">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

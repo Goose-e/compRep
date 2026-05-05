@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReviewScheduler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.iservice.services.review</a> &gt; <span class="el_source">ReviewScheduler.java</span></div><h1>ReviewScheduler.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.iservice.services.review;
+
+import com.example.companyReputationManagement.dao.CompanyDao;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordRequestDTO;
+import com.example.companyReputationManagement.models.Company;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+@Component
+@RequiredArgsConstructor
+
+public class ReviewScheduler {
+    private final CompanyDao companyDao;
+    private final ReviewService reviewService;
+    private final Logger log = LoggerFactory.getLogger(ReviewScheduler.class);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(5);
+
+    @Scheduled(cron = &quot;0 0 3 * * *&quot;)
+    public void scheduledUpdate() {
+<span class="nc" id="L28">        updateAllCompaniesTrends();</span>
+<span class="nc" id="L29">    }</span>
+
+    public void updateAllCompaniesTrends() {
+<span class="nc" id="L32">        List&lt;Company&gt; companies = companyDao.findAll();</span>
+<span class="nc" id="L33">        List&lt;CompletableFuture&lt;Void&gt;&gt; futures = companies.stream()</span>
+<span class="nc" id="L34">                .map(company -&gt; CompletableFuture.runAsync(() -&gt; {</span>
+                    try {
+<span class="nc" id="L36">                        reviewService.parseReviews(company);</span>
+                        {
+<span class="nc bnc" id="L38" title="All 2 branches missed.">                            for (long i = 1; i &lt; 5; i++) {</span>
+<span class="nc" id="L39">                                log.info(&quot;Running insights for company={}, sentiment={}&quot;, company.getName(), i);</span>
+
+<span class="nc" id="L41">                                KeyWordRequestDTO keyWordRequestDTO = new KeyWordRequestDTO(company.getCompanyCode(), i);</span>
+<span class="nc" id="L42">                                reviewService.keyWordAnalysis(keyWordRequestDTO);</span>
+                            }
+                        }
+
+<span class="nc" id="L46">                    } catch (Exception e) {</span>
+<span class="nc" id="L47">                        System.err.println(&quot;Error parsing trends for company: &quot; + company.getName() + &quot;, error: &quot; + e.getMessage());</span>
+<span class="nc" id="L48">                    }</span>
+<span class="nc" id="L49">                }, executorService))</span>
+<span class="nc" id="L50">                .toList();</span>
+<span class="nc" id="L51">        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();</span>
+<span class="nc" id="L52">    }</span>
+
+
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

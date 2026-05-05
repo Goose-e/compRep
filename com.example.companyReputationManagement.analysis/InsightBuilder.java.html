@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InsightBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.analysis</a> &gt; <span class="el_source">InsightBuilder.java</span></div><h1>InsightBuilder.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.analysis;
+
+import com.example.companyReputationManagement.dto.review.keyWord.bot.EvidenceDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.InsightDTO;
+import com.example.companyReputationManagement.models.enums.Sentiment;
+
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.*;
+import java.util.stream.Collectors;
+
+<span class="nc" id="L12">public class InsightBuilder {</span>
+
+<span class="fc" id="L14">    private static final Set&lt;String&gt; STOP = Set.of(</span>
+            &quot;и&quot;,&quot;в&quot;,&quot;во&quot;,&quot;на&quot;,&quot;но&quot;,&quot;а&quot;,&quot;я&quot;,&quot;мы&quot;,&quot;вы&quot;,&quot;они&quot;,&quot;он&quot;,&quot;она&quot;,&quot;оно&quot;,&quot;это&quot;,&quot;тот&quot;,&quot;эта&quot;,
+            &quot;что&quot;,&quot;как&quot;,&quot;когда&quot;,&quot;где&quot;,&quot;то&quot;,&quot;же&quot;,&quot;ли&quot;,&quot;бы&quot;,&quot;из&quot;,&quot;за&quot;,&quot;по&quot;,&quot;для&quot;,&quot;у&quot;,&quot;о&quot;,&quot;об&quot;,
+            &quot;с&quot;,&quot;со&quot;,&quot;к&quot;,&quot;ко&quot;,&quot;при&quot;,&quot;до&quot;,&quot;после&quot;,&quot;очень&quot;,&quot;все&quot;,&quot;всё&quot;,&quot;тоже&quot;,&quot;ещё&quot;,&quot;еще&quot;,
+            &quot;вообще&quot;,&quot;просто&quot;,&quot;там&quot;,&quot;тут&quot;,&quot;здесь&quot;,&quot;сразу&quot;,&quot;потом&quot;,&quot;тогда&quot;,&quot;который&quot;,&quot;которая&quot;,&quot;которые&quot;,
+            &quot;потому&quot;,&quot;поэтому&quot;,&quot;типа&quot;,&quot;вроде&quot;,&quot;ну&quot;,&quot;вот&quot;,&quot;да&quot;,&quot;нет&quot;
+    );
+<span class="nc" id="L21">    public enum AnchorCategory {</span>
+<span class="nc" id="L22">        DELIVERY(&quot;Доставка&quot;, &quot;доставка, курьер, сроки, привезли, опоздал, пункт выдачи, транспортировка, ожидание, задержка&quot;),</span>
+<span class="nc" id="L23">        PRICE(&quot;Цена&quot;, &quot;цена, стоимость, дорого, дёшево, скидка, акция, переплата, ценник&quot;),</span>
+<span class="nc" id="L24">        SUPPORT(&quot;Поддержка&quot;, &quot;служба поддержки, оператор, чат, звонок, отвечают, помощь, решение проблемы, саппорт&quot;),</span>
+<span class="nc" id="L25">        QUALITY(&quot;Качество&quot;, &quot;качество, брак, дефект, сломалось, неисправность, надежность, плохая сборка&quot;),</span>
+<span class="nc" id="L26">        PACKAGING(&quot;Упаковка&quot;, &quot;упаковка, коробка, пломба, мятая, повреждена, целостность, упаковочный материал&quot;),</span>
+<span class="nc" id="L27">        UX(&quot;Интерфейс&quot;, &quot;приложение, интерфейс, удобно, неудобно, дизайн, кнопки, навигация, баг, тормозит&quot;),</span>
+<span class="nc" id="L28">        FEATURES(&quot;Функции&quot;, &quot;функции, возможности, настройки, фича, режим, не хватает, добавить, улучшить&quot;),</span>
+<span class="nc" id="L29">        OTHER(&quot;Другое&quot;, &quot;прочее, общее впечатление&quot;);</span>
+
+        public final String title;
+        public final String anchorText;
+
+<span class="nc" id="L34">        AnchorCategory(String title, String anchorText) {</span>
+<span class="nc" id="L35">            this.title = title;</span>
+<span class="nc" id="L36">            this.anchorText = anchorText;</span>
+<span class="nc" id="L37">        }</span>
+    }
+    public static double cosine(double[] a, double[] b) {
+<span class="nc" id="L40">        double dot = 0, na = 0, nb = 0;</span>
+<span class="nc" id="L41">        int n = Math.min(a.length, b.length);</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        for (int i = 0; i &lt; n; i++) {</span>
+<span class="nc" id="L43">            dot += a[i] * b[i];</span>
+<span class="nc" id="L44">            na += a[i] * a[i];</span>
+<span class="nc" id="L45">            nb += b[i] * b[i];</span>
+        }
+<span class="nc bnc" id="L47" title="All 4 branches missed.">        if (na == 0 || nb == 0) return 0;</span>
+<span class="nc" id="L48">        return dot / (Math.sqrt(na) * Math.sqrt(nb));</span>
+    }
+
+<span class="fc" id="L51">    private static final Set&lt;String&gt; GENERIC = Set.of(</span>
+            &quot;хороший&quot;,&quot;плохой&quot;,&quot;удобный&quot;,&quot;неудобный&quot;,&quot;классный&quot;,&quot;ужасный&quot;,
+            &quot;отличный&quot;,&quot;нормальный&quot;,&quot;быстрый&quot;,&quot;медленный&quot;,&quot;дорогой&quot;,&quot;дешевый&quot;,
+            &quot;лучший&quot;,&quot;худший&quot;,&quot;супер&quot;,&quot;топ&quot;,&quot;ок&quot;,&quot;неплохой&quot;
+    );
+
+    private static final String DEFAULT_ASPECT = &quot;Общее впечатление&quot;;
+
+    public static List&lt;InsightDTO&gt; toInsights(List&lt;String&gt; reviewIds,
+                                              List&lt;String&gt; texts,
+                                              List&lt;OnlineClustering.Cluster&gt; clusters,
+                                              Sentiment sentiment,
+                                              int maxPerCategory,
+                                              int quoteMaxLen) {
+
+<span class="pc bpc" id="L66" title="3 of 6 branches missed.">        if (reviewIds == null || texts == null || clusters == null) return List.of();</span>
+<span class="fc" id="L67">        int n = Math.min(reviewIds.size(), texts.size());</span>
+<span class="pc bpc" id="L68" title="2 of 4 branches missed.">        if (n == 0 || maxPerCategory &lt;= 0) return List.of();</span>
+
+
+<span class="fc" id="L71">        List&lt;OnlineClustering.Cluster&gt; sorted = new ArrayList&lt;&gt;(clusters);</span>
+<span class="pc" id="L72">        sorted.sort((a, b) -&gt; Integer.compare(sizeOf(b), sizeOf(a)));</span>
+
+
+<span class="fc" id="L75">        List&lt;InsightDTO&gt; result = new ArrayList&lt;&gt;(Math.min(maxPerCategory, clusters.size()));</span>
+
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        for (OnlineClustering.Cluster cl : clusters) {</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">            if (result.size() &gt;= maxPerCategory) break;</span>
+
+<span class="fc" id="L80">            List&lt;Integer&gt; idxs = safeIndices(cl);</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">            if (idxs.isEmpty()) continue;</span>
+
+            // Фильтруем индексы по валидному диапазону
+<span class="fc" id="L84">            idxs = idxs.stream()</span>
+<span class="fc" id="L85">                    .filter(Objects::nonNull)</span>
+<span class="pc bpc" id="L86" title="2 of 4 branches missed.">                    .filter(i -&gt; i &gt;= 0 &amp;&amp; i &lt; n)</span>
+<span class="fc" id="L87">                    .distinct()</span>
+<span class="fc" id="L88">                    .toList();</span>
+
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">            if (idxs.isEmpty()) continue;</span>
+
+<span class="fc" id="L92">            AspectCandidate cand = buildAspectCandidate(texts, idxs);</span>
+<span class="fc" id="L93">            String aspect = cand.label();</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">            if (!isValidAspect(aspect)) continue;</span>
+
+<span class="fc" id="L96">            String statement = buildStatement(aspect, sentiment);</span>
+
+<span class="fc" id="L98">            int pick = pickBestEvidenceIndex(texts, idxs, cand.tokens());</span>
+<span class="fc" id="L99">            String quote = clip(texts.get(pick), quoteMaxLen);</span>
+<span class="fc" id="L100">            EvidenceDTO ev = new EvidenceDTO(reviewIds.get(pick), quote);</span>
+
+<span class="fc" id="L102">            result.add(new InsightDTO(</span>
+                    aspect,
+                    statement,
+                    sentiment,
+<span class="fc" id="L106">                    idxs.size(),</span>
+<span class="fc" id="L107">                    List.of(ev)</span>
+            ));
+<span class="fc" id="L109">        }</span>
+
+        // Результат уже ограничен maxPerCategory; доп. limit не нужен
+<span class="fc" id="L112">        return result.stream()</span>
+<span class="fc" id="L113">                .sorted(Comparator.comparingInt(InsightDTO::count).reversed())</span>
+<span class="fc" id="L114">                .toList();</span>
+    }
+
+    private static int sizeOf(OnlineClustering.Cluster cl) {
+<span class="nc bnc" id="L118" title="All 4 branches missed.">        if (cl == null || cl.indices == null) return 0;</span>
+<span class="nc" id="L119">        return cl.indices.size();</span>
+    }
+
+    private static List&lt;Integer&gt; safeIndices(OnlineClustering.Cluster cl) {
+<span class="pc bpc" id="L123" title="2 of 4 branches missed.">        if (cl == null || cl.indices == null) return List.of();</span>
+<span class="fc" id="L124">        return cl.indices;</span>
+    }
+
+    private static boolean isValidAspect(String s) {
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (s == null) return false;</span>
+<span class="fc" id="L129">        s = s.trim();</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">        if (s.isEmpty()) return false;</span>
+
+<span class="fc" id="L132">        String low = s.toLowerCase(Locale.ROOT);</span>
+
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (low.length() &lt; 3) return false;</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        if (low.matches(&quot;[\\p{Punct}\\d\\s]+&quot;)) return false;</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">        if (Set.of(&quot;censored&quot;, &quot;unknown&quot;, &quot;null&quot;).contains(low)) return false;</span>
+
+        // если аспект = одно слово и оно слишком общее — выкидываем
+<span class="pc bpc" id="L139" title="5 of 6 branches missed.">        if (!low.contains(&quot;/&quot;) &amp;&amp; (STOP.contains(low) || GENERIC.contains(low))) return false;</span>
+
+<span class="fc" id="L141">        return true;</span>
+    }
+
+<span class="fc" id="L144">    private static record AspectCandidate(String label, List&lt;String&gt; tokens) {}</span>
+
+    private static AspectCandidate buildAspectCandidate(List&lt;String&gt; texts, List&lt;Integer&gt; idxs) {
+<span class="fc" id="L147">        Map&lt;String, Integer&gt; freq = new HashMap&lt;&gt;();</span>
+
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        for (int idx : idxs) {</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">            for (String token : tokenize(texts.get(idx))) {</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">                if (token.length() &lt; 4) continue;</span>
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">                if (STOP.contains(token)) continue;</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">                if (GENERIC.contains(token)) continue;</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">                if (looksLikeMostlyNumber(token)) continue;</span>
+
+<span class="fc" id="L156">                freq.merge(token, 1, Integer::sum);</span>
+<span class="fc" id="L157">            }</span>
+<span class="fc" id="L158">        }</span>
+
+<span class="fc" id="L160">        List&lt;String&gt; top = freq.entrySet().stream()</span>
+<span class="fc" id="L161">                .sorted((a, b) -&gt; Integer.compare(b.getValue(), a.getValue()))</span>
+<span class="fc" id="L162">                .map(Map.Entry::getKey)</span>
+<span class="fc" id="L163">                .limit(2)</span>
+<span class="fc" id="L164">                .toList();</span>
+
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        if (top.isEmpty()) return new AspectCandidate(DEFAULT_ASPECT, List.of());</span>
+
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">        String label = (top.size() == 1)</span>
+<span class="nc" id="L169">                ? capitalize(top.get(0))</span>
+<span class="fc" id="L170">                : capitalize(top.get(0)) + &quot; / &quot; + top.get(1);</span>
+
+<span class="fc" id="L172">        return new AspectCandidate(label, top);</span>
+    }
+
+    private static int pickBestEvidenceIndex(List&lt;String&gt; texts, List&lt;Integer&gt; idxs, List&lt;String&gt; aspectTokens) {
+        // Выбираем цитату, которая лучше “покрывает” токены аспекта и не слишком длинная
+<span class="fc" id="L177">        int bestIdx = idxs.get(0);</span>
+<span class="fc" id="L178">        int bestScore = Integer.MIN_VALUE;</span>
+<span class="fc" id="L179">        int bestLen = Integer.MAX_VALUE;</span>
+
+<span class="fc bfc" id="L181" title="All 2 branches covered.">        for (int idx : idxs) {</span>
+<span class="fc" id="L182">            String t = texts.get(idx);</span>
+<span class="pc bpc" id="L183" title="2 of 4 branches missed.">            if (t == null || t.isBlank()) continue;</span>
+
+<span class="fc" id="L185">            int score = 0;</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">            if (!aspectTokens.isEmpty()) {</span>
+<span class="fc" id="L187">                String low = t.toLowerCase(Locale.ROOT);</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">                for (String tok : aspectTokens) {</span>
+<span class="pc bpc" id="L189" title="3 of 6 branches missed.">                    if (tok != null &amp;&amp; !tok.isBlank() &amp;&amp; low.contains(tok)) score += 10;</span>
+<span class="fc" id="L190">                }</span>
+            }
+
+            // Легкий бонус за “умеренную” длину (не пусто и не простыня)
+<span class="fc" id="L194">            int len = normalizedLen(t);</span>
+<span class="pc bpc" id="L195" title="2 of 4 branches missed.">            if (len &gt;= 40 &amp;&amp; len &lt;= 240) score += 3;</span>
+
+            // Tie-breaker: короче лучше (для цитаты)
+<span class="pc bpc" id="L198" title="5 of 6 branches missed.">            if (score &gt; bestScore || (score == bestScore &amp;&amp; len &lt; bestLen)) {</span>
+<span class="fc" id="L199">                bestScore = score;</span>
+<span class="fc" id="L200">                bestLen = len;</span>
+<span class="fc" id="L201">                bestIdx = idx;</span>
+            }
+<span class="fc" id="L203">        }</span>
+
+<span class="fc" id="L205">        return bestIdx;</span>
+    }
+
+    private static int normalizedLen(String s) {
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">        if (s == null) return 0;</span>
+<span class="fc" id="L210">        return s.replaceAll(&quot;\\s+&quot;, &quot; &quot;).trim().length();</span>
+    }
+
+    private static String buildStatement(String aspect, Sentiment sentiment) {
+<span class="pc bpc" id="L214" title="2 of 3 branches missed.">        return switch (sentiment) {</span>
+<span class="fc" id="L215">            case POSITIVE -&gt; &quot;Пользователи отмечают: &quot; + aspect + &quot;.&quot;;</span>
+<span class="nc" id="L216">            case NEGATIVE -&gt; &quot;Пользователи жалуются на: &quot; + aspect + &quot;.&quot;;</span>
+<span class="nc" id="L217">            case REQUEST -&gt; &quot;Пользователи просят улучшить: &quot; + aspect + &quot;.&quot;;</span>
+        };
+    }
+
+    private static List&lt;String&gt; tokenize(String s) {
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">        if (s == null) return List.of();</span>
+<span class="fc" id="L223">        String norm = s.toLowerCase(Locale.ROOT)</span>
+                // дефис оставляем, но режем остальное
+<span class="fc" id="L225">                .replaceAll(&quot;[^\\p{IsAlphabetic}\\p{IsDigit}\\s-]&quot;, &quot; &quot;);</span>
+
+<span class="fc" id="L227">        String[] parts = norm.split(&quot;\\s+&quot;);</span>
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">        if (parts.length == 0) return List.of();</span>
+
+<span class="fc" id="L230">        List&lt;String&gt; out = new ArrayList&lt;&gt;(parts.length);</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">        for (String p : parts) {</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">            if (p.isBlank()) continue;</span>
+            // уберём крайние дефисы: &quot;--камера--&quot; -&gt; &quot;камера&quot;
+<span class="fc" id="L234">            String cleaned = p.replaceAll(&quot;^-+|-+$&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">            if (cleaned.isBlank()) continue;</span>
+<span class="fc" id="L236">            out.add(cleaned);</span>
+        }
+<span class="fc" id="L238">        return out;</span>
+    }
+
+    private static boolean looksLikeMostlyNumber(String token) {
+        // чистые числа или “почти числа”
+        // 2024, 12, 3-5, 128gb, s23, mi11 — обычно шум в аспектах (если нужно — ослабь правило)
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">        if (token.matches(&quot;\\d+&quot;)) return true;</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">        if (token.matches(&quot;\\d+[a-zа-я]+\\d*&quot;)) return true;</span>
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">        if (token.matches(&quot;[a-zа-я]+\\d+&quot;)) return true;</span>
+<span class="fc" id="L247">        return false;</span>
+    }
+
+    private static String clip(String s, int max) {
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">        if (s == null) return &quot;&quot;;</span>
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">        if (max &lt;= 0) return &quot;&quot;;</span>
+<span class="fc" id="L253">        s = s.replaceAll(&quot;\\s+&quot;, &quot; &quot;).trim();</span>
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">        if (s.length() &lt;= max) return s;</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">        if (max &lt;= 3) return s.substring(0, max);</span>
+<span class="nc" id="L256">        return s.substring(0, max - 3) + &quot;...&quot;;</span>
+    }
+
+    private static String capitalize(String s) {
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">        if (s == null) return null;</span>
+<span class="fc" id="L261">        s = s.trim();</span>
+<span class="pc bpc" id="L262" title="1 of 2 branches missed.">        if (s.isEmpty()) return s;</span>
+<span class="fc" id="L263">        return s.substring(0, 1).toUpperCase(Locale.ROOT) + s.substring(1);</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

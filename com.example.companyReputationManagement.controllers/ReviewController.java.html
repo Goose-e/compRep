@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReviewController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.controllers</a> &gt; <span class="el_source">ReviewController.java</span></div><h1>ReviewController.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.controllers;
+
+import com.example.companyReputationManagement.dto.review.find.ReviewRequestDto;
+import com.example.companyReputationManagement.dto.review.find.ReviewResponse;
+import com.example.companyReputationManagement.dto.review.find.ReviewResponseListDto;
+import com.example.companyReputationManagement.dto.review.generate_chart.GenerateChartRequestDto;
+import com.example.companyReputationManagement.dto.review.generate_chart.GenerateChartResponseDto;
+import com.example.companyReputationManagement.dto.review.get_all.GetReviewRequestDto;
+import com.example.companyReputationManagement.dto.review.get_all.GetReviewResponseListDto;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentRequestDTO;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseListDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordRequestDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordResponseDTO;
+import com.example.companyReputationManagement.dto.review.report.GenerateReportRequestDTO;
+import com.example.companyReputationManagement.dto.review.report.GenerateReportResponseDTO;
+import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
+import com.example.companyReputationManagement.iservice.IReviewService;
+import com.example.companyReputationManagement.iservice.services.review.ReviewScheduler;
+import com.itextpdf.text.DocumentException;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+
+@RequiredArgsConstructor
+@CrossOrigin(maxAge = 3600)
+@RestController
+@RequestMapping(&quot;/review&quot;)
+public class ReviewController {
+    private final IReviewService reviewService;
+    private final ReviewScheduler reviewScheduler;
+
+    @PostMapping(value = &quot;/find_reviews&quot;)
+    public HttpResponseBody&lt;ReviewResponseListDto&gt; findReviews(@Valid @RequestBody ReviewRequestDto reviewRequestDto) {
+<span class="nc" id="L36">        HttpResponseBody&lt;ReviewResponseListDto&gt; response = new ReviewResponse();</span>
+        try {
+<span class="nc" id="L38">            response = reviewService.findReviews(reviewRequestDto);</span>
+<span class="nc" id="L39">        } catch (Exception e) {</span>
+<span class="nc" id="L40">            System.out.println(e.getMessage());</span>
+<span class="nc" id="L41">            e.printStackTrace();</span>
+<span class="nc" id="L42">        }</span>
+<span class="nc" id="L43">        return response;</span>
+    }
+
+    @PostMapping(value = &quot;/get_reviews&quot;)
+    public HttpResponseBody&lt;GetReviewResponseListDto&gt; getReviews(@Valid @RequestBody GetReviewRequestDto getReviewRequestDto) {
+<span class="nc" id="L48">        return reviewService.getReviews(getReviewRequestDto);</span>
+    }
+
+    @PostMapping(value = &quot;/get_review_chart&quot;)
+    public HttpResponseBody&lt;GenerateChartResponseDto&gt; getReviewsCharts(@Valid @RequestBody GenerateChartRequestDto generateChartRequestDto) throws IOException {
+<span class="nc" id="L53">        return reviewService.generateCharts(generateChartRequestDto);</span>
+    }
+
+    @PostMapping(value = &quot;/get_reviews_by_sent&quot;)
+    public HttpResponseBody&lt;GetAllBySentResponseListDTO&gt; getReviewsBySent(@Valid @RequestBody GetAllBySentRequestDTO getAllBySentRequestDTO) throws IOException {
+<span class="nc" id="L58">        return reviewService.getAllReviewsBySentType(getAllBySentRequestDTO);</span>
+    }
+
+    @PostMapping(value = &quot;/report&quot;)
+    public HttpResponseBody&lt;GenerateReportResponseDTO&gt; generateReport(@Valid @RequestBody GenerateReportRequestDTO generateReportRequestDTO) throws DocumentException, IOException {
+<span class="nc" id="L63">        return reviewService.generateReport(generateReportRequestDTO);</span>
+    }
+
+    @PostMapping(value = &quot;/key_words_analysis&quot;)
+    public HttpResponseBody&lt;KeyWordResponseDTO&gt; keyWordAnalysis(@Valid @RequestBody KeyWordRequestDTO keyWordRequestDTO) throws IOException {
+<span class="nc" id="L68">        return reviewService.keyWordAnalysis(keyWordRequestDTO);</span>
+    }
+
+    @PostMapping(value = &quot;/check&quot;)
+    public void check() throws IOException {
+<span class="nc" id="L73">        reviewScheduler.updateAllCompaniesTrends();</span>
+<span class="nc" id="L74">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

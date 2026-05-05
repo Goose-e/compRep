@@ -1,0 +1,578 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CompanyService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.iservice.services.company</a> &gt; <span class="el_source">CompanyService.java</span></div><h1>CompanyService.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.iservice.services.company;
+
+import com.example.companyReputationManagement.dao.CompanyDao;
+import com.example.companyReputationManagement.dao.CompanySourceUrlDao;
+import com.example.companyReputationManagement.dao.UserCompanyRolesDao;
+import com.example.companyReputationManagement.dao.UserDao;
+import com.example.companyReputationManagement.dto.company.add_user.AddUserRequestDTO;
+import com.example.companyReputationManagement.dto.company.add_user.AddUserResponse;
+import com.example.companyReputationManagement.dto.company.add_user.AddUserResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatus;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusResponse;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserCompanyRoleRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserRoleResponse;
+import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserRoleResponseDTO;
+import com.example.companyReputationManagement.dto.company.create.CompanyCreateRequestDTO;
+import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponse;
+import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
+import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
+import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponse;
+import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameRequestDTO;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponse;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponseDTO;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_all.AllCompaniesResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponse;
+import com.example.companyReputationManagement.dto.company.get_all.GetAllCompaniesResponseDTO;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersRequestDTO;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponse;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponseDTO;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_all_user_companies.AllUserCompaniesResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_all_user_companies.GetAllUserCompaniesResponse;
+import com.example.companyReputationManagement.dto.company.get_all_user_companies.GetAllUserCompaniesResponseDTO;
+import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeRequestDTO;
+import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponse;
+import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponseDTO;
+import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
+import com.example.companyReputationManagement.iservice.ICompanyService;
+import com.example.companyReputationManagement.iservice.IJwtService;
+import com.example.companyReputationManagement.iservice.services.transactions.CompanyTrans;
+import com.example.companyReputationManagement.mapper.CompanyMapper;
+import com.example.companyReputationManagement.mapper.CompanySourceUrlMapper;
+import com.example.companyReputationManagement.mapper.UserCompanyRolesMapper;
+import com.example.companyReputationManagement.models.Company;
+import com.example.companyReputationManagement.models.CompanySourceUrl;
+import com.example.companyReputationManagement.models.CompanyUser;
+import com.example.companyReputationManagement.models.UserCompanyRoles;
+import com.example.companyReputationManagement.models.enums.RoleEnum;
+import com.example.companyReputationManagement.models.enums.SourcesEnum;
+import com.example.companyReputationManagement.models.enums.StatusEnum;
+import lombok.RequiredArgsConstructor;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.oauth2.jwt.JwtException;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+
+import static com.example.companyReputationManagement.constants.SysConst.OC_BUGS;
+import static com.example.companyReputationManagement.constants.SysConst.OC_OK;
+
+@Service
+@RequiredArgsConstructor
+public class CompanyService implements ICompanyService {
+    private final CompanyDao companyDao;
+    private final CompanyMapper companyMapper;
+    private final UserDao userDao;
+    private final UserCompanyRolesDao userCompanyRolesdao;
+    private final UserCompanyRolesMapper userCompanyRolesMapper;
+    private final CompanyTrans companyTrans;
+<span class="fc" id="L87">    private static final Logger logger = LoggerFactory.getLogger(CompanyService.class);</span>
+    private final CompanySourceUrlMapper companySourceUrlMapper;
+    private final CompanySourceUrlDao companySourceUrlDao;
+    private final IJwtService jwtService;
+
+    //Парсинг
+    private WebDriver createWebDriver() {
+<span class="nc" id="L94">        ChromeOptions options = new ChromeOptions();</span>
+<span class="nc" id="L95">        options.addArguments(&quot;--blink-settings=imagesEnabled=false&quot;);</span>
+<span class="nc" id="L96">        options.addArguments(&quot;--disable-extensions&quot;);</span>
+<span class="nc" id="L97">        options.addArguments(&quot;--disable-popup-blocking&quot;);</span>
+<span class="nc" id="L98">        options.addArguments(&quot;--disable-default-apps&quot;);</span>
+<span class="nc" id="L99">        options.addArguments(&quot;--headless&quot;, &quot;--disable-gpu&quot;, &quot;--window-size=1920x1080&quot;);</span>
+<span class="nc" id="L100">        return new ChromeDriver(options);</span>
+    }
+
+    private String findCompanyUrl(String companyName, SourcesEnum source) {
+<span class="nc" id="L104">        WebDriver driver = createWebDriver();</span>
+        try {
+<span class="nc" id="L106">            driver.get(source.getUrl());</span>
+
+<span class="nc" id="L108">            WebElement input = driver.findElement(By.cssSelector(&quot;input.is-search-input&quot;));</span>
+<span class="nc" id="L109">            input.sendKeys(companyName);</span>
+
+<span class="nc" id="L111">            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));</span>
+<span class="nc" id="L112">            WebElement firstSuggestion = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(&quot;.is-title a&quot;)));</span>
+
+<span class="nc" id="L114">            return firstSuggestion.getAttribute(&quot;href&quot;);</span>
+<span class="nc" id="L115">        } catch (Exception e) {</span>
+<span class="nc" id="L116">            return null;</span>
+        } finally {
+<span class="nc" id="L118">            driver.quit();</span>
+        }
+    }
+
+    //Проверки
+    private boolean checkStatus(StatusEnum userStatus) {
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        return userStatus == StatusEnum.CLOSED;</span>
+    }
+
+    private boolean hasPermissionToChangeRole(RoleEnum currentRole) {
+<span class="nc bnc" id="L128" title="All 4 branches missed.">        return !currentRole.equals(RoleEnum.OWNER) &amp;&amp; !currentRole.equals(RoleEnum.ADMIN);</span>
+    }
+
+    private boolean hasHigherRole(RoleEnum current, RoleEnum target) {
+<span class="nc bnc" id="L132" title="All 4 branches missed.">        if (current == null || target == null) return false;</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        return current.getId() &gt; target.getId();</span>
+    }
+
+
+    @Override
+    public HttpResponseBody&lt;CompanyCreateResponseDTO&gt; createCompany(CompanyCreateRequestDTO companyCreateRequestDTO) {
+<span class="nc" id="L139">        HttpResponseBody&lt;CompanyCreateResponseDTO&gt; response = new CompanyCreateResponse();</span>
+        try {
+<span class="nc" id="L141">            CompanyUser user = userDao.findUserByUserCode(jwtService.extractUserCodeFromJwt());</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">            if (user != null) {</span>
+<span class="nc" id="L143">                boolean companyExists = companyDao.existByCompanyName(companyCreateRequestDTO.getCompanyName());</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                if (!companyExists) {</span>
+<span class="nc" id="L145">                    response.setMessage(&quot;Company is being created...&quot;);</span>
+<span class="nc" id="L146">                    response.setResponseCode(OC_OK);</span>
+<span class="nc" id="L147">                    Company company = companyMapper.mapCompanyCreateRequestDTOToCompany(companyCreateRequestDTO);</span>
+<span class="nc" id="L148">                    response.setResponseEntity(companyMapper.mapCompanyCreateRequestDTOToCompanyCreateResponse(company, &quot;in process&quot;));</span>
+<span class="nc" id="L149">                    UserCompanyRoles userCompanyRoles = userCompanyRolesMapper.mapUserAndCompanyToUserCompanyRoles(user, company);</span>
+<span class="nc" id="L150">                    companyTrans.saveCompanyAndRole(company, userCompanyRoles);</span>
+<span class="nc" id="L151">                    CompletableFuture.runAsync(() -&gt; {</span>
+                        try {
+<span class="nc" id="L153">                            String url = findCompanyUrl(companyCreateRequestDTO.getCompanyName(), SourcesEnum.OTZOVIK);</span>
+<span class="nc" id="L154">                            CompanySourceUrl companySourceUrl = companySourceUrlMapper.create(company.getCoreEntityId(), url);</span>
+                            try {
+<span class="nc" id="L156">                                companyTrans.saveCompanySourceUrl(companySourceUrl);</span>
+<span class="nc" id="L157">                            } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L158">                                logger.error(&quot;Data integrity error while saving company and user role: &quot;, e);</span>
+<span class="nc" id="L159">                            } catch (Exception e) {</span>
+<span class="nc" id="L160">                                logger.error(&quot;Unexpected error while saving company and user role: &quot;, e);</span>
+<span class="nc" id="L161">                            }</span>
+<span class="nc" id="L162">                        } catch (Exception e) {</span>
+<span class="nc" id="L163">                            logger.error(&quot;Error occurred while creating company in background task: &quot;, e);</span>
+<span class="nc" id="L164">                        }</span>
+<span class="nc" id="L165">                    });</span>
+<span class="nc" id="L166">                } else {</span>
+<span class="nc" id="L167">                    response.setMessage(&quot;Company name already exist&quot;);</span>
+                }
+<span class="nc" id="L169">            } else {</span>
+<span class="nc" id="L170">                response.setError(&quot;User not found&quot;);</span>
+<span class="nc" id="L171">                response.setMessage(&quot;User not found&quot;);</span>
+            }
+<span class="nc" id="L173">        } catch (Exception e) {</span>
+<span class="nc" id="L174">            response.setError(&quot;get user error&quot;);</span>
+<span class="nc" id="L175">            response.setMessage(&quot;get user error&quot;);</span>
+<span class="nc" id="L176">        }</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+
+<span class="nc" id="L179">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;ChangeCompanyStatusResponseDTO&gt; changeCompanyStatus(ChangeCompanyStatusRequestDTO changeCompanyStatusRequestDTO) {
+<span class="nc" id="L184">        HttpResponseBody&lt;ChangeCompanyStatusResponseDTO&gt; response = new ChangeCompanyStatus();</span>
+        try {
+<span class="nc" id="L186">            Company company = companyDao.findByCompanyCode(changeCompanyStatusRequestDTO.getCompanyCode());</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">            if (company == null) {</span>
+<span class="nc" id="L188">                response.setError(&quot;Company not found&quot;);</span>
+<span class="nc" id="L189">                response.setMessage(&quot;Company not found&quot;);</span>
+            } else {
+
+<span class="nc" id="L192">                Long userId = userDao.findUserIdByUserCode(jwtService.extractUserCodeFromJwt());</span>
+<span class="nc" id="L193">                UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">                if (userCompanyRoles == null) {</span>
+<span class="nc" id="L195">                    response.setError(&quot;User not in company&quot;);</span>
+<span class="nc" id="L196">                    response.setMessage(&quot;User not in company&quot;);</span>
+                } else {
+<span class="nc bnc" id="L198" title="All 2 branches missed.">                    if (userCompanyRoles.getRole() != RoleEnum.OWNER) {</span>
+<span class="nc" id="L199">                        response.setMessage(&quot;User doesnt have enough rights&quot;);</span>
+                    } else {
+                        try {
+<span class="nc" id="L202">                            userCompanyRoles = userCompanyRolesMapper.changeUserStatus(userCompanyRoles, changeCompanyStatusRequestDTO.getNewStatusId());</span>
+<span class="nc" id="L203">                            company = companyMapper.changeCompanyStatus(company, changeCompanyStatusRequestDTO.getNewStatusId());</span>
+<span class="nc" id="L204">                            companyTrans.saveCompanyAndRole(company, userCompanyRoles);</span>
+<span class="nc" id="L205">                            response.setMessage(&quot;Company &quot; + company.getStatus());</span>
+<span class="nc" id="L206">                            StatusEnum newStatus = StatusEnum.fromId(changeCompanyStatusRequestDTO.getNewStatusId().intValue());</span>
+<span class="nc" id="L207">                            response.setResponseEntity(new ChangeCompanyStatusResponseDTO(company.getName(), newStatus.getStatus()));</span>
+<span class="nc" id="L208">                        } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L209">                            response.setError(&quot;Transaction failed&quot;);</span>
+<span class="nc" id="L210">                            response.setMessage(&quot;Data integrity violation: &quot; + e.getMessage());</span>
+<span class="nc" id="L211">                            logger.error(&quot;Data integrity error while saving company and user role: &quot;, e);</span>
+<span class="nc" id="L212">                        } catch (Exception e) {</span>
+<span class="nc" id="L213">                            response.setError(&quot;Transaction failed&quot;);</span>
+<span class="nc" id="L214">                            response.setMessage(&quot;Unexpected error: &quot; + e.getMessage());</span>
+<span class="nc" id="L215">                            logger.error(&quot;Unexpected error while saving company and user role: &quot;, e);</span>
+<span class="nc" id="L216">                        }</span>
+                    }
+                }
+            }
+<span class="nc" id="L220">        } catch (</span>
+                JwtException e) {
+<span class="nc" id="L222">            response.setError(&quot;get user error&quot;);</span>
+<span class="nc" id="L223">            response.setMessage(&quot;get user error&quot;);</span>
+<span class="nc" id="L224">        }</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+
+<span class="nc" id="L227">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;AllCompaniesResponseListDTO&gt; getAllCompanies() {
+<span class="fc" id="L232">        HttpResponseBody&lt;AllCompaniesResponseListDTO&gt; response = new GetAllCompaniesResponse();</span>
+<span class="fc" id="L233">        List&lt;GetAllCompaniesResponseDTO&gt; companiesList = companyDao.findAllWithUrls();</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">        if (companiesList.isEmpty()) {</span>
+<span class="fc" id="L235">            response.setMessage(&quot;Companies not found&quot;);</span>
+<span class="fc" id="L236">            response.setResponseEntity(null);</span>
+        } else {
+<span class="fc" id="L238">            AllCompaniesResponseListDTO allCompaniesResponseListDTO = new AllCompaniesResponseListDTO(companiesList);</span>
+<span class="fc" id="L239">            response.setResponseEntity(allCompaniesResponseListDTO);</span>
+<span class="fc" id="L240">            response.setMessage(&quot;All companies found&quot;);</span>
+        }
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+
+<span class="fc" id="L244">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;EditCompanyResponseDTO&gt; editCompany(EditCompanyRequestDTO editCompanyRequestDTO) {
+<span class="nc" id="L249">        HttpResponseBody&lt;EditCompanyResponseDTO&gt; response = new EditCompanyResponse();</span>
+        try {
+<span class="nc" id="L251">            Company company = companyDao.findByCompanyCode(editCompanyRequestDTO.getCompanyCode());</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">            if (company == null) {</span>
+<span class="nc" id="L253">                response.setError(&quot;Company not found&quot;);</span>
+<span class="nc" id="L254">                response.setMessage(&quot;Company not found&quot;);</span>
+            } else {
+<span class="nc" id="L256">                Long userId = userDao.findUserIdByUserCode(jwtService.extractUserCodeFromJwt());</span>
+<span class="nc" id="L257">                UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">                if (userCompanyRoles == null) {</span>
+<span class="nc" id="L259">                    response.setError(&quot;User not in company&quot;);</span>
+<span class="nc" id="L260">                    response.setMessage(&quot;User not in company&quot;);</span>
+                } else {
+<span class="nc bnc" id="L262" title="All 2 branches missed.">                    if (checkStatus(userCompanyRoles.getStatus())) {</span>
+<span class="nc" id="L263">                        response.setMessage(&quot;You banned&quot;);</span>
+                    } else {
+<span class="nc bnc" id="L265" title="All 4 branches missed.">                        if (userCompanyRoles.getRole() != RoleEnum.OWNER &amp;&amp; userCompanyRoles.getRole() != RoleEnum.ADMIN) {</span>
+<span class="nc" id="L266">                            response.setMessage(&quot;User doesnt have enough rights&quot;);</span>
+                        } else {
+<span class="nc" id="L268">                            company = companyMapper.mapCompanyToEditedCompany(company, editCompanyRequestDTO);</span>
+<span class="nc" id="L269">                            CompanySourceUrl companySourceUrl = companySourceUrlDao.findByCompanyId(company.getCoreEntityId());</span>
+<span class="nc" id="L270">                            companySourceUrl = companySourceUrlMapper.edit(editCompanyRequestDTO.getNewOtzovikUrl(), companySourceUrl);</span>
+<span class="nc" id="L271">                            EditCompanyResponseDTO editCompanyResponseDTO = companyMapper.mapCompanyToEditCompanyResponseDTO(company, companySourceUrl);</span>
+                            try {
+<span class="nc" id="L273">                                companyTrans.updateCompany(company, companySourceUrl);</span>
+<span class="nc" id="L274">                                response.setMessage(&quot;Company edited successfully&quot;);</span>
+<span class="nc" id="L275">                                response.setResponseEntity(editCompanyResponseDTO);</span>
+<span class="nc" id="L276">                            } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L277">                                response.setError(&quot;Transaction failed&quot;);</span>
+<span class="nc" id="L278">                                response.setMessage(&quot;Data integrity violation: &quot; + e.getMessage());</span>
+<span class="nc" id="L279">                                logger.error(&quot;Data integrity error while saving company and user role: &quot;, e);</span>
+<span class="nc" id="L280">                            } catch (Exception e) {</span>
+<span class="nc" id="L281">                                response.setError(&quot;Transaction failed&quot;);</span>
+<span class="nc" id="L282">                                response.setMessage(&quot;Unexpected error: &quot; + e.getMessage());</span>
+<span class="nc" id="L283">                                logger.error(&quot;Unexpected error while saving company and user role: &quot;, e);</span>
+<span class="nc" id="L284">                            }</span>
+                        }
+                    }
+                }
+            }
+<span class="nc" id="L289">        } catch (</span>
+                JwtException e) {
+<span class="nc" id="L291">            response.setError(&quot;get user error&quot;);</span>
+<span class="nc" id="L292">            response.setMessage(&quot;get user error&quot;);</span>
+<span class="nc" id="L293">        }</span>
+
+<span class="nc bnc" id="L295" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+
+<span class="nc" id="L297">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;ChangeUserRoleResponseDTO&gt; changeUserRole(ChangeUserCompanyRoleRequestDTO changeUserCompanyRoleRequestDTO) {
+<span class="nc" id="L302">        HttpResponseBody&lt;ChangeUserRoleResponseDTO&gt; response = new ChangeUserRoleResponse();</span>
+<span class="nc" id="L303">        boolean isOwner = false;</span>
+        try {
+<span class="nc" id="L305">            Company company = companyDao.findByCompanyCode(changeUserCompanyRoleRequestDTO.getCompanyCode());</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">            if (company == null) {</span>
+<span class="nc" id="L307">                response.setError(&quot;Company not found&quot;);</span>
+<span class="nc" id="L308">                response.setMessage(&quot;Company not found&quot;);</span>
+            } else {
+<span class="nc" id="L310">                Long userId = userDao.findUserIdByUserCode(jwtService.extractUserCodeFromJwt());</span>
+<span class="nc" id="L311">                UserCompanyRoles userCompanyRolesAdmin = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">                if (userCompanyRolesAdmin == null) {</span>
+<span class="nc" id="L313">                    response.setError(&quot;Users not in company&quot;);</span>
+<span class="nc" id="L314">                    response.setMessage(&quot;Users not in company&quot;);</span>
+                } else {
+<span class="nc bnc" id="L316" title="All 2 branches missed.">                    if (hasPermissionToChangeRole(userCompanyRolesAdmin.getRole())) {</span>
+<span class="nc" id="L317">                        response.setMessage(&quot;User doesnt have enough rights&quot;);</span>
+                    } else {
+<span class="nc" id="L319">                        Long userCandidateId = userDao.findIdByUsernameOrEmail(changeUserCompanyRoleRequestDTO.getUsername());</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">                        if (userCandidateId == null) {</span>
+<span class="nc" id="L321">                            response.setError(&quot;User not found&quot;);</span>
+<span class="nc" id="L322">                            response.setMessage(&quot;User not found&quot;);</span>
+                        } else {
+<span class="nc" id="L324">                            UserCompanyRoles userCompanyRolesCandidate = userCompanyRolesdao.findByUserId(userCandidateId, company.getCoreEntityId());</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">                            if (userCompanyRolesCandidate == null) {</span>
+<span class="nc" id="L326">                                response.setMessage(&quot;Users not in company&quot;);</span>
+                            } else {
+<span class="nc" id="L328">                                Long newRole = changeUserCompanyRoleRequestDTO.getNewRoleId();</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">                                if (newRole.intValue() == 2) {</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">                                    if (userCompanyRolesAdmin.getRole() == RoleEnum.OWNER) {</span>
+<span class="nc" id="L331">                                        userCompanyRolesAdmin.setRole(RoleEnum.ADMIN);</span>
+<span class="nc" id="L332">                                        userCompanyRolesCandidate.setStatus(StatusEnum.ACTUAL);</span>
+<span class="nc" id="L333">                                        isOwner = true;</span>
+<span class="nc" id="L334">                                        userCompanyRolesCandidate.setRole(RoleEnum.fromId(newRole.intValue()));</span>
+                                    } else {
+<span class="nc" id="L336">                                        response.setMessage(&quot;User doesnt have enough rights&quot;);</span>
+                                    }
+                                } else {
+<span class="nc" id="L339">                                    userCompanyRolesCandidate.setRole(RoleEnum.fromId(newRole.intValue()));</span>
+                                }
+                                try {
+<span class="nc bnc" id="L342" title="All 2 branches missed.">                                    if (isOwner) {</span>
+<span class="nc" id="L343">                                        companyTrans.changeUserRoleOwner(userCompanyRolesAdmin, userCompanyRolesCandidate);</span>
+<span class="nc" id="L344">                                        response.setMessage(&quot;User role owner successfully&quot;);</span>
+                                    } else {
+<span class="nc" id="L346">                                        companyTrans.saveCompanyUserRole(userCompanyRolesCandidate);</span>
+<span class="nc" id="L347">                                        response.setMessage(&quot;User role successfully&quot;);</span>
+                                    }
+<span class="nc" id="L349">                                    ChangeUserRoleResponseDTO changeUserRoleResponseDTO = userCompanyRolesMapper.changeUserRole(userCompanyRolesCandidate, changeUserCompanyRoleRequestDTO.getUsername());</span>
+<span class="nc" id="L350">                                    response.setResponseEntity(changeUserRoleResponseDTO);</span>
+<span class="nc" id="L351">                                } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L352">                                    response.setError(&quot;Transaction failed&quot;);</span>
+<span class="nc" id="L353">                                    response.setMessage(&quot;Data integrity violation: &quot; + e.getMessage());</span>
+<span class="nc" id="L354">                                    logger.error(&quot;Data integrity error while saving company and user role: &quot;, e);</span>
+<span class="nc" id="L355">                                } catch (Exception e) {</span>
+<span class="nc" id="L356">                                    response.setError(&quot;Transaction failed&quot;);</span>
+<span class="nc" id="L357">                                    response.setMessage(&quot;Unexpected error: &quot; + e.getMessage());</span>
+<span class="nc" id="L358">                                    logger.error(&quot;Unexpected error while saving company and user role: &quot;, e);</span>
+<span class="nc" id="L359">                                }</span>
+                            }
+                        }
+                    }
+                }
+            }
+<span class="nc" id="L365">        } catch (JwtException e) {</span>
+<span class="nc" id="L366">            response.setError(&quot;Get user error&quot;);</span>
+<span class="nc" id="L367">            response.setMessage(&quot;Get user error&quot;);</span>
+<span class="nc" id="L368">        }</span>
+
+<span class="nc bnc" id="L370" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+<span class="nc" id="L371">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;AddUserResponseDTO&gt; addUser(AddUserRequestDTO addUserRequestDTO) {
+<span class="nc" id="L376">        HttpResponseBody&lt;AddUserResponseDTO&gt; response = new AddUserResponse();</span>
+        try {
+<span class="nc" id="L378">            Company company = companyDao.findByCompanyCode(addUserRequestDTO.getCompanyCode());</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">            if (company == null) {</span>
+<span class="nc" id="L380">                response.setError(&quot;Company not found&quot;);</span>
+<span class="nc" id="L381">                response.setMessage(&quot;Company not found&quot;);</span>
+            } else {
+<span class="nc" id="L383">                Long userId = userDao.findUserIdByUserCode(jwtService.extractUserCodeFromJwt());</span>
+<span class="nc" id="L384">                UserCompanyRoles userCompanyRolesAdmin = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">                if (userCompanyRolesAdmin == null) {</span>
+<span class="nc" id="L386">                    response.setError(&quot;Users not in company&quot;);</span>
+<span class="nc" id="L387">                    response.setMessage(&quot;Users not in company&quot;);</span>
+                } else {
+<span class="nc bnc" id="L389" title="All 2 branches missed.">                    if (checkStatus(userCompanyRolesAdmin.getStatus())) {</span>
+<span class="nc" id="L390">                        response.setError(&quot;User banned&quot;);</span>
+                    } else {
+<span class="nc bnc" id="L392" title="All 2 branches missed.">                        if (hasPermissionToChangeRole(userCompanyRolesAdmin.getRole())) {</span>
+<span class="nc" id="L393">                            response.setMessage(&quot;User doesnt have enough rights&quot;);</span>
+                        } else {
+<span class="nc" id="L395">                            Long userCandidateId = userDao.findIdByUsernameOrEmail(addUserRequestDTO.getUsername());</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">                            if (userCandidateId == null) {</span>
+<span class="nc" id="L397">                                response.setError(&quot;User not found&quot;);</span>
+<span class="nc" id="L398">                                response.setMessage(&quot;User not found&quot;);</span>
+                            } else {
+<span class="nc" id="L400">                                UserCompanyRoles userCompanyRolesCandidate = userCompanyRolesdao.findByUserId(userCandidateId, company.getCoreEntityId());</span>
+<span class="nc bnc" id="L401" title="All 2 branches missed.">                                if (userCompanyRolesCandidate != null) {</span>
+<span class="nc" id="L402">                                    response.setMessage(&quot;Users already in company&quot;);</span>
+                                } else {
+<span class="nc" id="L404">                                    userCompanyRolesCandidate = userCompanyRolesMapper.addUser(userCandidateId, company.getCoreEntityId());</span>
+                                    try {
+<span class="nc" id="L406">                                        companyTrans.saveCompanyUserRole(userCompanyRolesCandidate);</span>
+<span class="nc" id="L407">                                        AddUserResponseDTO addUserResponseDTO = userCompanyRolesMapper.mapNewUserToAddUserResponse(addUserRequestDTO.getUsername());</span>
+<span class="nc" id="L408">                                        response.setResponseEntity(addUserResponseDTO);</span>
+<span class="nc" id="L409">                                        response.setMessage(&quot;User added successfully&quot;);</span>
+<span class="nc" id="L410">                                    } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L411">                                        response.setError(&quot;Transaction failed&quot;);</span>
+<span class="nc" id="L412">                                        response.setMessage(&quot;Data integrity violation: &quot; + e.getMessage());</span>
+<span class="nc" id="L413">                                        logger.error(&quot;Data integrity error while saving company and user role: &quot;, e);</span>
+<span class="nc" id="L414">                                    } catch (Exception e) {</span>
+<span class="nc" id="L415">                                        response.setError(&quot;Transaction failed&quot;);</span>
+<span class="nc" id="L416">                                        response.setMessage(&quot;Unexpected error: &quot; + e.getMessage());</span>
+<span class="nc" id="L417">                                        logger.error(&quot;Unexpected error while saving company and user role: &quot;, e);</span>
+<span class="nc" id="L418">                                    }</span>
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+<span class="nc" id="L425">        } catch (</span>
+                JwtException e) {
+<span class="nc" id="L427">            response.setError(&quot;get user error&quot;);</span>
+<span class="nc" id="L428">            response.setMessage(&quot;get user error&quot;);</span>
+<span class="nc" id="L429">        }</span>
+
+<span class="nc bnc" id="L431" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+
+<span class="nc" id="L433">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;ChangeCompanyUserStatusResponseDTO&gt; changeUserStatus(ChangeCompanyUserStatusRequestDTO changeCompanyUserStatusRequestDTO) {
+<span class="fc" id="L438">        HttpResponseBody&lt;ChangeCompanyUserStatusResponseDTO&gt; response = new ChangeCompanyUserStatusResponse();</span>
+        try {
+<span class="fc" id="L440">            Company company = companyDao.findByCompanyCode(changeCompanyUserStatusRequestDTO.getCompanyCode());</span>
+<span class="pc bpc" id="L441" title="1 of 2 branches missed.">            if (company == null) {</span>
+<span class="fc" id="L442">                response.setError(&quot;Company not found&quot;);</span>
+<span class="fc" id="L443">                response.setMessage(&quot;Company not found&quot;);</span>
+            } else {
+<span class="nc" id="L445">                Long userId = userDao.findUserIdByUserCode(jwtService.extractUserCodeFromJwt());</span>
+<span class="nc" id="L446">                UserCompanyRoles userCompanyRoles = userCompanyRolesdao.findByUserId(userId, company.getCoreEntityId());</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">                if (userCompanyRoles == null) {</span>
+<span class="nc" id="L448">                    response.setError(&quot;User not in company&quot;);</span>
+<span class="nc" id="L449">                    response.setMessage(&quot;User not in company&quot;);</span>
+                } else {
+<span class="nc bnc" id="L451" title="All 2 branches missed.">                    if (checkStatus(userCompanyRoles.getStatus())) {</span>
+<span class="nc" id="L452">                        response.setMessage(&quot;User already has enough rights&quot;);</span>
+                    } else {
+<span class="nc bnc" id="L454" title="All 2 branches missed.">                        if (hasPermissionToChangeRole(userCompanyRoles.getRole())) {</span>
+<span class="nc" id="L455">                            response.setMessage(&quot;User doesnt have enough rights&quot;);</span>
+                        } else {
+                            try {
+<span class="nc" id="L458">                                CompanyUser userCandidateForId = userDao.findUserByUserCode(changeCompanyUserStatusRequestDTO.getUserCode());</span>
+<span class="nc" id="L459">                                Long userCandidateId = userCandidateForId.getCoreEntityId();</span>
+<span class="nc bnc" id="L460" title="All 2 branches missed.">                                if (Objects.equals(userCandidateId, userId)) {</span>
+<span class="nc" id="L461">                                    response.setMessage(&quot;You cant ban yourself&quot;);</span>
+                                } else {
+<span class="nc" id="L463">                                    UserCompanyRoles userCandidate = userCompanyRolesdao.findByUserId(userCandidateId, company.getCoreEntityId());</span>
+<span class="nc bnc" id="L464" title="All 2 branches missed.">                                    if (userCandidate == null) {</span>
+<span class="nc" id="L465">                                        response.setError(&quot;User not in company&quot;);</span>
+                                    } else {
+<span class="nc bnc" id="L467" title="All 2 branches missed.">                                        if (!hasHigherRole(userCompanyRoles.getRole(), userCandidate.getRole())) {</span>
+<span class="nc" id="L468">                                            response.setMessage(&quot;You cant ban admin or owner&quot;);</span>
+                                        } else {
+<span class="nc" id="L470">                                            userCandidate = userCompanyRolesMapper.changeUserStatus(userCandidate, changeCompanyUserStatusRequestDTO.getNewStatusId());</span>
+<span class="nc" id="L471">                                            companyTrans.saveCompanyUserRole(userCandidate);</span>
+<span class="nc" id="L472">                                            response.setMessage(&quot;User changed status successfully&quot;);</span>
+<span class="nc" id="L473">                                            StatusEnum newStatus = StatusEnum.fromId(changeCompanyUserStatusRequestDTO.getNewStatusId().intValue());</span>
+<span class="nc" id="L474">                                            response.setResponseEntity(new ChangeCompanyUserStatusResponseDTO(userCandidateForId.getUsername(), newStatus.getStatus()));</span>
+                                        }
+                                    }
+                                }
+<span class="nc" id="L478">                            } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L479">                                response.setError(&quot;Transaction failed&quot;);</span>
+<span class="nc" id="L480">                                response.setMessage(&quot;Data integrity violation: &quot; + e.getMessage());</span>
+<span class="nc" id="L481">                                logger.error(&quot;Data integrity error while saving company and user role: &quot;, e);</span>
+<span class="nc" id="L482">                            } catch (Exception e) {</span>
+<span class="nc" id="L483">                                response.setError(&quot;Transaction failed&quot;);</span>
+<span class="nc" id="L484">                                response.setMessage(&quot;Unexpected error: &quot; + e.getMessage());</span>
+<span class="nc" id="L485">                                logger.error(&quot;Unexpected error while saving company and user role: &quot;, e);</span>
+<span class="nc" id="L486">                            }</span>
+                        }
+                    }
+                }
+            }
+<span class="nc" id="L491">        } catch (</span>
+                JwtException e) {
+<span class="nc" id="L493">            response.setError(&quot;get user error&quot;);</span>
+<span class="nc" id="L494">            response.setMessage(&quot;get user error&quot;);</span>
+<span class="fc" id="L495">        }</span>
+<span class="pc bpc" id="L496" title="1 of 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+
+<span class="fc" id="L498">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;GetCompanyByCodeResponseDTO&gt; getCompanyByCode(GetCompanyByCodeRequestDTO getCompanyByCodeRequestDTO) {
+<span class="nc" id="L503">        HttpResponseBody&lt;GetCompanyByCodeResponseDTO&gt; response = new GetCompanyByCodeResponse();</span>
+<span class="nc" id="L504">        String jwt = jwtService.extractUserCodeFromJwt();</span>
+
+<span class="nc" id="L506">        GetCompanyByCodeResponseDTO company = companyDao.findCompanyByCodeWithUrls(getCompanyByCodeRequestDTO.companyCode(), jwt);</span>
+<span class="nc bnc" id="L507" title="All 2 branches missed.">        if (company == null) {</span>
+<span class="nc" id="L508">            response.setMessage(&quot;Company not found&quot;);</span>
+<span class="nc" id="L509">            response.setResponseEntity(null);</span>
+        } else {
+<span class="nc" id="L511">            response.setResponseEntity(company);</span>
+<span class="nc" id="L512">            response.setMessage(&quot;Company found&quot;);</span>
+        }
+<span class="nc bnc" id="L514" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+
+<span class="nc" id="L516">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;AllUserCompaniesResponseListDTO&gt; getAllUserCompanies() {
+<span class="nc" id="L521">        HttpResponseBody&lt;AllUserCompaniesResponseListDTO&gt; response = new GetAllUserCompaniesResponse();</span>
+<span class="nc" id="L522">        String code = jwtService.extractUserCodeFromJwt();</span>
+<span class="nc bnc" id="L523" title="All 2 branches missed.">        if (code == null) {</span>
+<span class="nc" id="L524">            response.setError(&quot;User not authorized&quot;);</span>
+        } else {
+<span class="nc" id="L526">            List&lt;GetAllUserCompaniesResponseDTO&gt; companiesList = companyDao.findAllUsersCompanies(code);</span>
+<span class="nc bnc" id="L527" title="All 2 branches missed.">            if (companiesList.isEmpty()) {</span>
+<span class="nc" id="L528">                response.setMessage(&quot;Companies not found&quot;);</span>
+            } else {
+<span class="nc" id="L530">                AllUserCompaniesResponseListDTO allCompaniesResponseListDTO = new AllUserCompaniesResponseListDTO(companiesList);</span>
+<span class="nc" id="L531">                response.setResponseEntity(allCompaniesResponseListDTO);</span>
+<span class="nc" id="L532">                response.setMessage(&quot;All companies found&quot;);</span>
+            }
+        }
+<span class="nc bnc" id="L535" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+
+<span class="nc" id="L537">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;GetAllCompanyUsersResponseListDTO&gt; getAllCompanyUsers(GetAllCompanyUsersRequestDTO getAllCompanyUsersRequestDTO) {
+<span class="nc" id="L542">        HttpResponseBody&lt;GetAllCompanyUsersResponseListDTO&gt; response = new GetAllCompanyUsersResponse();</span>
+<span class="nc" id="L543">        List&lt;GetAllCompanyUsersResponseDTO&gt; companyUsersList = companyDao.findAllCompanyUsers(getAllCompanyUsersRequestDTO.companyCode());</span>
+<span class="nc bnc" id="L544" title="All 2 branches missed.">        if (companyUsersList.isEmpty()) {</span>
+<span class="nc" id="L545">            response.setMessage(&quot;Company users not found&quot;);</span>
+<span class="nc" id="L546">            response.setError(&quot;No users in company&quot;);</span>
+        } else {
+<span class="nc" id="L548">            response.setMessage(&quot;Company users found&quot;);</span>
+<span class="nc" id="L549">            response.setResponseEntity(new GetAllCompanyUsersResponseListDTO(companyUsersList));</span>
+        }
+<span class="nc bnc" id="L551" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+<span class="nc" id="L552">        return response;</span>
+    }
+
+
+    @Override
+    public HttpResponseBody&lt;FindCompanyByNameResponseListDTO&gt; findCompaniesByName(FindCompanyByNameRequestDTO findCompanyByNameRequestDTO) {
+<span class="nc" id="L558">        HttpResponseBody&lt;FindCompanyByNameResponseListDTO&gt; response = new FindCompanyByNameResponse();</span>
+
+<span class="nc" id="L560">        List&lt;FindCompanyByNameResponseDTO&gt; companies = companyDao.findCompaniesByName(findCompanyByNameRequestDTO.companyName());</span>
+<span class="nc bnc" id="L561" title="All 2 branches missed.">        if (companies.isEmpty()) {</span>
+
+<span class="nc" id="L563">            response.setMessage(&quot;Companies not found&quot;);</span>
+<span class="nc" id="L564">            response.setResponseEntity(null);</span>
+        } else {
+<span class="nc" id="L566">            FindCompanyByNameResponseListDTO companiesDTO = new FindCompanyByNameResponseListDTO(companies);</span>
+<span class="nc" id="L567">            response.setMessage(&quot;Companies found&quot;);</span>
+<span class="nc" id="L568">            response.setResponseEntity(companiesDTO);</span>
+        }
+<span class="nc bnc" id="L570" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+
+<span class="nc" id="L572">        return response;</span>
+    }
+
+
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

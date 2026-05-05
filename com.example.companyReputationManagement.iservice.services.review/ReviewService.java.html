@@ -1,0 +1,789 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReviewService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.iservice.services.review</a> &gt; <span class="el_source">ReviewService.java</span></div><h1>ReviewService.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.iservice.services.review;
+
+import com.example.companyReputationManagement.dao.*;
+import com.example.companyReputationManagement.dto.review.find.ReviewRequestDto;
+import com.example.companyReputationManagement.dto.review.find.ReviewResponse;
+import com.example.companyReputationManagement.dto.review.find.ReviewResponseListDto;
+import com.example.companyReputationManagement.dto.review.generate_chart.GenerateChartRequestDto;
+import com.example.companyReputationManagement.dto.review.generate_chart.GenerateChartResponse;
+import com.example.companyReputationManagement.dto.review.generate_chart.GenerateChartResponseDto;
+import com.example.companyReputationManagement.dto.review.get_all.GetReviewRequestDto;
+import com.example.companyReputationManagement.dto.review.get_all.GetReviewResponse;
+import com.example.companyReputationManagement.dto.review.get_all.GetReviewResponseListDto;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentRequestDTO;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponse;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseDTO;
+import com.example.companyReputationManagement.dto.review.get_all_by_sent.GetAllBySentResponseListDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordRequestDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordResponse;
+import com.example.companyReputationManagement.dto.review.keyWord.KeyWordResponseDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.BotRequestDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.BotResponseDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.BotReviewDTO;
+import com.example.companyReputationManagement.dto.review.keyWord.bot.InsightDTO;
+import com.example.companyReputationManagement.dto.review.report.GenerateReportRequestDTO;
+import com.example.companyReputationManagement.dto.review.report.GenerateReportResponse;
+import com.example.companyReputationManagement.dto.review.report.GenerateReportResponseDTO;
+import com.example.companyReputationManagement.external_api.ExternalBotClient;
+import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
+import com.example.companyReputationManagement.iservice.IJwtService;
+import com.example.companyReputationManagement.iservice.IReviewService;
+import com.example.companyReputationManagement.iservice.services.transactions.ReviewsTrans;
+import com.example.companyReputationManagement.mapper.ReviewMapper;
+import com.example.companyReputationManagement.models.Company;
+import com.example.companyReputationManagement.models.CompanySourceUrl;
+import com.example.companyReputationManagement.models.Review;
+import com.example.companyReputationManagement.models.ReviewInsight;
+import com.example.companyReputationManagement.models.enums.RoleEnum;
+import com.example.companyReputationManagement.models.enums.Sentiment;
+import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfWriter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartRenderingInfo;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.stereotype.Service;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.Font;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import static com.example.companyReputationManagement.constants.SysConst.OC_BUGS;
+import static com.example.companyReputationManagement.constants.SysConst.OC_OK;
+import static org.hibernate.Hibernate.size;
+
+<span class="fc" id="L90">@Slf4j</span>
+@Service
+@RequiredArgsConstructor
+public class ReviewService implements IReviewService {
+    private final ReviewMapper reviewMapper;
+    private final CompanyDao companyDao;
+    private final ReviewsTrans reviewsTrans;
+    private final ReviewDao reviewDao;
+    private final UserCompanyRolesDao userCompanyRolesDao;
+    private final CompanySourceUrlDao companySourceUrlDao;
+    private final IJwtService jwtService;
+    private final ExternalBotClient externalBotClient;
+    private final ReviewInsightDao reviewInsightDao;
+
+    private Timestamp dateFormat(String date) {
+<span class="nc" id="L105">        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(&quot;dd.MM.yyyy HH:mm&quot;);</span>
+<span class="nc" id="L106">        LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);</span>
+<span class="nc" id="L107">        return Timestamp.valueOf(localDateTime);</span>
+    }
+
+
+    private void findReviewsOtzovik(Company company, List&lt;Review&gt; reviews, HttpResponseBody&lt;ReviewResponseListDto&gt; response) {
+<span class="nc" id="L112">        String url = findUrl(company.getCoreEntityId());</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        if (url == null) {</span>
+<span class="nc" id="L114">            response.setError(&quot;company not found on site&quot;);</span>
+<span class="nc" id="L115">            response.setMessage(&quot;Company not found on site&quot;);</span>
+        } else {
+<span class="nc" id="L117">            getReviewsList(url, company.getCoreEntityId(), reviews);</span>
+        }
+
+<span class="nc" id="L120">    }</span>
+
+    private void parseChrome(String url, Long companyId) {
+<span class="nc" id="L123">        boolean hasMore = true;</span>
+        String urlCom;
+<span class="nc" id="L125">        int rating = 0;</span>
+<span class="nc" id="L126">        List&lt;Review&gt; reviews = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L127">        int page = 0;</span>
+<span class="nc" id="L128">        int seconds = 10;</span>
+<span class="nc" id="L129">        Duration duration = Duration.ofSeconds(seconds);</span>
+<span class="nc" id="L130">        ChromeOptions options = new ChromeOptions();</span>
+<span class="nc" id="L131">        options.addArguments(&quot;--blink-settings=imagesEnabled=false&quot;);</span>
+<span class="nc" id="L132">        options.addArguments(&quot;--disable-extensions&quot;);</span>
+<span class="nc" id="L133">        options.addArguments(&quot;--disable-popup-blocking&quot;);</span>
+<span class="nc" id="L134">        options.addArguments(&quot;--disable-default-apps&quot;);</span>
+<span class="nc" id="L135">        options.addArguments(&quot;--headless&quot;, &quot;--disable-gpu&quot;, &quot;--window-size=1920x1080&quot;);</span>
+<span class="nc" id="L136">        ChromeDriver driver = new ChromeDriver(options);</span>
+        try {
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            while (hasMore) {</span>
+                try {
+<span class="nc" id="L140">                    ++page;</span>
+<span class="nc" id="L141">                    urlCom = url + &quot;/comment-page-&quot; + page + &quot;/#comments&quot;;</span>
+<span class="nc" id="L142">                    driver.get(urlCom);</span>
+<span class="nc" id="L143">                    WebDriverWait wait = new WebDriverWait(driver, duration);</span>
+                    try {
+<span class="nc" id="L145">                        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(&quot;.wpd-comment&quot;)));</span>
+<span class="nc" id="L146">                    } catch (TimeoutException e) {</span>
+<span class="nc" id="L147">                        System.out.println(&quot;Элемент 'comment' не найден. Завершаем обработку.&quot;);</span>
+<span class="nc" id="L148">                        hasMore = false;</span>
+<span class="nc" id="L149">                    }</span>
+<span class="nc" id="L150">                    String pageSource = driver.getPageSource();</span>
+<span class="nc" id="L151">                    Document doc = Jsoup.parse(pageSource);</span>
+<span class="nc" id="L152">                    Elements elements = doc.select(&quot;.wpd-comment:not(.wpd-reply)&quot;);</span>
+<span class="nc" id="L153">                    elementsProc(companyId, reviews, rating, elements);</span>
+
+<span class="nc" id="L155">                } catch (Exception e) {</span>
+<span class="nc" id="L156">                    System.out.println(e.getMessage());</span>
+<span class="nc" id="L157">                }</span>
+            }
+
+<span class="nc" id="L160">        } catch (Exception e) {</span>
+<span class="nc" id="L161">            log.error(&quot;Ошибка запуска драйвера: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L162">        }</span>
+<span class="nc" id="L163">        driver.quit();</span>
+        try {
+<span class="nc" id="L165">            reviewsTrans.saveAll(reviews);</span>
+<span class="nc" id="L166">        } catch (Exception e) {</span>
+<span class="nc" id="L167">            log.error(&quot;Error saving reviews&quot;, e);</span>
+<span class="nc" id="L168">            Thread.currentThread().interrupt();</span>
+<span class="nc" id="L169">        }</span>
+<span class="nc" id="L170">    }</span>
+
+    private void getReviewsList(String url, Long companyId, List&lt;Review&gt; reviews) {
+        try {
+<span class="nc" id="L174">            int rating = 0;</span>
+<span class="nc" id="L175">            Connection.Response response1 = Jsoup.connect(url)</span>
+<span class="nc" id="L176">                    .userAgent(&quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64)&quot;)</span>
+<span class="nc" id="L177">                    .header(&quot;Accept-Language&quot;, &quot;en-US,en;q=0.9&quot;)</span>
+<span class="nc" id="L178">                    .header(&quot;Accept&quot;, &quot;text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8&quot;)</span>
+<span class="nc" id="L179">                    .referrer(&quot;https://www.google.com/&quot;)</span>
+<span class="nc" id="L180">                    .timeout(15_000)</span>
+<span class="nc" id="L181">                    .method(Connection.Method.GET)</span>
+<span class="nc" id="L182">                    .execute();</span>
+<span class="nc" id="L183">            Document doc = response1.parse();</span>
+
+<span class="nc" id="L185">            Elements elements = doc.select(&quot;.wpd-comment:not(.wpd-reply)&quot;);</span>
+<span class="nc bnc" id="L186" title="All 4 branches missed.">            if (elements.size() &gt;= 99 || elements.isEmpty()) {</span>
+<span class="nc" id="L187">                CompletableFuture.runAsync(() -&gt; parseChrome(url, companyId));</span>
+
+            } else {
+<span class="nc" id="L190">                elementsProc(companyId, reviews, rating, elements);</span>
+            }
+<span class="nc" id="L192">        } catch (Exception e) {</span>
+<span class="nc" id="L193">            System.out.println(e.getMessage());</span>
+<span class="nc" id="L194">        }</span>
+<span class="nc" id="L195">    }</span>
+
+    private void elementsProc(Long companyId, List&lt;Review&gt; reviews, int rating, Elements elements) {
+<span class="nc bnc" id="L198" title="All 2 branches missed.">        for (Element element : elements) {</span>
+<span class="nc" id="L199">            Elements reviewBlocks = element.select(&quot;.description&quot;);</span>
+<span class="nc" id="L200">            Elements ratingBlocks = element.select(&quot;.wpd-cf-value&quot;);</span>
+<span class="nc" id="L201">            Elements authors = element.select(&quot;.wpd-comment-author&quot;);</span>
+<span class="nc" id="L202">            Elements dates = element.select(&quot;.wpd-comment-date&quot;);</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">            boolean check = !ratingBlocks.isEmpty();</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">            for (int i = 0; i &lt; reviewBlocks.size(); i++, rating = 0) {</span>
+                try {
+<span class="nc" id="L206">                    String dateStr = dates.get(i).attr(&quot;title&quot;);</span>
+<span class="nc" id="L207">                    Timestamp date = dateFormat(dateStr);</span>
+<span class="nc" id="L208">                    String text = reviewBlocks.get(i).text();</span>
+<span class="nc bnc" id="L209" title="All 4 branches missed.">                    if (check &amp;&amp; i &lt; ratingBlocks.size()) {</span>
+<span class="nc" id="L210">                        Elements stars = ratingBlocks.get(i).select(&quot;.fas.fa-star&quot;);</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">                        for (Element star : stars) {</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">                            if (star.hasClass(&quot;wcf-active-star&quot;)) {</span>
+<span class="nc" id="L213">                                rating++;</span>
+                            }
+<span class="nc" id="L215">                        }</span>
+                    }
+<span class="nc bnc" id="L217" title="All 2 branches missed.">                    String author = i &lt; authors.size() ? authors.get(i).text() : &quot;Аноним&quot;;</span>
+<span class="nc" id="L218">                    Review review = reviewMapper.createReview(text, author, rating, companyId, 1L, date);</span>
+<span class="nc" id="L219">                    reviews.add(review);</span>
+<span class="nc" id="L220">                } catch (Exception e) {</span>
+<span class="nc" id="L221">                    log.error(&quot;Error while processing reviews&quot;, e);</span>
+<span class="nc" id="L222">                    break;</span>
+<span class="nc" id="L223">                }</span>
+            }
+<span class="nc" id="L225">        }</span>
+<span class="nc" id="L226">    }</span>
+
+    private String findUrl(Long companyId) {
+<span class="nc" id="L229">        CompanySourceUrl url = companySourceUrlDao.findByCompanyId(companyId);</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">        return url == null ? null : url.getSourceUrl();</span>
+    }
+
+    void parseReviews(Company company) {
+<span class="nc" id="L234">        List&lt;Review&gt; reviews = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L235">        String url = findUrl(company.getCoreEntityId());</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">        if (url == null) {</span>
+<span class="nc" id="L237">            log.error(&quot;company not found on site&quot;);</span>
+        } else {
+            try {
+<span class="nc" id="L240">                getReviewsList(url, company.getCoreEntityId(), reviews);</span>
+<span class="nc" id="L241">            } catch (Exception e) {</span>
+<span class="nc" id="L242">                log.error(&quot;Error while processing reviews&quot;);</span>
+<span class="nc" id="L243">            }</span>
+            try {
+<span class="nc" id="L245">                reviewsTrans.saveAll(reviews);</span>
+<span class="nc" id="L246">            } catch (Exception e) {</span>
+
+<span class="nc" id="L248">                log.error(&quot;Error while saving reviews&quot;);</span>
+<span class="nc" id="L249">            }</span>
+        }
+<span class="nc" id="L251">    }</span>
+
+    //Создание картинок графиков и отчёта
+    private byte[] createChartPng(JFreeChart chart) throws IOException {
+<span class="nc" id="L255">        CategoryPlot plot = (CategoryPlot) chart.getPlot();</span>
+<span class="nc" id="L256">        CategoryAxis xAxis = plot.getDomainAxis();</span>
+<span class="nc" id="L257">        xAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4));</span>
+<span class="nc" id="L258">        xAxis.setTickLabelFont(new Font(&quot;SansSerif&quot;, Font.PLAIN, 10));</span>
+<span class="nc" id="L259">        plot.setBackgroundPaint(Color.WHITE);</span>
+<span class="nc" id="L260">        plot.setRangeGridlinePaint(Color.LIGHT_GRAY);</span>
+<span class="nc" id="L261">        ChartRenderingInfo info = new ChartRenderingInfo();</span>
+<span class="nc" id="L262">        BufferedImage image = chart.createBufferedImage(900, 750, info);</span>
+<span class="nc" id="L263">        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L264">        ImageIO.write(image, &quot;PNG&quot;, byteArrayOutputStream);</span>
+<span class="nc" id="L265">        return byteArrayOutputStream.toByteArray();</span>
+    }
+
+    private byte[] generateAverageChart(List&lt;Review&gt; reviews, String compName) throws IOException {
+<span class="nc" id="L269">        DefaultCategoryDataset dataset = new DefaultCategoryDataset();</span>
+<span class="nc" id="L270">        Map&lt;String, List&lt;Integer&gt;&gt; reviewsByDate = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">        for (Review review : reviews) {</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">            if (review.getRating() == 0) continue;</span>
+<span class="nc" id="L273">            String formattedDate = review.getPublishedDate().toLocalDateTime().toLocalDate().toString().substring(0, 7); // Группировка по году-месяцу</span>
+<span class="nc" id="L274">            reviewsByDate.computeIfAbsent(formattedDate, k -&gt; new ArrayList&lt;&gt;()).add(review.getRating());</span>
+<span class="nc" id="L275">        }</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">        for (Map.Entry&lt;String, List&lt;Integer&gt;&gt; entry : reviewsByDate.entrySet()) {</span>
+<span class="nc" id="L277">            double averageRating = entry.getValue().stream().mapToDouble(Integer::doubleValue).average().orElse(0);</span>
+<span class="nc" id="L278">            dataset.addValue(averageRating, &quot;Average Rating&quot;, entry.getKey());</span>
+<span class="nc" id="L279">        }</span>
+<span class="nc" id="L280">        JFreeChart chart = ChartFactory.createLineChart(</span>
+                compName + &quot; Average Rating&quot;, // Заголовок
+                &quot;Date&quot;,         // Ось X
+                &quot;Average Rating&quot;,          // Ось Y
+                dataset,           // Набор данных
+                PlotOrientation.VERTICAL,
+                true,              // Легенда
+                true,              // Подсказки
+                false              // Статистика
+        );
+
+<span class="nc" id="L291">        return createChartPng(chart);</span>
+    }
+
+    private byte[] generateSentChart(List&lt;Review&gt; reviews, String compName) throws IOException {
+<span class="nc" id="L295">        DefaultCategoryDataset dataset = new DefaultCategoryDataset();</span>
+<span class="nc" id="L296">        Map&lt;SentimentTypeEnum, Integer&gt; countByType = new EnumMap&lt;&gt;(SentimentTypeEnum.class);</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">        for (SentimentTypeEnum type : SentimentTypeEnum.values()) {</span>
+<span class="nc" id="L298">            countByType.put(type, 0);</span>
+        }
+<span class="nc bnc" id="L300" title="All 2 branches missed.">        for (Review review : reviews) {</span>
+<span class="nc" id="L301">            SentimentTypeEnum type = review.getSentimentTypeId();</span>
+<span class="nc" id="L302">            countByType.put(type, countByType.get(type) + 1);</span>
+<span class="nc" id="L303">        }</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">        for (Map.Entry&lt;SentimentTypeEnum, Integer&gt; entry : countByType.entrySet()) {</span>
+<span class="nc bnc" id="L305" title="All 4 branches missed.">            String label = switch (entry.getKey()) {</span>
+<span class="nc" id="L306">                case POSITIVE -&gt; &quot;POSITIVE&quot;;</span>
+<span class="nc" id="L307">                case NEUTRAL -&gt; &quot;NEUTRAL&quot;;</span>
+<span class="nc" id="L308">                case NEGATIVE -&gt; &quot;NEGATIVE&quot;;</span>
+<span class="nc" id="L309">                case UNRATED -&gt; &quot;UNRATED&quot;;</span>
+            };
+<span class="nc" id="L311">            dataset.addValue(entry.getValue(), &quot;Number of reviews&quot;, label);</span>
+<span class="nc" id="L312">        }</span>
+<span class="nc" id="L313">        JFreeChart chart = ChartFactory.createBarChart(</span>
+                compName + &quot; – Number of reviews by type&quot;, // Заголовок
+                &quot;Review type&quot;,                               // Ось X
+                &quot;Quantity&quot;,                               // Ось Y
+                dataset,
+                PlotOrientation.VERTICAL,
+                true, true, false
+        );
+
+<span class="nc" id="L322">        return createChartPng(chart);</span>
+    }
+
+    private byte[] generateReport(List&lt;Review&gt; reviews, String compName, Long compId) throws DocumentException, IOException {
+<span class="nc" id="L326">        ByteArrayOutputStream out = new ByteArrayOutputStream();</span>
+<span class="nc" id="L327">        com.itextpdf.text.Document document = new com.itextpdf.text.Document(PageSize.A4);</span>
+<span class="nc" id="L328">        PdfWriter.getInstance(document, out);</span>
+<span class="nc" id="L329">        document.open();</span>
+<span class="nc" id="L330">        com.itextpdf.text.Font titleFont = ruFont(16, Font.BOLD);</span>
+<span class="nc" id="L331">        com.itextpdf.text.Font bodyFont = ruFont(12, Font.ROMAN_BASELINE);</span>
+
+
+<span class="nc" id="L334">        LocalDate start = LocalDate.now().withDayOfMonth(1);</span>
+<span class="nc" id="L335">        LocalDate end = start.plusMonths(1).minusDays(1);</span>
+<span class="nc" id="L336">        Timestamp startTimestamp = Timestamp.valueOf(start.atStartOfDay());</span>
+<span class="nc" id="L337">        Timestamp endTimestamp = Timestamp.valueOf(end.atTime(LocalTime.MAX));</span>
+//        com.itextpdf.text.Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
+//        com.itextpdf.text.Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
+<span class="nc" id="L340">        LocalDate currentDate = LocalDate.now();</span>
+
+<span class="nc" id="L342">        String monthName = currentDate.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault());</span>
+<span class="nc" id="L343">        int day = currentDate.getDayOfMonth();</span>
+<span class="nc" id="L344">        int year = currentDate.getYear();</span>
+<span class="nc" id="L345">        Paragraph title = new Paragraph(&quot;REPORT\n\n&quot;, titleFont);</span>
+<span class="nc" id="L346">        title.setAlignment(com.itextpdf.text.Element.ALIGN_CENTER);</span>
+<span class="nc" id="L347">        document.add(title);</span>
+<span class="nc" id="L348">        document.add(new Paragraph(&quot;Company name: &quot; + compName, bodyFont));</span>
+<span class="nc" id="L349">        document.add(new Paragraph(&quot;Date of report generation: &quot; + day + &quot; &quot; + monthName + &quot; &quot; + year, bodyFont));</span>
+<span class="nc" id="L350">        document.add(new Paragraph(&quot;\n&quot;));</span>
+        String str;
+<span class="nc" id="L352">        Double averageReview = reviewDao.getAverageRating(compId, startTimestamp, endTimestamp);</span>
+<span class="nc bnc" id="L353" title="All 2 branches missed.">        if (averageReview == null) {</span>
+<span class="nc" id="L354">            averageReview = 0.0;</span>
+<span class="nc" id="L355">            str = &quot;No reviews at this month&quot;;</span>
+        } else {
+<span class="nc" id="L357">            str = &quot;Average rating for month: &quot;;</span>
+        }
+<span class="nc" id="L359">        document.add(new Paragraph(&quot;The purpose of the report is to provide a summary analysis of user reviews over a period.\n&quot;, bodyFont));</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">        String avgStr = averageReview == 0.0 ? &quot; &quot; : String.format(Locale.US, &quot;%.2f&quot;, averageReview);</span>
+
+<span class="nc" id="L362">        document.add(new Paragraph(str + avgStr, bodyFont));</span>
+<span class="nc" id="L363">        document.add(new Paragraph(&quot;\nBelow are graphs with data visualization.\n\n&quot;, bodyFont));</span>
+
+<span class="nc" id="L365">        document.setPageSize(PageSize.A4.rotate());</span>
+<span class="nc" id="L366">        document.newPage();</span>
+
+<span class="nc" id="L368">        byte[] chart1Bytes = generateAverageChart(reviews, compName);</span>
+<span class="nc" id="L369">        com.itextpdf.text.Image chart1 = com.itextpdf.text.Image.getInstance(chart1Bytes);</span>
+<span class="nc" id="L370">        chart1.scaleToFit(PageSize.A4.getHeight() - 125, PageSize.A4.getWidth() - 125);</span>
+<span class="nc" id="L371">        chart1.setAlignment(com.itextpdf.text.Image.ALIGN_CENTER);</span>
+<span class="nc" id="L372">        document.add(new Paragraph(&quot;Chart 1. Average rating by reviews for all time\n\n&quot;, bodyFont));</span>
+<span class="nc" id="L373">        document.add(chart1);</span>
+<span class="nc" id="L374">        document.setPageSize(PageSize.A4.rotate());</span>
+<span class="nc" id="L375">        document.newPage();</span>
+
+<span class="nc" id="L377">        byte[] chart2Bytes = generateSentChart(reviews, compName);</span>
+<span class="nc" id="L378">        com.itextpdf.text.Image chart2 = com.itextpdf.text.Image.getInstance(chart2Bytes);</span>
+<span class="nc" id="L379">        chart2.scaleToFit(PageSize.A4.getHeight() - 125, PageSize.A4.getWidth() - 125);</span>
+<span class="nc" id="L380">        chart2.setAlignment(com.itextpdf.text.Image.ALIGN_CENTER);</span>
+<span class="nc" id="L381">        document.add(new Paragraph(&quot;Graph 2. Distribution of reviews by tonality for all time\n\n&quot;, bodyFont));</span>
+<span class="nc" id="L382">        document.add(chart2);</span>
+<span class="nc" id="L383">        document.setPageSize(PageSize.A4.rotate());</span>
+<span class="nc" id="L384">        document.newPage();</span>
+
+<span class="nc" id="L386">        List&lt;Review&gt; reviewsForMonth = reviewDao.findAllByCompanyIdForMonth(compId, startTimestamp, endTimestamp);</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">        if (!reviewsForMonth.isEmpty()) {</span>
+<span class="nc" id="L388">            chart1Bytes = generateSentChart(reviewsForMonth, compName);</span>
+<span class="nc" id="L389">            com.itextpdf.text.Image chart3 = com.itextpdf.text.Image.getInstance(chart1Bytes);</span>
+<span class="nc" id="L390">            chart3.scaleToFit(PageSize.A4.getHeight() - 125, PageSize.A4.getWidth() - 125);</span>
+<span class="nc" id="L391">            chart3.setAlignment(com.itextpdf.text.Image.ALIGN_CENTER);</span>
+<span class="nc" id="L392">            document.add(new Paragraph(&quot;Graph 3. Distribution of reviews by tonality for month\n\n&quot;, bodyFont));</span>
+<span class="nc" id="L393">            document.add(chart3);</span>
+<span class="nc" id="L394">            document.setPageSize(PageSize.A4.rotate());</span>
+        }
+
+<span class="nc" id="L397">        appendReviewInsightsSection(document, compId, bodyFont);</span>
+<span class="nc" id="L398">        Paragraph footer = new Paragraph(</span>
+                &quot;The report is generated automatically based on data received from the feedback system..\n&quot; +
+                        &quot;For more information, please contact the analytical department..&quot;,
+                bodyFont);
+<span class="nc" id="L402">        footer.setSpacingBefore(50);</span>
+
+<span class="nc" id="L404">        document.add(footer);</span>
+
+<span class="nc" id="L406">        document.close();</span>
+
+<span class="nc" id="L408">        return out.toByteArray();</span>
+    }
+
+    private static com.itextpdf.text.Font ruFont(float size, int style) {
+        try {
+<span class="nc" id="L413">            BaseFont bf = BaseFont.createFont(</span>
+<span class="nc" id="L414">                    Objects.requireNonNull(</span>
+<span class="nc" id="L415">                            ReviewService.class.getClassLoader().getResource(&quot;fonts/DejaVuSans.ttf&quot;)</span>
+<span class="nc" id="L416">                    ).toString(),</span>
+                    BaseFont.IDENTITY_H,
+                    BaseFont.EMBEDDED
+            );
+
+<span class="nc" id="L421">            return new com.itextpdf.text.Font(bf, size, style, BaseColor.BLACK);</span>
+<span class="nc" id="L422">        } catch (Exception e) {</span>
+<span class="nc" id="L423">            throw new RuntimeException(&quot;Cannot load Cyrillic font&quot;, e);</span>
+        }
+    }
+
+    private void appendReviewInsightsSection(com.itextpdf.text.Document document, Long compId, com.itextpdf.text.Font bodyFont) throws DocumentException {
+
+
+<span class="nc" id="L430">        List&lt;ReviewInsight&gt; latestInsights = reviewInsightDao.findLatestByCompany(compId);</span>
+
+<span class="nc bnc" id="L432" title="All 2 branches missed.">        if (latestInsights.isEmpty()) {</span>
+<span class="nc" id="L433">            return;</span>
+        }
+
+<span class="nc" id="L436">        document.setPageSize(PageSize.A4);</span>
+<span class="nc" id="L437">        document.newPage();</span>
+
+<span class="nc" id="L439">        com.itextpdf.text.Font headerFont = ruFont(14, Font.BOLD);</span>
+<span class="nc" id="L440">        com.itextpdf.text.Font subHeaderFont = ruFont(13, Font.BOLD);</span>
+<span class="nc" id="L441">        document.add(new Paragraph(&quot;Key insights from reviews&quot;, headerFont));</span>
+<span class="nc" id="L442">        document.add(new Paragraph(&quot;Summary of highlighted aspects extracted from user feedback.\n&quot;, bodyFont));</span>
+
+<span class="nc bnc" id="L444" title="All 2 branches missed.">        for (ReviewInsight insight : latestInsights) {</span>
+<span class="nc" id="L445">            log.info(&quot;PDF insight: id={}, type={}, createdAt={}&quot;,</span>
+<span class="nc" id="L446">                    insight.getId(),</span>
+<span class="nc" id="L447">                    insight.getSentimentType(),</span>
+<span class="nc" id="L448">                    insight.getCreatedAt());</span>
+
+<span class="nc" id="L450">            BotResponseDTO r = insight.getResultJson();</span>
+<span class="nc" id="L451">            log.info(&quot;PDF content: likes={}, dislikes={}, requests={}&quot;,</span>
+<span class="nc" id="L452">                    size(r.topLikes()),</span>
+<span class="nc" id="L453">                    size(r.topDislikes()),</span>
+<span class="nc" id="L454">                    size(r.topDislikes())</span>
+            );
+
+<span class="nc" id="L457">            BotResponseDTO response = insight.getResultJson();</span>
+<span class="nc" id="L458">            String title = SentimentTypeEnum.toString(insight.getSentimentType()) + &quot; insights&quot;;</span>
+<span class="nc" id="L459">            document.add(new Paragraph(title, subHeaderFont));</span>
+<span class="nc" id="L460">            addInsightsList(document, &quot;Top likes&quot;, response.topLikes(), bodyFont);</span>
+<span class="nc" id="L461">            addInsightsList(document, &quot;Top dislikes&quot;, response.topDislikes(), bodyFont);</span>
+<span class="nc" id="L462">            addInsightsList(document, &quot;Top requests&quot;, response.topRequests(), bodyFont);</span>
+<span class="nc" id="L463">        }</span>
+<span class="nc" id="L464">    }</span>
+
+    private void addInsightsList(com.itextpdf.text.Document document, String title, List&lt;InsightDTO&gt; insights, com.itextpdf.text.Font bodyFont) throws DocumentException {
+<span class="nc bnc" id="L467" title="All 4 branches missed.">        if (insights == null || insights.isEmpty()) return;</span>
+
+<span class="nc" id="L469">        document.add(new Paragraph(title, bodyFont));</span>
+
+<span class="nc" id="L471">        com.itextpdf.text.List list = new com.itextpdf.text.List(false, 10);</span>
+
+<span class="nc" id="L473">        insights.stream()</span>
+<span class="nc" id="L474">                .filter(Objects::nonNull)</span>
+<span class="nc bnc" id="L475" title="All 4 branches missed.">                .filter(i -&gt; i.aspect() != null &amp;&amp; !i.aspect().isBlank())</span>
+<span class="nc" id="L476">                .sorted(Comparator.comparingInt(InsightDTO::count).reversed())</span>
+<span class="nc" id="L477">                .limit(30)</span>
+<span class="nc" id="L478">                .forEach(i -&gt; {</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">                    String aspect = i.aspect() == null ? &quot;&quot; : i.aspect().trim();</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">                    String statement = i.statement() == null ? &quot;&quot; : i.statement().trim();</span>
+
+<span class="nc" id="L482">                    String itemText = String.format(&quot;%s: %s (mentions: %d)&quot;,</span>
+                            aspect,
+<span class="nc bnc" id="L484" title="All 2 branches missed.">                            statement.isBlank() ? &quot;—&quot; : statement,</span>
+<span class="nc" id="L485">                            i.count());</span>
+
+<span class="nc" id="L487">                    ListItem item = new ListItem(itemText, bodyFont);</span>
+
+                    // 👇 добавляем цитату(ы)
+<span class="nc bnc" id="L490" title="All 4 branches missed.">                    if (i.evidence() != null &amp;&amp; !i.evidence().isEmpty()) {</span>
+<span class="nc" id="L491">                        com.itextpdf.text.List evList = new com.itextpdf.text.List(false, 8);</span>
+<span class="nc" id="L492">                        i.evidence().stream()</span>
+<span class="nc" id="L493">                                .filter(Objects::nonNull)</span>
+<span class="nc" id="L494">                                .limit(2) // можно 1 или 2</span>
+<span class="nc" id="L495">                                .forEach(ev -&gt; {</span>
+<span class="nc bnc" id="L496" title="All 2 branches missed.">                                    String rid = ev.reviewId() == null ? &quot;&quot; : ev.reviewId().trim();</span>
+<span class="nc bnc" id="L497" title="All 2 branches missed.">                                    String q = ev.quote() == null ? &quot;&quot; : ev.quote().trim();</span>
+<span class="nc bnc" id="L498" title="All 2 branches missed.">                                    if (q.length() &gt; 140) q = q.substring(0, 140) + &quot;…&quot;;</span>
+<span class="nc" id="L499">                                    evList.add(new ListItem(String.format(&quot;[%s] \&quot;%s\&quot;&quot;, rid, q), bodyFont));</span>
+<span class="nc" id="L500">                                });</span>
+<span class="nc" id="L501">                        item.add(evList);</span>
+                    }
+
+<span class="nc" id="L504">                    list.add(item);</span>
+<span class="nc" id="L505">                });</span>
+
+<span class="nc" id="L507">        document.add(list);</span>
+<span class="nc" id="L508">        document.add(new Paragraph(&quot;\n&quot;, bodyFont));</span>
+<span class="nc" id="L509">    }</span>
+
+
+    //Проверки
+    private boolean hasPermission(Long compId) {
+<span class="nc" id="L514">        String userCode = jwtService.extractUserCodeFromJwt();</span>
+<span class="nc" id="L515">        RoleEnum currentRole = userCompanyRolesDao.findRoleByUserCode(userCode, compId);</span>
+<span class="nc bnc" id="L516" title="All 4 branches missed.">        return currentRole.equals(RoleEnum.OWNER) || currentRole.equals(RoleEnum.ADMIN);</span>
+    }
+
+    private static boolean isValidAspect(String s) {
+<span class="nc bnc" id="L520" title="All 2 branches missed.">        if (s == null) return false;</span>
+<span class="nc" id="L521">        s = s.trim().toLowerCase();</span>
+
+<span class="nc bnc" id="L523" title="All 2 branches missed.">        if (s.length() &lt; 3) return false;</span>
+<span class="nc bnc" id="L524" title="All 2 branches missed.">        if (s.matches(&quot;[\\p{Punct}\\d\\s]+&quot;)) return false;</span>
+<span class="nc bnc" id="L525" title="All 2 branches missed.">        if (Set.of(&quot;censored&quot;, &quot;unknown&quot;, &quot;null&quot;).contains(s)) return false;</span>
+
+<span class="nc" id="L527">        return true;</span>
+    }
+
+    private boolean checkEmployment(Long compId) {
+<span class="nc" id="L531">        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc" id="L532">        Jwt jwt = (Jwt) authentication.getPrincipal();</span>
+<span class="nc" id="L533">        String userCode = jwt.getClaim(&quot;userCode&quot;);</span>
+<span class="nc bnc" id="L534" title="All 2 branches missed.">        return !userCompanyRolesDao.userExistInCompanyByUserCoe(userCode, compId);</span>
+    }
+
+    private Company findCompanyByCode(String companyCode) {
+<span class="nc" id="L538">        return companyDao.findByCompanyCode(companyCode);</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;ReviewResponseListDto&gt; findReviews(ReviewRequestDto reviewRequestDto) {
+<span class="nc" id="L543">        HttpResponseBody&lt;ReviewResponseListDto&gt; response = new ReviewResponse();</span>
+<span class="nc" id="L544">        Company comp = findCompanyByCode(reviewRequestDto.getCompanyCode());</span>
+<span class="nc bnc" id="L545" title="All 2 branches missed.">        if (comp == null) {</span>
+<span class="nc" id="L546">            response.setMessage(&quot;Company not found&quot;);</span>
+<span class="nc" id="L547">            response.setError(OC_BUGS);</span>
+        } else {
+<span class="nc bnc" id="L549" title="All 2 branches missed.">            if (!hasPermission(comp.getCoreEntityId())) {</span>
+<span class="nc" id="L550">                response.setMessage(&quot;User hasn't permission&quot;);</span>
+            } else {
+
+<span class="nc" id="L553">                List&lt;Review&gt; reviews = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L554">                findReviewsOtzovik(comp, reviews, response);</span>
+<span class="nc" id="L555">                log.debug(&quot;findReviewsOtzovik for {}&quot;, comp.getName());</span>
+<span class="nc bnc" id="L556" title="All 2 branches missed.">                if (!reviews.isEmpty()) {</span>
+                    try {
+<span class="nc" id="L558">                        reviewsTrans.saveAll(reviews);</span>
+<span class="nc" id="L559">                    } catch (Exception e) {</span>
+<span class="nc" id="L560">                        response.setError(&quot;Error while saving reviews&quot;);</span>
+<span class="nc" id="L561">                        Thread.currentThread().interrupt();</span>
+<span class="nc" id="L562">                    }</span>
+<span class="nc" id="L563">                    reviews = reviewDao.findAllByCompanyId(comp.getCoreEntityId());</span>
+<span class="nc" id="L564">                    ReviewResponseListDto reviewResponseListDto = new ReviewResponseListDto(</span>
+<span class="nc" id="L565">                            reviews.stream().map(reviewMapper::mapReviewToReviewResponseDto).toList());</span>
+<span class="nc" id="L566">                    response.setResponseEntity(reviewResponseListDto);</span>
+<span class="nc" id="L567">                    response.setMessage(&quot;Responses found&quot;);</span>
+<span class="nc" id="L568">                } else {</span>
+<span class="nc" id="L569">                    response.setMessage(&quot;Responses has 100+ messages .Checking response in process...&quot;);</span>
+                }
+            }
+        }
+<span class="nc bnc" id="L573" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+<span class="nc" id="L574">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;GetReviewResponseListDto&gt; getReviews(GetReviewRequestDto getReviewRequestDto) {
+<span class="nc" id="L579">        HttpResponseBody&lt;GetReviewResponseListDto&gt; response = new GetReviewResponse();</span>
+<span class="nc" id="L580">        Company comp = findCompanyByCode(getReviewRequestDto.getCompanyCode());</span>
+<span class="nc bnc" id="L581" title="All 2 branches missed.">        if (comp == null) {</span>
+<span class="nc" id="L582">            response.setMessage(&quot;Company not found&quot;);</span>
+<span class="nc" id="L583">            response.setResponseCode(OC_BUGS);</span>
+        } else {
+<span class="nc bnc" id="L585" title="All 2 branches missed.">            if (checkEmployment(comp.getCoreEntityId())) {</span>
+<span class="nc" id="L586">                response.setMessage(&quot;User not in company&quot;);</span>
+            } else {
+<span class="nc" id="L588">                List&lt;Review&gt; responseListDto = reviewDao.findAllByCompanyId(comp.getCoreEntityId());</span>
+<span class="nc" id="L589">                GetReviewResponseListDto getReviewResponseListDto = new GetReviewResponseListDto(</span>
+<span class="nc" id="L590">                        responseListDto.stream().map(reviewMapper::mapReviewToGetReviewResponseDto).toList());</span>
+<span class="nc bnc" id="L591" title="All 2 branches missed.">                if (getReviewResponseListDto.getReviewList().isEmpty()) {</span>
+<span class="nc" id="L592">                    response.setMessage(&quot;No reviews found&quot;);</span>
+                } else {
+<span class="nc" id="L594">                    response.setMessage(&quot;Responses found&quot;);</span>
+<span class="nc" id="L595">                    response.setResponseEntity(getReviewResponseListDto);</span>
+                }
+            }
+        }
+<span class="nc bnc" id="L599" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+<span class="nc" id="L600">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;GenerateChartResponseDto&gt; generateCharts(GenerateChartRequestDto generateChartRequestDto) throws IOException {
+<span class="nc" id="L605">        HttpResponseBody&lt;GenerateChartResponseDto&gt; response = new GenerateChartResponse();</span>
+<span class="nc" id="L606">        Company comp = findCompanyByCode(generateChartRequestDto.getCompanyCode());</span>
+<span class="nc bnc" id="L607" title="All 2 branches missed.">        if (comp == null) {</span>
+<span class="nc" id="L608">            response.setMessage(&quot;Company not found&quot;);</span>
+        } else {
+<span class="nc bnc" id="L610" title="All 2 branches missed.">            if (checkEmployment(comp.getCoreEntityId())) {</span>
+<span class="nc" id="L611">                response.setMessage(&quot;User not in company&quot;);</span>
+            } else {
+<span class="nc" id="L613">                List&lt;Review&gt; reviews = reviewDao.findAllByCompanyIdSorted(comp.getCoreEntityId());</span>
+<span class="nc bnc" id="L614" title="All 2 branches missed.">                if (reviews.isEmpty()) {</span>
+<span class="nc" id="L615">                    response.setMessage(&quot;No reviews found&quot;);</span>
+                } else {
+<span class="nc" id="L617">                    byte[] chartAvgImage = generateAverageChart(reviews, comp.getName());</span>
+<span class="nc" id="L618">                    byte[] chartBar = generateSentChart(reviews, comp.getName());</span>
+<span class="nc" id="L619">                    response.setResponseEntity(new GenerateChartResponseDto(chartAvgImage, chartBar));</span>
+<span class="nc" id="L620">                    response.setMessage(&quot;Chart generated successfully&quot;);</span>
+
+                    // Сохранение изображения в файл
+                    //  ImageIO.write(image, &quot;PNG&quot;, new File(&quot;test_chart.png&quot;));
+                }
+            }
+        }
+
+<span class="nc bnc" id="L628" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+<span class="nc" id="L629">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;GetAllBySentResponseListDTO&gt; getAllReviewsBySentType(GetAllBySentRequestDTO allBySentRequestDTO) {
+<span class="nc" id="L634">        HttpResponseBody&lt;GetAllBySentResponseListDTO&gt; response = new GetAllBySentResponse();</span>
+<span class="nc" id="L635">        Company comp = findCompanyByCode(allBySentRequestDTO.companyCode());</span>
+<span class="nc bnc" id="L636" title="All 2 branches missed.">        if (comp == null) {</span>
+<span class="nc" id="L637">            response.setMessage(&quot;Company not found&quot;);</span>
+<span class="nc" id="L638">            response.setResponseCode(OC_BUGS);</span>
+        } else {
+<span class="nc bnc" id="L640" title="All 2 branches missed.">            if (checkEmployment(comp.getCoreEntityId())) {</span>
+<span class="nc" id="L641">                response.setMessage(&quot;User not in company&quot;);</span>
+            } else {
+<span class="nc" id="L643">                SentimentTypeEnum type = SentimentTypeEnum.fromId(Math.toIntExact(allBySentRequestDTO.sentId()));</span>
+<span class="nc" id="L644">                List&lt;GetAllBySentResponseDTO&gt; reviewList = reviewDao.findAllBySentType(comp.getCoreEntityId(), type);</span>
+<span class="nc bnc" id="L645" title="All 2 branches missed.">                if (reviewList.isEmpty()) {</span>
+<span class="nc" id="L646">                    response.setMessage(&quot;No reviews found&quot;);</span>
+                } else {
+<span class="nc" id="L648">                    GetAllBySentResponseListDTO reviewResponseList = reviewMapper.mapListToGetAllBySentResponseListDTO(comp.getName(), reviewList, type.getType());</span>
+<span class="nc" id="L649">                    response.setResponseEntity(reviewResponseList);</span>
+<span class="nc" id="L650">                    response.setMessage(&quot;All reviews found&quot;);</span>
+                }
+            }
+        }
+<span class="nc bnc" id="L654" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+<span class="nc" id="L655">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;GenerateReportResponseDTO&gt; generateReport(GenerateReportRequestDTO generateReportRequestDTo) throws DocumentException, IOException {
+<span class="nc" id="L660">        HttpResponseBody&lt;GenerateReportResponseDTO&gt; response = new GenerateReportResponse();</span>
+<span class="nc" id="L661">        Company comp = findCompanyByCode(generateReportRequestDTo.companyCode());</span>
+<span class="nc bnc" id="L662" title="All 2 branches missed.">        if (comp == null) {</span>
+<span class="nc" id="L663">            response.setMessage(&quot;Company not found&quot;);</span>
+        } else {
+<span class="nc bnc" id="L665" title="All 2 branches missed.">            if (checkEmployment(comp.getCoreEntityId())) {</span>
+<span class="nc" id="L666">                response.setMessage(&quot;User not in company&quot;);</span>
+            } else {
+<span class="nc" id="L668">                Long compId = comp.getCoreEntityId();</span>
+<span class="nc" id="L669">                List&lt;Review&gt; reviews = reviewDao.findAllByCompanyIdSorted(compId);</span>
+<span class="nc bnc" id="L670" title="All 2 branches missed.">                if (reviews.isEmpty()) {</span>
+<span class="nc" id="L671">                    response.setMessage(&quot;No reviews found&quot;);</span>
+                } else {
+<span class="nc" id="L673">                    byte[] report = generateReport(reviews, comp.getName(), compId);</span>
+<span class="nc" id="L674">                    response.setResponseEntity(new GenerateReportResponseDTO(report));</span>
+<span class="nc" id="L675">                    response.setMessage(&quot;Report generated successfully&quot;);</span>
+
+                }
+            }
+        }
+
+<span class="nc bnc" id="L681" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+<span class="nc" id="L682">        return response;</span>
+    }
+
+    @Override
+    public HttpResponseBody&lt;KeyWordResponseDTO&gt; keyWordAnalysis(KeyWordRequestDTO keyWordRequestDTO) {
+<span class="nc" id="L687">        HttpResponseBody&lt;KeyWordResponseDTO&gt; response = new KeyWordResponse();</span>
+<span class="nc" id="L688">        Company comp = findCompanyByCode(keyWordRequestDTO.companyCode());</span>
+<span class="nc bnc" id="L689" title="All 2 branches missed.">        if (comp == null) {</span>
+<span class="nc" id="L690">            response.setMessage(&quot;Company not found&quot;);</span>
+<span class="nc" id="L691">            response.setResponseCode(OC_BUGS);</span>
+        } else {
+
+<span class="nc" id="L694">            Long companyId = comp.getCoreEntityId();</span>
+<span class="nc" id="L695">            SentimentTypeEnum type = SentimentTypeEnum.fromId(Math.toIntExact((keyWordRequestDTO.sentId())));</span>
+<span class="nc" id="L696">            List&lt;BotReviewDTO&gt; reviewList = reviewDao.findForAnalysis(companyId, type);</span>
+<span class="nc" id="L697">            log.debug(reviewList.toString());</span>
+<span class="nc bnc" id="L698" title="All 2 branches missed.">            if (reviewList.isEmpty()) {</span>
+<span class="nc" id="L699">                log.debug(&quot;No reviews found&quot;);</span>
+<span class="nc" id="L700">                response.setMessage(&quot;No reviews found&quot;);</span>
+            } else {
+                try {
+<span class="nc" id="L703">                    BotResponseDTO mergedResponse = analyzeInBatches(companyId, type, reviewList);</span>
+<span class="nc" id="L704">                    response.setResponseEntity(new KeyWordResponseDTO(mergedResponse));</span>
+<span class="nc" id="L705">                    response.setMessage(&quot;Analysis&quot;);</span>
+<span class="nc" id="L706">                } catch (Exception e) {</span>
+<span class="nc" id="L707">                    log.error(e.getMessage());</span>
+<span class="nc" id="L708">                    response.setResponseCode(OC_BUGS);</span>
+<span class="nc" id="L709">                    response.setMessage(&quot;Something went wrong while analyzing your reviews&quot;);</span>
+<span class="nc" id="L710">                    return response;</span>
+<span class="nc" id="L711">                }</span>
+
+
+            }
+
+        }
+<span class="nc bnc" id="L717" title="All 2 branches missed.">        response.setResponseCode(response.getErrors().isEmpty() ? OC_OK : OC_BUGS);</span>
+<span class="nc" id="L718">        return response;</span>
+    }
+
+    private BotResponseDTO analyzeInBatches(Long companyId, SentimentTypeEnum type, List&lt;BotReviewDTO&gt; reviewList) {
+<span class="nc" id="L722">        final int batchSize = 10;</span>
+<span class="nc" id="L723">        List&lt;BotResponseDTO&gt; responses = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L725" title="All 2 branches missed.">        for (int start = 0; start &lt; reviewList.size(); start += batchSize) {</span>
+<span class="nc" id="L726">            int end = Math.min(start + batchSize, reviewList.size());</span>
+<span class="nc" id="L727">            List&lt;BotReviewDTO&gt; batch = reviewList.subList(start, end);</span>
+
+<span class="nc" id="L729">            BotRequestDTO botRequest = new BotRequestDTO(&quot;ru&quot;, batch, batch.size());</span>
+
+<span class="nc" id="L731">            BotResponseDTO botResponse = externalBotClient.analyzeFor(botRequest, mapToSentiment(type));</span>
+
+<span class="nc bnc" id="L733" title="All 2 branches missed.">            if (hasInsightContent(botResponse)) {</span>
+<span class="nc" id="L734">                responses.add(botResponse);</span>
+            } else {
+<span class="nc" id="L736">                log.warn(&quot;Empty batch insights: companyId={}, type={}, batch={}..{}&quot;, companyId, type, start, end);</span>
+            }
+        }
+
+<span class="nc" id="L740">        BotResponseDTO mergedResponse = mergeResponses(responses);</span>
+
+<span class="nc bnc" id="L742" title="All 2 branches missed.">        if (hasInsightContent(mergedResponse)) {</span>
+<span class="nc" id="L743">            reviewInsightDao.save(new ReviewInsight(companyId, type, mergedResponse));</span>
+        } else {
+<span class="nc" id="L745">            log.warn(&quot;Merged insights empty, skip save: companyId={}, type={}&quot;, companyId, type);</span>
+        }
+
+<span class="nc" id="L748">        return mergedResponse;</span>
+    }
+
+    private static boolean hasInsightContent(BotResponseDTO r) {
+<span class="nc bnc" id="L752" title="All 2 branches missed.">        if (r == null) return false;</span>
+<span class="nc bnc" id="L753" title="All 4 branches missed.">        return (r.topLikes() != null &amp;&amp; !r.topLikes().isEmpty())</span>
+<span class="nc bnc" id="L754" title="All 4 branches missed.">                || (r.topDislikes() != null &amp;&amp; !r.topDislikes().isEmpty())</span>
+<span class="nc bnc" id="L755" title="All 4 branches missed.">                || (r.topRequests() != null &amp;&amp; !r.topRequests().isEmpty());</span>
+    }
+
+
+    private BotResponseDTO mergeResponses(List&lt;BotResponseDTO&gt; responses) {
+<span class="nc" id="L760">        List&lt;InsightDTO&gt; likes = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L761">        List&lt;InsightDTO&gt; dislikes = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L762">        List&lt;InsightDTO&gt; requests = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L764" title="All 2 branches missed.">        for (BotResponseDTO response : responses) {</span>
+<span class="nc bnc" id="L765" title="All 2 branches missed.">            if (response.topLikes() != null) {</span>
+<span class="nc" id="L766">                likes.addAll(response.topLikes());</span>
+            }
+<span class="nc bnc" id="L768" title="All 2 branches missed.">            if (response.topDislikes() != null) {</span>
+<span class="nc" id="L769">                dislikes.addAll(response.topDislikes());</span>
+            }
+<span class="nc bnc" id="L771" title="All 2 branches missed.">            if (response.topRequests() != null) {</span>
+<span class="nc" id="L772">                requests.addAll(response.topRequests());</span>
+            }
+<span class="nc" id="L774">        }</span>
+
+<span class="nc" id="L776">        return new BotResponseDTO(likes, dislikes, requests);</span>
+    }
+
+    private Sentiment mapToSentiment(SentimentTypeEnum type) {
+<span class="nc bnc" id="L780" title="All 3 branches missed.">        return switch (type) {</span>
+<span class="nc" id="L781">            case POSITIVE -&gt; Sentiment.POSITIVE;</span>
+<span class="nc" id="L782">            case NEGATIVE -&gt; Sentiment.NEGATIVE;</span>
+<span class="nc" id="L783">            default -&gt; Sentiment.REQUEST;</span>
+        };
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

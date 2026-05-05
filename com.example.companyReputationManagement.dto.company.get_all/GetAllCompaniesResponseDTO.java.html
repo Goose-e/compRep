@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GetAllCompaniesResponseDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.dto.company.get_all</a> &gt; <span class="el_source">GetAllCompaniesResponseDTO.java</span></div><h1>GetAllCompaniesResponseDTO.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.dto.company.get_all;
+
+import com.example.companyReputationManagement.httpResponse.ResponseDto;
+import com.example.companyReputationManagement.models.enums.StatusEnum;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
+@Data
+@Getter
+@Setter
+public class GetAllCompaniesResponseDTO implements ResponseDto {
+    private String companyName;
+    private String companyCode;
+    private String industry;
+    private String website;
+    private String otzovikUrl;
+    private String companyStatus;
+<span class="fc" id="L19">    public GetAllCompaniesResponseDTO(String companyName, String companyCode, String industry, String website, String otzovikUrl, StatusEnum companyStatus) {</span>
+<span class="fc" id="L20">        this.companyName = companyName;</span>
+<span class="fc" id="L21">        this.companyCode = companyCode;</span>
+<span class="fc" id="L22">        this.industry = industry;</span>
+<span class="fc" id="L23">        this.website = website;</span>
+<span class="pc bpc" id="L24" title="1 of 2 branches missed.">        this.otzovikUrl = otzovikUrl != null ? otzovikUrl : &quot;Company url does not exists or try later&quot;;</span>
+<span class="fc" id="L25">        this.companyStatus = companyStatus.getStatus();</span>
+<span class="fc" id="L26">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

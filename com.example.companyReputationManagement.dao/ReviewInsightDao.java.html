@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReviewInsightDao.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.dao</a> &gt; <span class="el_source">ReviewInsightDao.java</span></div><h1>ReviewInsightDao.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.dao;
+
+import com.example.companyReputationManagement.dto.review.keyWord.bot.BotResponseDTO;
+import com.example.companyReputationManagement.models.ReviewInsight;
+import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
+import com.example.companyReputationManagement.repo.ReviewInsightRepo;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+
+@RequiredArgsConstructor
+@Component
+public class ReviewInsightDao {
+    private final ReviewInsightRepo reviewInsightRepo;
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    public ReviewInsight save(ReviewInsight insight) {
+<span class="nc" id="L23">        return reviewInsightRepo.save(insight);</span>
+    }
+
+    public Optional&lt;ReviewInsight&gt; findLatest(Long companyId, SentimentTypeEnum sentimentType) {
+<span class="nc" id="L27">        Optional&lt;ReviewInsight&gt; res =</span>
+<span class="nc" id="L28">                reviewInsightRepo.findTopByCompanyIdAndSentimentTypeOrderByCreatedAtDesc(companyId, sentimentType);</span>
+
+<span class="nc" id="L30">        log.info(&quot;DB findLatest: companyId={}, sentiment={}, present={}&quot;,</span>
+<span class="nc" id="L31">                companyId, sentimentType, res.isPresent());</span>
+
+<span class="nc" id="L33">        res.ifPresent(ri -&gt; log.info(</span>
+                &quot;DB result: id={}, createdAt={}, likes={}, dislikes={}, requests={}&quot;,
+<span class="nc" id="L35">                ri.getId(),</span>
+<span class="nc" id="L36">                ri.getCreatedAt(),</span>
+<span class="nc" id="L37">                size(ri.getResultJson().topLikes()),</span>
+<span class="nc" id="L38">                size(ri.getResultJson().topDislikes()),</span>
+<span class="nc" id="L39">                size(ri.getResultJson().topRequests())</span>
+        ));
+
+<span class="nc" id="L42">        return res;</span>
+    }
+
+    private int size(List&lt;?&gt; l) {
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        return l == null ? 0 : l.size();</span>
+    }
+
+
+    public List&lt;ReviewInsight&gt; findLatestByCompany(Long companyId) {
+<span class="nc" id="L51">        return Arrays.stream(SentimentTypeEnum.values())</span>
+<span class="nc" id="L52">                .filter(this::isSupported)</span>
+<span class="nc" id="L53">                .map(type -&gt; reviewInsightRepo</span>
+<span class="nc" id="L54">                        .findTopByCompanyIdAndSentimentTypeOrderByCreatedAtDesc(companyId, type))</span>
+<span class="nc" id="L55">                .flatMap(Optional::stream)</span>
+<span class="nc" id="L56">                .filter(this::hasInsightContent)</span>
+<span class="nc" id="L57">                .sorted(Comparator.comparingInt(i -&gt; orderByType(i.getSentimentType())))</span>
+<span class="nc" id="L58">                .toList();</span>
+    }
+
+    private boolean hasInsightContent(ReviewInsight insight) {
+<span class="nc" id="L62">        BotResponseDTO response = insight.getResultJson();</span>
+
+<span class="nc bnc" id="L64" title="All 6 branches missed.">        return response != null &amp;&amp; ((response.topLikes() != null &amp;&amp; !response.topLikes().isEmpty())</span>
+<span class="nc bnc" id="L65" title="All 4 branches missed.">                || (response.topDislikes() != null &amp;&amp; !response.topDislikes().isEmpty())</span>
+<span class="nc bnc" id="L66" title="All 4 branches missed.">                || (response.topRequests() != null &amp;&amp; !response.topRequests().isEmpty()));</span>
+    }
+
+    private boolean isSupported(SentimentTypeEnum sentimentType) {
+<span class="nc bnc" id="L70" title="All 4 branches missed.">        return sentimentType == SentimentTypeEnum.POSITIVE || sentimentType == SentimentTypeEnum.NEGATIVE;</span>
+    }
+
+    private int orderByType(SentimentTypeEnum sentimentType) {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        return sentimentType == SentimentTypeEnum.POSITIVE ? 0 : 1;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

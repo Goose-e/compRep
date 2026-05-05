@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDao.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.dao</a> &gt; <span class="el_source">UserDao.java</span></div><h1>UserDao.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.dao;
+
+import com.example.companyReputationManagement.dto.user.find.FindByNameResponseListDTO;
+import com.example.companyReputationManagement.models.CompanyUser;
+import com.example.companyReputationManagement.repo.UserRepo;
+import lombok.RequiredArgsConstructor;
+import org.h2.engine.User;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@RequiredArgsConstructor
+@Component
+public class UserDao {
+    private final UserRepo userRepo;
+    public CompanyUser save(CompanyUser companyUser){
+<span class="nc" id="L17">        return userRepo.save(companyUser);</span>
+    }
+    public CompanyUser findUserByUserName(String username){
+<span class="nc" id="L20">        return userRepo.findUserByUsername(username);</span>
+    }
+
+    public List&lt;CompanyUser&gt; findUsersByUserName(String username){
+<span class="nc" id="L24">        return userRepo.findCompanyUsersByUsernameContainingIgnoreCase(username);</span>
+    }
+
+    public CompanyUser findUserByLoginOrEmail(String UserLogin, String UserEmail) {
+<span class="nc" id="L28">        return userRepo.findFirstByUsernameOrEmail(UserLogin, UserEmail);</span>
+    }
+    public CompanyUser findUserByLoginOrEmail(String userLoginOrEmail) {
+<span class="nc" id="L31">        return userRepo.findFirstByUsernameOrEmail(userLoginOrEmail,userLoginOrEmail);</span>
+    }
+    public Long findIdByUsernameOrEmail(String usernameOrEmail) {
+<span class="nc" id="L34">        return userRepo.findCoreEntityIdByUsernameOrEmail(usernameOrEmail,usernameOrEmail);</span>
+    }
+    public CompanyUser findUserByUserCode(String userCode) {
+<span class="nc" id="L37">        return userRepo.findCompanyUserByUserCode(userCode);</span>
+    }
+    public Long findUserIdByUserCode(String userCode) {
+<span class="nc" id="L40">        return userRepo.findCompanyUserIdByUserCode(userCode);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

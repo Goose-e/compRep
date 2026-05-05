@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CompanyTrans.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.iservice.services.transactions</a> &gt; <span class="el_source">CompanyTrans.java</span></div><h1>CompanyTrans.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.iservice.services.transactions;
+
+import com.example.companyReputationManagement.dao.CompanyDao;
+import com.example.companyReputationManagement.dao.CompanySourceUrlDao;
+import com.example.companyReputationManagement.dao.UserCompanyRolesDao;
+import com.example.companyReputationManagement.dao.UserDao;
+import com.example.companyReputationManagement.models.Company;
+import com.example.companyReputationManagement.models.CompanySourceUrl;
+import com.example.companyReputationManagement.models.UserCompanyRoles;
+import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+
+@Service
+@AllArgsConstructor
+public class CompanyTrans {
+    private final CompanyDao companyDao;
+    private final UserCompanyRolesDao userCompanyRolesdao;
+    private final CompanySourceUrlDao companySourceUrlDao;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    @Transactional
+    public void save(Company company, UserCompanyRoles userCompanyRoles, CompanySourceUrl companySourceUrl) {
+        try{
+<span class="nc" id="L28">            companyDao.save(company);</span>
+<span class="nc" id="L29">            userCompanyRolesdao.save(userCompanyRoles);</span>
+<span class="nc" id="L30">            companySourceUrlDao.save(companySourceUrl);</span>
+<span class="nc" id="L31">        } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L32">            logger.error(&quot;Data integrity violation during save operation&quot;, e);</span>
+<span class="nc" id="L33">            throw e;</span>
+<span class="nc" id="L34">        } catch (Exception e) {</span>
+<span class="nc" id="L35">            logger.error(&quot;Unexpected error during save operation&quot;, e);</span>
+<span class="nc" id="L36">            throw new RuntimeException(&quot;Unexpected error&quot;, e);</span>
+<span class="nc" id="L37">        }</span>
+<span class="nc" id="L38">    }</span>
+    @Transactional
+    public void saveCompanySourceUrl(CompanySourceUrl companySourceUrl) {
+        try{
+<span class="nc" id="L42">            companySourceUrlDao.save(companySourceUrl);</span>
+<span class="nc" id="L43">        } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L44">            logger.error(&quot;Data integrity violation during save operation&quot;, e);</span>
+<span class="nc" id="L45">            throw e;</span>
+<span class="nc" id="L46">        } catch (Exception e) {</span>
+<span class="nc" id="L47">            logger.error(&quot;Unexpected error during save operation&quot;, e);</span>
+<span class="nc" id="L48">            throw new RuntimeException(&quot;Unexpected error&quot;, e);</span>
+<span class="nc" id="L49">        }</span>
+<span class="nc" id="L50">    }</span>
+
+    @Transactional
+    public void saveCompanyAndRole(Company company, UserCompanyRoles userCompanyRoles) {
+        try{
+<span class="nc" id="L55">            companyDao.save(company);</span>
+<span class="nc" id="L56">            userCompanyRolesdao.save(userCompanyRoles);</span>
+<span class="nc" id="L57">        } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L58">            logger.error(&quot;Data integrity violation during save operation&quot;, e);</span>
+<span class="nc" id="L59">            throw e;</span>
+<span class="nc" id="L60">        } catch (Exception e) {</span>
+<span class="nc" id="L61">            logger.error(&quot;Unexpected error during save operation&quot;, e);</span>
+<span class="nc" id="L62">            throw new RuntimeException(&quot;Unexpected error&quot;, e);</span>
+<span class="nc" id="L63">        }</span>
+<span class="nc" id="L64">    }</span>
+
+    @Transactional
+    public void updateCompany(Company company,CompanySourceUrl companySourceUrl) {
+        try {
+<span class="nc" id="L69">            companyDao.save(company);</span>
+<span class="nc" id="L70">            companySourceUrlDao.save(companySourceUrl);</span>
+<span class="nc" id="L71">        } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L72">            logger.error(&quot;Data integrity violation during save operation&quot;, e);</span>
+<span class="nc" id="L73">            throw e;</span>
+<span class="nc" id="L74">        } catch (Exception e) {</span>
+<span class="nc" id="L75">            logger.error(&quot;Unexpected error during save operation&quot;, e);</span>
+<span class="nc" id="L76">            throw new RuntimeException(&quot;Unexpected error&quot;, e);</span>
+<span class="nc" id="L77">        }</span>
+<span class="nc" id="L78">    }</span>
+
+    @Transactional
+    public void saveCompanyUserRole(UserCompanyRoles userCompanyRoles) {
+        try {
+<span class="nc" id="L83">            userCompanyRolesdao.save(userCompanyRoles);</span>
+<span class="nc" id="L84">        } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L85">            logger.error(&quot;Data integrity violation during save operation&quot;, e);</span>
+<span class="nc" id="L86">            throw e;</span>
+<span class="nc" id="L87">        } catch (Exception e) {</span>
+<span class="nc" id="L88">            logger.error(&quot;Unexpected error during save operation&quot;, e);</span>
+<span class="nc" id="L89">            throw new RuntimeException(&quot;Unexpected error&quot;, e);</span>
+<span class="nc" id="L90">        }</span>
+<span class="nc" id="L91">    }</span>
+
+    @Transactional
+    public void changeUserRoleOwner(UserCompanyRoles userCompanyRolesOwner,UserCompanyRoles userCompanyRolesNewOwner) {
+        try {
+<span class="nc" id="L96">            userCompanyRolesdao.save(userCompanyRolesOwner);</span>
+<span class="nc" id="L97">            userCompanyRolesdao.save(userCompanyRolesNewOwner);</span>
+<span class="nc" id="L98">        } catch (DataIntegrityViolationException e) {</span>
+<span class="nc" id="L99">            logger.error(&quot;Data integrity violation during save operation&quot;, e);</span>
+<span class="nc" id="L100">            throw e;</span>
+<span class="nc" id="L101">        } catch (Exception e) {</span>
+<span class="nc" id="L102">            logger.error(&quot;Unexpected error during save operation&quot;, e);</span>
+<span class="nc" id="L103">            throw new RuntimeException(&quot;Unexpected error&quot;, e);</span>
+<span class="nc" id="L104">        }</span>
+<span class="nc" id="L105">    }</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

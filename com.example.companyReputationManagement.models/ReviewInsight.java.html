@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReviewInsight.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.models</a> &gt; <span class="el_source">ReviewInsight.java</span></div><h1>ReviewInsight.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.models;
+
+import com.example.companyReputationManagement.dto.review.keyWord.bot.BotResponseDTO;
+import com.example.companyReputationManagement.models.enums.SentimentTypeEnum;
+import com.example.companyReputationManagement.models.enums.converters.SentimentTypeRefConverter;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.annotations.JdbcTypeCode;
+
+import java.sql.Timestamp;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@Entity
+@Table(name = &quot;review_insights&quot;)
+public class ReviewInsight {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = &quot;company_id&quot;, nullable = false)
+    private Long companyId;
+
+    @Column(name = &quot;sentiment_type&quot;, nullable = false)
+    @Convert(converter = SentimentTypeRefConverter.class)
+    private SentimentTypeEnum sentimentType;
+
+    @Column(name = &quot;result_json&quot;, nullable = false, columnDefinition = &quot;jsonb&quot;)
+    @JdbcTypeCode(SqlTypes.JSON)
+    private BotResponseDTO resultJson;
+
+    @CreationTimestamp
+    @Column(name = &quot;created_at&quot;, updatable = false)
+    private Timestamp createdAt;
+
+<span class="nc" id="L41">    public ReviewInsight(Long companyId, SentimentTypeEnum sentimentType, BotResponseDTO resultJson) {</span>
+<span class="nc" id="L42">        this.companyId = companyId;</span>
+<span class="nc" id="L43">        this.sentimentType = sentimentType;</span>
+<span class="nc" id="L44">        this.resultJson = resultJson;</span>
+<span class="nc" id="L45">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

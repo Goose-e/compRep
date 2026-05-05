@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebSecurityConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.config</a> &gt; <span class="el_source">WebSecurityConfig.java</span></div><h1>WebSecurityConfig.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.config;
+
+import com.example.companyReputationManagement.iservice.services.company.CompanyService;
+import com.example.companyReputationManagement.jwt.CustomJwtAuthenticationConverter;
+import com.example.companyReputationManagement.jwt.security.CustomAuthenticationEntryPoint;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
+
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.UUID;
+
+import static com.example.companyReputationManagement.jwt.security.KeyLoader.loadPrivateKey;
+import static com.example.companyReputationManagement.jwt.security.KeyLoader.loadPublicKey;
+
+<span class="fc" id="L49">@Slf4j</span>
+@Configuration
+@EnableWebSecurity
+<span class="fc" id="L52">public class WebSecurityConfig {</span>
+
+    @Value(&quot;${app.secretKey}&quot;)
+    private String secretKey;
+<span class="fc" id="L56">    private static final Logger logger = LoggerFactory.getLogger(CompanyService.class);</span>
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthenticationEntryPoint entryPoint) throws Exception {
+
+<span class="fc" id="L61">        http</span>
+<span class="fc" id="L62">                .cors(Customizer.withDefaults())</span>
+<span class="fc" id="L63">                .exceptionHandling(exceptionHandling -&gt;</span>
+<span class="fc" id="L64">                        exceptionHandling</span>
+<span class="fc" id="L65">                                .authenticationEntryPoint(entryPoint)</span>
+                )
+                .authorizeHttpRequests
+<span class="fc" id="L68">                        ((requests) -&gt; requests</span>
+
+<span class="fc" id="L70">                                .requestMatchers(&quot;/.well-known/**&quot;, &quot;/oauth2/**&quot;).permitAll()</span>
+<span class="fc" id="L71">                                .anyRequest().permitAll()</span>
+
+<span class="fc" id="L73">                        ).oauth2ResourceServer(oauth2 -&gt; oauth2</span>
+<span class="fc" id="L74">                        .jwt(jwt -&gt; jwt</span>
+<span class="fc" id="L75">                                .jwtAuthenticationConverter(new CustomJwtAuthenticationConverter())</span>
+<span class="fc" id="L76">                        ).authenticationEntryPoint(entryPoint)</span>
+                )
+<span class="fc" id="L78">                .logout(LogoutConfigurer::permitAll).csrf(AbstractHttpConfigurer::disable);</span>
+<span class="fc" id="L79">        return http.build();</span>
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+<span class="fc" id="L84">        return new BCryptPasswordEncoder();</span>
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder(JWKSource&lt;SecurityContext&gt; jwkSource) {
+<span class="fc" id="L89">        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);</span>
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(PasswordEncoder encoder) {
+<span class="fc" id="L94">        UserDetails user = User.withUsername(&quot;user&quot;)</span>
+<span class="fc" id="L95">                .password(encoder.encode(&quot;password&quot;))</span>
+<span class="fc" id="L96">                .roles(&quot;USER&quot;)</span>
+<span class="fc" id="L97">                .build();</span>
+<span class="fc" id="L98">        return new InMemoryUserDetailsManager(user);</span>
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder, UserDetailsService userDetailsService) throws Exception {
+<span class="fc" id="L103">        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();</span>
+<span class="fc" id="L104">        provider.setUserDetailsService(userDetailsService);</span>
+<span class="fc" id="L105">        provider.setPasswordEncoder(passwordEncoder);</span>
+<span class="fc" id="L106">        return new ProviderManager(provider);</span>
+    }
+
+    @Bean
+    public RegisteredClientRepository registeredClientRepository() {
+<span class="fc" id="L111">        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())</span>
+<span class="fc" id="L112">                .clientId(&quot;client&quot;)</span>
+<span class="fc" id="L113">                .clientSecret(&quot;{noop}secret&quot;)</span>
+<span class="fc" id="L114">                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)</span>
+<span class="fc" id="L115">                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)</span>
+<span class="fc" id="L116">                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)</span>
+<span class="fc" id="L117">                .redirectUri(&quot;http://localhost:8080/login/oauth2/code/custom&quot;)</span>
+<span class="fc" id="L118">                .scope(OidcScopes.OPENID)</span>
+<span class="fc" id="L119">                .scope(&quot;read&quot;)</span>
+<span class="fc" id="L120">                .build();</span>
+
+
+<span class="fc" id="L123">        return new InMemoryRegisteredClientRepository(registeredClient);</span>
+    }
+
+    @Bean
+    public JWKSource&lt;SecurityContext&gt; jwkSource() throws Exception {
+<span class="fc" id="L128">        logger.error(&quot;Using jwkSource() with hardcoded keys&quot;);</span>
+
+<span class="fc" id="L130">        RSAPublicKey publicKey = loadPublicKey(&quot;-----BEGIN PUBLIC KEY-----\n&quot; +</span>
+                &quot;MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA83ER2xKBgPqzbsA44CML\n&quot; +
+                &quot;xS6wRBQAd5+wY/Q3QuOf2AxxNJhMbZUWapOdVxcd2iunG+pBDjnFC/8vUs9IMbTK\n&quot; +
+                &quot;yST796ECPrB8F8QNsaVQlpiySb5XV62qhC/3taSXrynSlj69OaxBlRn3c7Sd2VDq\n&quot; +
+                &quot;cfsCoTU+Zx7NHinTYgmDz63Q4l2arR3hz88mtb5yMYhP2kB8/ZTWI5bpFbepZYqD\n&quot; +
+                &quot;yVMBFN3YrDYftpM+mSBi1F95K47P7UGlsFlzEbxmLeMuQlqyMPmvO57SGZC/zQLD\n&quot; +
+                &quot;C9ZrKJ58nTK8hY9qRLtJc1X3KD23TXY4JL6E5AFlB751nbLnxMaAZBMwtOIPsVsa\n&quot; +
+                &quot;rwIDAQAB\n&quot; +
+                &quot;-----END PUBLIC KEY-----\n&quot;);
+<span class="fc" id="L139">        RSAPrivateKey privateKey = loadPrivateKey(&quot;-----BEGIN PRIVATE KEY-----\n&quot; +</span>
+                &quot;MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDzcRHbEoGA+rNu\n&quot; +
+                &quot;wDjgIwvFLrBEFAB3n7Bj9DdC45/YDHE0mExtlRZqk51XFx3aK6cb6kEOOcUL/y9S\n&quot; +
+                &quot;z0gxtMrJJPv3oQI+sHwXxA2xpVCWmLJJvldXraqEL/e1pJevKdKWPr05rEGVGfdz\n&quot; +
+                &quot;tJ3ZUOpx+wKhNT5nHs0eKdNiCYPPrdDiXZqtHeHPzya1vnIxiE/aQHz9lNYjlukV\n&quot; +
+                &quot;t6llioPJUwEU3disNh+2kz6ZIGLUX3krjs/tQaWwWXMRvGYt4y5CWrIw+a87ntIZ\n&quot; +
+                &quot;kL/NAsML1msonnydMryFj2pEu0lzVfcoPbdNdjgkvoTkAWUHvnWdsufExoBkEzC0\n&quot; +
+                &quot;4g+xWxqvAgMBAAECggEABmfgxOd5QegW5aCoPnmdmywt1jTCiGNK1G5+L8PmllxJ\n&quot; +
+                &quot;dE1XoYCNTPOibcK9ddq1NH5XBOVPQpAN8jtjFm+/8EgJW0xAz158fXGavKRxeOz+\n&quot; +
+                &quot;sAMSsEtxE7ZhacWxehn7IRn4h7Z5KU+8G67Sgn/nE2W7/Xr1r+f3FMab+dXvQn0u\n&quot; +
+                &quot;wLSkE7Zprl5wJUFAEuzTrLEt/laRdjTny69WI1H0ARa534aQ9fCJbDVTYBEYNkMC\n&quot; +
+                &quot;GIat+sb5xK7mLTSF3Ux52YjLEmz8N+8bPPwc4U9fbmCHPFIzyCNutCoVe2kgXFuF\n&quot; +
+                &quot;ZGX9ApzHpZIVAZpyC2dS3ZuAnYC0csqP13xjgY1RNQKBgQD9cvgeWgbHfBg3jnqA\n&quot; +
+                &quot;55pSSlWdzpEmfgu7mmouhk1WYnI7LTLdN8bYvSNCDp/qvs2vTkVa+RcivtHDj220\n&quot; +
+                &quot;LubRZxjf8wDpleVhUx+xYx1yTkypBGfFx6xuqjlKBRBtxXj1q2FsDaem9kJyXKga\n&quot; +
+                &quot;vcNPKJ4nKU/N0ErSGmLj3sefUwKBgQD15FDPLkbFTFlCxpEDTJ3QNU+kGS7qGD12\n&quot; +
+                &quot;4E1umgxdHzefDFgAWk7ckwuMZ2Xt+VTfFmYbTA3tp5PhE0/yYAVSY6kNN816UlJ3\n&quot; +
+                &quot;OBnv2DrcPsTTA0RuMSj0B+cQg5EP3H5oJu0oDUqOwR49xiZZrQQXZmd6wudNofVB\n&quot; +
+                &quot;bRyHM50XtQKBgQDTyH0yh5HAoZ5u1hzhmCZo+vp96j16B7twIUD27Xy0YYEIl+U3\n&quot; +
+                &quot;20LKm4lZynSwqI2hHmtv8FL30rHfkvtdpA92DYtIn3s0tO++msIR7TuO54TBew/n\n&quot; +
+                &quot;wckBlDZY9tBambdQucunieV866xseaZy6fzJKay2Fpw75ACRfkECHod6RwKBgDBr\n&quot; +
+                &quot;QgJaAXOOYjFE+n8k0hqStNkCYHuWRFwpNPYnfXHE2OYHvzhqkAbdKbP/FFI0+6Jm\n&quot; +
+                &quot;Pbr4UfHPQs5aSC7Y+5NKrpo8t8hzd2ukb28MLCL8dTN7/Diak47iE3zr+1+dMoL9\n&quot; +
+                &quot;z0tIurq7imHtp9WWvSyCbLP+tx9RWgMFIk35OuDVAoGBAItb2We+FoseehnWuCiT\n&quot; +
+                &quot;PRLT2jhLkDwYdPayJwFm1VfM8Oat2ZpZX339SvGX5bsz4awZtPfxsaT7nuHZKFDh\n&quot; +
+                &quot;i62QJHtEBkiqJ1v2AMockCvSnNt5CWDYBcHx9p51XHrOgiS3y1KbETddmDYhFAkf\n&quot; +
+                &quot;SJfVzsUI4mmUP5SfZH1izDE5\n&quot; +
+                &quot;-----END PRIVATE KEY-----&quot;);
+
+
+<span class="fc" id="L169">        RSAKey rsaKey = new RSAKey.Builder(publicKey)</span>
+<span class="fc" id="L170">                .privateKey(privateKey)</span>
+<span class="fc" id="L171">                .keyID(secretKey)</span>
+<span class="fc" id="L172">                .build();</span>
+
+<span class="fc" id="L174">        JWKSet jwkSet = new JWKSet(rsaKey);</span>
+<span class="pc" id="L175">        return (jwkSelector, securityContext) -&gt; jwkSelector.select(jwkSet);</span>
+    }
+
+    @Bean
+    public JwtEncoder jwtEncoder(JWKSource&lt;SecurityContext&gt; jwkSource) {
+<span class="fc" id="L180">        return new NimbusJwtEncoder(jwkSource);</span>
+    }
+
+    @Bean
+    public AuthorizationServerSettings authorizationServerSettings() {
+<span class="fc" id="L185">        return AuthorizationServerSettings.builder().issuer(&quot;http://localhost:9000&quot;)</span>
+<span class="fc" id="L186">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

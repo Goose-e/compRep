@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CompanyController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">CompanyReputationManagment</a> &gt; <a href="index.source.html" class="el_package">com.example.companyReputationManagement.controllers</a> &gt; <span class="el_source">CompanyController.java</span></div><h1>CompanyController.java</h1><pre class="source lang-java linenums">package com.example.companyReputationManagement.controllers;
+
+
+import com.example.companyReputationManagement.dto.company.add_user.AddUserRequestDTO;
+import com.example.companyReputationManagement.dto.company.add_user.AddUserResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_status.ChangeCompanyStatusResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_user_company_status.ChangeCompanyUserStatusResponseDTO;
+import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserCompanyRoleRequestDTO;
+import com.example.companyReputationManagement.dto.company.change_user_role.ChangeUserRoleResponseDTO;
+import com.example.companyReputationManagement.dto.company.create.CompanyCreateRequestDTO;
+import com.example.companyReputationManagement.dto.company.create.CompanyCreateResponseDTO;
+import com.example.companyReputationManagement.dto.company.edit.EditCompanyRequestDTO;
+import com.example.companyReputationManagement.dto.company.edit.EditCompanyResponseDTO;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameRequestDTO;
+import com.example.companyReputationManagement.dto.company.find_by_name.FindCompanyByNameResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_all.AllCompaniesResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersRequestDTO;
+import com.example.companyReputationManagement.dto.company.get_all_company_users.GetAllCompanyUsersResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_all_user_companies.AllUserCompaniesResponseListDTO;
+import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeRequestDTO;
+import com.example.companyReputationManagement.dto.company.get_by_code.GetCompanyByCodeResponseDTO;
+import com.example.companyReputationManagement.httpResponse.HttpResponseBody;
+import com.example.companyReputationManagement.iservice.ICompanyService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RequiredArgsConstructor
+@CrossOrigin(maxAge = 3600)
+@RestController
+@RequestMapping(&quot;/company&quot;)
+public class CompanyController {
+
+    private final ICompanyService companyService;
+
+    @PostMapping(value = &quot;/create&quot;)
+    public HttpResponseBody&lt;CompanyCreateResponseDTO&gt; createCompany(@Valid @RequestBody CompanyCreateRequestDTO companyCreateRequestDTO) {
+<span class="nc" id="L41">        return companyService.createCompany(companyCreateRequestDTO);</span>
+    }
+
+    @PostMapping(value = &quot;/find_by_name&quot;)
+    public HttpResponseBody&lt;FindCompanyByNameResponseListDTO&gt; findCompanyByName(@Valid @RequestBody FindCompanyByNameRequestDTO findCompanyByNameRequestDTO) {
+<span class="nc" id="L46">        return companyService.findCompaniesByName(findCompanyByNameRequestDTO);</span>
+    }
+
+    @PostMapping(value = &quot;/get_by_code&quot;)
+    public HttpResponseBody&lt;GetCompanyByCodeResponseDTO&gt; getCompanyByCode(@Valid @RequestBody GetCompanyByCodeRequestDTO companyByCodeRequestDTO) {
+<span class="nc" id="L51">        return companyService.getCompanyByCode(companyByCodeRequestDTO);</span>
+    }
+
+    @PostMapping(value = &quot;/get_all_staff&quot;)
+    public HttpResponseBody&lt;GetAllCompanyUsersResponseListDTO&gt; getAllCompanyUsers(@Valid @RequestBody GetAllCompanyUsersRequestDTO getAllCompanyUsersRequestDTO) {
+<span class="nc" id="L56">        return companyService.getAllCompanyUsers(getAllCompanyUsersRequestDTO);</span>
+    }
+
+    @PostMapping(value = &quot;/change_status&quot;)
+    public HttpResponseBody&lt;ChangeCompanyStatusResponseDTO&gt; changeStatus(@Valid @RequestBody ChangeCompanyStatusRequestDTO changeCompanyStatusRequestDTO) {
+<span class="nc" id="L61">        return companyService.changeCompanyStatus(changeCompanyStatusRequestDTO);</span>
+    }
+
+    @GetMapping(value = &quot;/get_all&quot;)
+    public HttpResponseBody&lt;AllCompaniesResponseListDTO&gt; getAllCompanies() {
+<span class="nc" id="L66">        return companyService.getAllCompanies();</span>
+    }
+
+    @GetMapping(value = &quot;/get_all_for_user&quot;)
+    public HttpResponseBody&lt;AllUserCompaniesResponseListDTO&gt; getAllUserCompanies() {
+<span class="nc" id="L71">        return companyService.getAllUserCompanies();</span>
+    }
+
+    @PatchMapping(value = &quot;/edit&quot;)
+    public HttpResponseBody&lt;EditCompanyResponseDTO&gt; editCompany(@Valid @RequestBody EditCompanyRequestDTO editCompanyRequestCompany) {
+<span class="nc" id="L76">        return companyService.editCompany(editCompanyRequestCompany);</span>
+    }
+
+    @PostMapping(value = &quot;/change_role&quot;)
+    public HttpResponseBody&lt;ChangeUserRoleResponseDTO&gt; changeUserRole(@Valid @RequestBody ChangeUserCompanyRoleRequestDTO changeUserCompanyRoleRequestDTO) {
+<span class="nc" id="L81">        return companyService.changeUserRole(changeUserCompanyRoleRequestDTO);</span>
+    }
+
+    @PostMapping(value = &quot;/add_user&quot;)
+    public HttpResponseBody&lt;AddUserResponseDTO&gt; addUserToCompany(@Valid @RequestBody AddUserRequestDTO addUserRequestDTO) {
+<span class="nc" id="L86">        return companyService.addUser(addUserRequestDTO);</span>
+    }
+
+    @PostMapping(value = &quot;/change_user_status&quot;)
+    public HttpResponseBody&lt;ChangeCompanyUserStatusResponseDTO&gt; changeUserStatus(@Valid @RequestBody ChangeCompanyUserStatusRequestDTO changeCompanyUserStatusRequestDTO) {
+<span class="nc" id="L91">        return companyService.changeUserStatus(changeCompanyUserStatusRequestDTO);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
